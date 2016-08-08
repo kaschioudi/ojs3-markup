@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plugin_settings SYSTEM "../../../lib/pkp/dtd/pluginSettings.dtd">
+
+<plugin_settings>
+    <setting type="bool">
+            <name>overrideGalley</name>
+            <value>false</value>
+    </setting>
+    <setting type="object">
+            <name>wantedFormats</name>
+            <value>
+                <array>
+                    <element>xml</element>
+                    <element>html</element>
+                    <element>pdf</element>
+                    <element>epub</element>
+                </array>
+            </value>
+    </setting>
+</plugin_settings>
