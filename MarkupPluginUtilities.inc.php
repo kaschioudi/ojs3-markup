@@ -52,18 +52,6 @@ class MarkupPluginUtilities {
         }
     }
 
-    /**
-     * Return article's supplementary files directory.
-     *
-     * @param $articleId int ArticleId
-     *
-     * @return string Supplementary file folder path
-     */
-    function getSuppFolder($articleId) {
-        import('classes.file.ArticleFileManager');
-        $articleFileManager = new ArticleFileManager((int) $articleId);
-        return $articleFileManager->filesDir . $articleFileManager->fileStageToPath(ARTICLE_FILE_SUPP);
-    }
 
     /**
      * Return requested markup file to user's browser.
@@ -90,62 +78,6 @@ class MarkupPluginUtilities {
         $fileManager->downloadFile($filePath, $mimeType, true);
 
         exit;
-    }
-
-    /**
-     * Clean markup plugin media files related to an article if no XML or HTML
-     * galley links are left.
-     *
-     * @param $articleId int ArticleID
-     * @param $type string What document type to discard if not provided all galley media will be discarded
-     *
-     * @return void
-     */
-    function cleanGalleyMedia($articleId, $type = '') {
-        $galleyDao =& DAORegistry::getDAO('ArticleGalleyDAO');
-        $galleys =& $galleyDao->getGalleysByArticle($articleId);
-
-        $keep = array();
-        if (!empty($type)) {
-            foreach ($galleys as $galley) {
-                $label = $galley->getLabel();
-                if ($label == 'XML' && $type != 'XML') $keep['xml'] = true;
-                if ($label == 'HTML' && $type != 'HTML') $keep['html'] = true;
-                if ($label == 'PDF' && $type != 'PDF') $keep['pdf'] = true;
-            };
-        }
-
-        $suppFolder = self::getSuppFolder($articleId) . '/markup/';
-
-        $deletes = array();
-        if ($keep) {
-            if (!isset($keep['xml'])) {
-                $deletes[] = $suppFolder . 'document.xml';
-            }
-            if (!isset($keep['html'])) {
-                $deletes[] = $suppFolder . 'html';
-            }
-            if (!isset($keep['pdf'])) {
-                $deletes[] = $suppFolder . 'document.pdf';
-            }
-        } else {
-            $deletes[] = $suppFolder;
-        }
-
-        foreach ($deletes as $delete) {
-            if (!file_exists($delete)) continue;
-
-            if (is_file($delete)) {
-                unlink($delete);
-            } else {
-                $rdi = new RecursiveDirectoryIterator($delete, FilesystemIterator::SKIP_DOTS);
-                $rii = new RecursiveIteratorIterator($rdi, RecursiveIteratorIterator::CHILD_FIRST);
-                foreach($rii as $path) {
-                    $path->isFile() ? unlink($path->getPathname()) : rmdir($path->getPathname());
-                }
-                rmdir($delete);
-            }
-        }
     }
 
     /**
