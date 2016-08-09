@@ -88,8 +88,7 @@ class MarkupPluginUtilities {
      * @return string Mime type of the file
      */
     function getMimeType($file) {
-        $finfo = finfo_open(FILEINFO_MIME_TYPE);
-        return finfo_file($finfo, $file);
+        return String::mime_content_type($file);
     }
 
     /**
