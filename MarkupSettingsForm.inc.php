@@ -1,12 +1,13 @@
 <?php
 
 /**
-* @file plugins/generic/markup/SettingsForm.inc.php
+* @file plugins/generic/markup/MarkupSettingsForm.inc.php
 *
-* Copyright (c) 2003-2013 John Willinsky
+* Copyright (c) 2003-2016 Simon Fraser University Library
+* Copyright (c) 2003-2016 John Willinsky
 * Distributed under the GNU GPL v2. For full terms see the file docs/COPYING.
 *
-* @class SettingsForm
+* @class MarkupSettingsForm
 * @ingroup plugins_generic_markup
 *
 * @brief Form for Document Markup gateway plugin settings

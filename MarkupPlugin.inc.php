@@ -1,5 +1,32 @@
 <?php
 
+/**
+ * @file plugins/generic/markup/MarkupPlugin.inc.php
+ *
+ * Copyright (c) 2003-2016 Simon Fraser University Library
+ * Copyright (c) 2003-2016 John Willinsky
+ * Distributed under the GNU GPL v2. For full terms see the file docs/COPYING.
+ *
+ * @class MarkupPlugin
+ * @ingroup plugins_generic_markup
+ *
+ * @brief NLM XML and HTML transform plugin class
+ *
+ * Specification:
+ *
+ * When an author, copyeditor or editor uploads a new version (odt, docx, doc,
+ * or pdf format) of a submission, this module submits it to the Document Markup
+ * Server specified in the configuration file. 
+ *
+ * manifest.xml document-new.pdf (layout version of PDF) document-review.pdf
+ * (review version of PDF, header author info stripped) document.xml
+ * (NLM-XML3/JATS-compliant) document.html (web-viewable article version)
+ *
+ * This plugin extracts
+ * the html, xml, epub and pdf versions and places them in the galley. 
+ *
+ */
+
 import('lib.pkp.classes.plugins.GenericPlugin');
 
 class MarkupPlugin extends GenericPlugin {
