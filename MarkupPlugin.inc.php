@@ -200,7 +200,7 @@ class MarkupPlugin extends GenericPlugin {
      * @return string Public plugin CSS URL
      */
     function getCssUrl() {
-        return Request::getBaseUrl() . '/' . parent::getPluginPath() . '/css/';
+        return parent::getPluginPath() . '/css/';
     }
     
     /**
@@ -209,7 +209,7 @@ class MarkupPlugin extends GenericPlugin {
      * @return string Public plugin JS URL
      */
     function getJsUrl() {
-        return Request::getBaseUrl() . '/' . parent::getPluginPath() . '/js/';
+        return parent::getPluginPath() . '/js/';
     }
     
     /**

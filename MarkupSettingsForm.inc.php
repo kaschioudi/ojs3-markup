@@ -124,9 +124,8 @@ class MarkupSettingsForm extends Form {
         $templateMgr->assign('zipSupport', extension_loaded('zlib') ? __('plugins.generic.markup.settings.installed') : __('plugins.generic.markup.settings.notInstalled'));
         $templateMgr->assign('pathInfo', Request::isPathInfoEnabled() ? __('plugins.generic.markup.settings.enabled') : __('plugins.generic.markup.settings.disabled'));
         
-        // $additionalHeadData = '<link rel="stylesheet" type="text/css" href="' . $this->plugin->getCssUrl() . 'settingsForm.css" />';
-        $additionalHeadData = '<script type="text/javascript" src="' . $this->plugin->getJsUrl() . 'settingsForm.js" />';
-        $templateMgr->assign('additionalHeadData', $additionalHeadData);        
+        $additionalScriptPath = $this->plugin->getJsUrl(). 'settingsForm.js';
+        $templateMgr->addJavaScript($additionalScriptPath);
         
         return parent::fetch($request);
     }
