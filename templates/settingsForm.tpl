@@ -84,9 +84,6 @@
     {/fbvFormSection}
 
     <dl>
-        <dt>{fieldLabel key="plugins.generic.markup.settings.php5Support"}</dt>
-        <dd><strong>{$php5Support|escape}</strong><br/>{translate key="plugins.generic.markup.settings.php5SupportHelp"}</dd>
-        
         <dt>{fieldLabel key="plugins.generic.markup.settings.curlSupport"}</dt>
         <dd><strong>{$curlSupport|escape}</strong><br/>{translate key="plugins.generic.markup.settings.curlSupportHelp"}</dd>
         
@@ -95,10 +92,6 @@
         
         <dt>{fieldLabel key="plugins.generic.markup.settings.pathInfo"}</dt>
         <dd><strong>{$pathInfo|escape}</strong><br/>{translate key="plugins.generic.markup.settings.pathInfoHelp"}</dd>
-        
-        <dt>{fieldLabel key="plugins.generic.markup.settings.php5Support"}</dt>
-        <dd><strong>{$php5Support|escape}</strong><br/>{translate key="plugins.generic.markup.settings.php5SupportHelp"}</dd>
-        
     </dl>
     
     {fbvFormButtons id="markupFormSubmit" submitText="common.save" hideCancel=true}

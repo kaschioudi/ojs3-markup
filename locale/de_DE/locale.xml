@@ -58,8 +58,6 @@
     <message key="plugins.generic.markup.settings.notInstalled">Nicht installiert</message>
     <message key="plugins.generic.markup.settings.pathInfo">URL-Pfade</message>
     <message key="plugins.generic.markup.settings.pathInfoHelp">"Aktiviert" ist die bevorzugte und übliche Auswahl. Sie meint, dass Seiten und Dokumente in OJS als Pfade in URLs aufgerufen werden. "Deaktiviert" meint, dass OJS URL-Parameter benutzt, um auf Seiten und Dokumente zuzugreifen. Ein Nachteil der Deaktivierung ist im Moment, dass das Anzeigen von HTML-Fahnen (über den Link Korrekturfahnen anzeigen), die mit dem Plug-In erzeugt worden sind, einige Medien nicht anzeigen könnte.</message>
-    <message key="plugins.generic.markup.settings.php5Support">PHP 5.x:</message>
-    <message key="plugins.generic.markup.settings.php5SupportHelp">Dieses Plug-In unterstützt nur PHP 5.x.</message>
     <message key="plugins.generic.markup.settings.saved">Einstellungen gespeichert!</message>
     <message key="plugins.generic.markup.settings.zipSupport">PHP-Unzip-Unterstützung:</message>
     <message key="plugins.generic.markup.settings.zipSupportHelp">PHP zlib muss auf Ihrem OJS-Server installiert sein. Dieses Plug-In benutzt zlib, um die Dateien des Dokumenten-Markup-Servers zu entpacken.</message>

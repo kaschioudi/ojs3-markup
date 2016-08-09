@@ -58,8 +58,6 @@
     <message key="plugins.generic.markup.settings.notInstalled">Not installed</message>
     <message key="plugins.generic.markup.settings.pathInfo">URL Paths</message>
     <message key="plugins.generic.markup.settings.pathInfoHelp">"Enabled" is the default selection if supported by your server. If set to "Disabled," images may be missing from HTML version of articles.</message>
-    <message key="plugins.generic.markup.settings.php5Support">PHP 5.x:</message>
-    <message key="plugins.generic.markup.settings.php5SupportHelp">This plugin only supports PHP 5+.</message>
     <message key="plugins.generic.markup.settings.saved">Settings saved!</message>
     <message key="plugins.generic.markup.settings.zipSupport">PHP Unzip Support:</message>
     <message key="plugins.generic.markup.settings.zipSupportHelp">PHP zlib needs to be installed on your OJS server. This plugin uses zlib to unzip the Document Markup Server files.</message>
