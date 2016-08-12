@@ -10,10 +10,15 @@
 
 {$additionalHeadData}
 <script type="text/javascript">
-	$(function() {ldelim}
-		// Attach the form handler.
-		$('#markupSettingsForm').pkpHandler('$.pkp.controllers.form.AjaxFormHandler');
-	{rdelim});
+    $(function() {ldelim}
+        // Attach the form handler.
+        $('#markupSettingsForm').pkpHandler(
+            '$.pkp.plugins.markup.js.MarkupSettingsFormHandler',
+            {ldelim}
+                cslStyleSelection: '{$cslStyle|escape}'
+            {rdelim}
+        );
+    {rdelim});
 </script>
 
 <form id="markupSettingsForm" class="pkp_form" method="post" action="{url router=$smarty.const.ROUTE_COMPONENT op="plugin" category="generic" plugin=$pluginName verb="save"}"  enctype="multipart/form-data" autocomplete="off">
@@ -77,7 +82,7 @@
     {/if}
     
     {fbvFormSection list=true description="plugins.generic.markup.settings.wantedFormats" description="plugins.generic.markup.settings.wantedFormatsHelp"}
-        {fbvElement type="checkbox" name="wantedFormats[]" id="markupDocFormatXml" value="xml" label="plugins.generic.markup.settings.wantedFormatsXML" checked=markupDocFormatXmlChecked}
+        {fbvElement type="checkbox" name="wantedFormats[]" id="markupDocFormatXml" value="xml" label="plugins.generic.markup.settings.wantedFormatsXML" checked=$markupDocFormatXmlChecked}
         {fbvElement type="checkbox" name="wantedFormats[]" id="markupDocFormatHtml" value="html" label="plugins.generic.markup.settings.wantedFormatsHTML" checked=$markupDocFormatHtmlChecked}
         {fbvElement type="checkbox" name="wantedFormats[]" id="markupDocFormatPdf" value="pdf" label="plugins.generic.markup.settings.wantedFormatsPDF" checked=$markupDocFormatPdfChecked}
         {fbvElement type="checkbox" name="wantedFormats[]" id="markupDocFormatEpub" value="epub" label="plugins.generic.markup.settings.wantedFormatsEPUB" checked=$markupDocFormatEpubChecked}
@@ -97,10 +102,3 @@
     {fbvFormButtons id="markupFormSubmit" submitText="common.save" hideCancel=true}
     
 </form>
-
-<script>
-{* Populate required variables for the citation style select *}
-{literal}var cslStyleSelection = '{/literal}{$cslStyle|escape}{literal}';{/literal}
-{literal}var submitErrorMessage = '{/literal}{translate key="plugins.generic.markup.settings.cslStyleSubmitErrorMessage"}{literal}';{/literal}
-</script>
-

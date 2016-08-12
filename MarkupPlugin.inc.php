@@ -82,7 +82,6 @@ class MarkupPlugin extends GenericPlugin {
         
         if (parent::register($category, $path)) {
             if ($this->getEnabled()) {
-                $this->import('MarkupPluginUtilities');
                 // Register callbacks.
                 HookRegistry::register('PluginRegistry::loadCategory', array($this, 'callbackLoadCategory'));
                 HookRegistry::register('submissionfiledaodelegate::_updateobject', array($this, 'fileToMarkupCallback'));
@@ -157,7 +156,7 @@ class MarkupPlugin extends GenericPlugin {
         $user = Request::getUser();
 
         $path = array(
-            MARKUP_GATEWAY_FOLDER,
+            'markupplugin',
             'fileId', $fileId,
             'userId', $user->getId()
         );

@@ -57,7 +57,6 @@ class MarkupSettingsForm extends Form {
      * @return void
      */
     function initData() {
-        $journal = Request::getJournal();
         $journalId = $this->journalId;
         $plugin = $this->plugin;
 
@@ -124,7 +123,7 @@ class MarkupSettingsForm extends Form {
         $templateMgr->assign('zipSupport', extension_loaded('zlib') ? __('plugins.generic.markup.settings.installed') : __('plugins.generic.markup.settings.notInstalled'));
         $templateMgr->assign('pathInfo', Request::isPathInfoEnabled() ? __('plugins.generic.markup.settings.enabled') : __('plugins.generic.markup.settings.disabled'));
         
-        $additionalScriptPath = $this->plugin->getJsUrl(). 'settingsForm.js';
+        $additionalScriptPath = $this->plugin->getJsUrl(). 'MarkupSettingsFormHandler.js';
         $templateMgr->addJavaScript($additionalScriptPath);
         
         return parent::fetch($request);

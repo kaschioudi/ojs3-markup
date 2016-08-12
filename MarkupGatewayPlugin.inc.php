@@ -19,11 +19,34 @@ import('lib.pkp.classes.plugins.GatewayPlugin');
 class MarkupGatewayPlugin extends GatewayPlugin {
     
     /** @var $parentPluginName string Name of parent plugin */
-    var $parentPluginName;
+    protected $parentPluginName = null;
+    
+    protected $plugin = null;
+    protected $xmlpsWrapper = null;
 
     function MarkupGatewayPlugin($parentPluginName) {
         parent::GatewayPlugin();
+        
         $this->parentPluginName = $parentPluginName;
+        $this->plugin = PluginRegistry::getPlugin('generic', $parentPluginName);
+        $this->_initXMLPSWrapper();
+    }
+    
+    /**
+     * Initialize xmlps wrapper
+     */
+    protected function _initXMLPSWrapper() {
+        
+        $journal = $this->getRequest()->getJournal();
+        $journalId = $journal->getId();
+        
+        $plugin = $this->getMarkupPlugin();
+        $host = $plugin->getSetting($journalId, 'markupHostURL');
+        $user = $plugin->getSetting($journalId, 'markupHostUser');
+        $password = $plugin->getSetting($journalId, 'markupHostPass');
+
+        $this->import('helpers.XMLPSWrapper');
+        $this->xmlpsWrapper = new XMLPSWrapper($host, $user, $password);
     }
     
     /**
@@ -69,8 +92,7 @@ class MarkupGatewayPlugin extends GatewayPlugin {
      * @return MarkupPlugin Markup plugin object
      */
     function &getMarkupPlugin() {
-        $plugin =& PluginRegistry::getPlugin('generic', $this->parentPluginName);
-        return $plugin;
+        return $this->plugin;
     }
     
     /**
@@ -133,24 +155,17 @@ class MarkupGatewayPlugin extends GatewayPlugin {
     }
     
     /**
-     * Handles URL requests to trigger document markup processing for given
-     * article; also handles download requests for xml/pdf/html/epub versions of an
-     * article as well as the html's css files
+     * Handles URL requests to trigger document markup processing for given submission;
      *
      * Accepted parameters:
      *   fileId/[int],
-     *   fileName/[string]
-     *   refresh/[bool]
-     *   refreshGalley/[bool]
-     *   css/[string]
-     *   js/[string]
-     *   userId/[int]
      *
      * @param $args Array of url arguments
      *
      * @return void
      */
     function fetch($args, $request) {
+        
         // Parse keys and values from arguments
         $keys = array();
         $values = array();
@@ -172,25 +187,13 @@ class MarkupGatewayPlugin extends GatewayPlugin {
         }
 
         // Make sure we're within a Journal context
-        $journal =& Request::getJournal();
+        $journal = $this->getRequest()->getJournal();
         if (!$journal) {
             echo __('plugins.generic.markup.archive.no_journal');
             exit;
         }
 
-        // Handles requests for css files
-        if (isset($args['css'])) {
-            $this->_downloadMarkupCSS($journal, $args['css']);
-            exit;
-        }
-
-        // Handles requests for js files
-        if (isset($args['js'])) {
-            $this->_downloadMarkupJS($args['js']);
-            exit;
-        }
-
-        // Load the article
+        // Load submission
         $fileId = isset($args['fileId']) ? (int) $args['fileId'] : false;
         if (!$fileId) {
             echo __('plugins.generic.markup.archive.no_articleID');
@@ -206,8 +209,9 @@ class MarkupGatewayPlugin extends GatewayPlugin {
         
         // process
         $this->_process($submissionFile);
-        
     }
+    
+    
     
     /**
      * Takes care of document markup conversion
@@ -217,7 +221,9 @@ class MarkupGatewayPlugin extends GatewayPlugin {
      * @return void
      */
     function _process($submissionFile) {
-        $this->import('MarkupPluginUtilities');
+        
+        $journal = $this->getRequest()->getJournal();
+        $journalId = $journal->getId();
         
         $submissionDao = Application::getSubmissionDAO();
         $submission = $submissionDao->getById($submissionFile->getSubmissionId());
@@ -225,45 +231,47 @@ class MarkupGatewayPlugin extends GatewayPlugin {
         // submit file to markup server
         $filePath = $submissionFile->getFilePath();
         $filename = basename($filePath);
+        $fileContent = file_get_contents($filePath);
+        $citationStyle = $this->plugin->getSetting($journalId, 'cslStyle');
         
-        $apiResponse = MarkupPluginUtilities::submitFile($this->getMarkupPlugin(), $filename, $filePath);
-        if ($apiResponse['status'] == 'error') {
-            echo $apiResponse['error'];
+        $tmpZipFile = null;
+        
+        try {
+            $jobId = $this->xmlpsWrapper->submitJob($filename, $fileContent, $citationStyle);
+            
+            // retrieve job archive from markup server
+            $i = 0;
+            $jobStatus = null;
+            while($i++ < 60) {
+                $jobStatus = $this->xmlpsWrapper->getJobStatus($jobId);
+                if (($jobStatus != XMLPSWrapper::JOB_STATUS_PENDING) && ($jobStatus != XMLPSWrapper::JOB_STATUS_PROCESSING)) break; 
+                sleep(5);
+            }
+            
+            // Return if the job didn't complete
+            if ($jobStatus != XMLPSWrapper::JOB_STATUS_COMPLETED) return;
+            
+            // make sure submission file has not been deleted (for instance when user cancel out of wizard)
+            $submissionFileDao = DAORegistry::getDAO('SubmissionFileDAO');
+            $submissionFile = $submissionFileDao->getLatestRevision($submissionFile->getFileId());
+            if (empty($submissionFile)) {
+                echo __('plugins.generic.markup.archive.no_file');
+                exit;
+            }
+            
+            // Download the Zip archive.
+            $tmpZipFile = $this->xmlpsWrapper->downloadFile($jobId);
+            
+            if (!file_exists($tmpZipFile)) return;
+            
+        }
+        catch (Exception $e) {
+            // @TODO log error
             return;
         }
         
-        $jobId = $apiResponse['id'];
-        
-        // retrieve job archive from markup server
-        $i = 0;
-        while($i++ < 60) {
-            $apiResponse = MarkupPluginUtilities::getJobStatus($this->getMarkupPlugin(), $jobId);
-            if (($apiResponse['jobStatus'] != 0) && ($apiResponse['jobStatus'] != 1)) break; // Jobstatus 0 - pending ; Jobstatus 1 - Processing
-            sleep(5);
-        }
-        
-        // Return if the job didn't complete
-        if ($apiResponse['jobStatus'] != 2) return;
-        
-        // make sure submission file has not been deleted (for instance when user cancel out of wizard)
-        $submissionFileDao = DAORegistry::getDAO('SubmissionFileDAO');
-        $submissionFile = $submissionFileDao->getLatestRevision($submissionFile->getFileId());
-        if (empty($submissionFile)) {
-            echo __('plugins.generic.markup.archive.no_file');
-            exit;
-        }
-        
-        // Download the Zip archive.
-        $url = MarkupPluginUtilities::getZipFileUrl($this->getMarkupPlugin(), $jobId);
-        $tmpZipFile = sys_get_temp_dir() . '/documents.zip';
-        @unlink($tmpZipFile);
-        @copy($url, $tmpZipFile);
-        
-        if (!file_exists($tmpZipFile)) return;
-        
         // save archive as production ready file
         // @TODO @TBD
-        
         
         // Extract archive
         $extractionPath = null;
@@ -272,9 +280,10 @@ class MarkupGatewayPlugin extends GatewayPlugin {
         }
         
         // save relevant documents
-        $journal =& Request::getJournal();
+        $journal = $this->getRequest()->getJournal();
         $journalId = $journal->getId();
-        $plugin =& $this->getMarkupPlugin();
+        $plugin = $this->getMarkupPlugin();
+        
         $wantedFormats = $plugin->getSetting($journalId, 'wantedFormats');
         $overrideGalley = (bool) intval($plugin->getSetting($journalId, 'overrideGalley'));
         
@@ -353,7 +362,7 @@ class MarkupGatewayPlugin extends GatewayPlugin {
         
         
         $submissionFileDao = DAORegistry::getDAO('SubmissionFileDAO');
-        $submissionFile = $this->_getSubmissionFile($galleyFiles, $overrideGalley);
+        $submissionFile = $this->_getSubmissionFile($genreId, $galleyFiles, $overrideGalley);
         
         $submissionFile->setSubmissionId($submissionId);
         $submissionFile->setGenreId($genreId);
@@ -387,12 +396,13 @@ class MarkupGatewayPlugin extends GatewayPlugin {
     /**
      * Instantiates a submission file depending of whether it's first galley file and plugin settings 
      *
+     * @param $genreId genre id
      * @param $galleyFiles latest galley files
      * @param $overrideGalley plugin setting value
      *
      * @return SubmissionFile Submission File object instance
      */
-    protected function _getSubmissionFile ($galleyFiles, $overrideGalley)
+    protected function _getSubmissionFile ($genreId, $galleyFiles, $overrideGalley)
     {
         $submissionFileDao = DAORegistry::getDAO('SubmissionFileDAO');
         
@@ -410,6 +420,48 @@ class MarkupGatewayPlugin extends GatewayPlugin {
         $submissionFile = $submissionFileDao->getLatestRevision($fileId);
         $submissionFile->setRevision($revision);
         return $submissionFile;
+    }
+    
+    /**
+     * Extract zip a archive
+     *
+     * @param $zipFile string File to extract
+     * @param $validFiles mixed Array with file names to extract
+     * @param $destination string Destination folder
+     * @param $message string Reference to status message from ZipArchive
+     *
+     * @return bool Whether or not the extraction was successful
+     */
+    protected function _zipArchiveExtract($zipFile, $destination, &$message, $validFiles = array()) {
+        $zip = new ZipArchive;
+        if (!$zip->open($zipFile, ZIPARCHIVE::CHECKCONS)) {
+            $message = $zip->getStatusString();
+            return false;
+        }
+
+        if (!empty($validFiles)) {
+            // Restrict which files to extract
+            $extractFiles = array();
+            foreach ($validFiles as $validFile) {
+                if ($zip->locateName($validFile) !== false) {
+                    $extractFiles[] = $validFile;
+                }
+            }
+            $status = $zip->extractTo($destination, $extractFiles);
+        } else {
+            // Extract the entire archive
+            $status = $zip->extractTo($destination);
+        }
+
+        if ($status === false && $zip->getStatusString() != 'No error') {
+            $zip->close();
+            $message = $zip->getStatusString();
+            return false;
+        }
+
+        $zip->close();
+
+        return true;
     }
     
     /**
@@ -431,7 +483,7 @@ class MarkupGatewayPlugin extends GatewayPlugin {
         // Extract the zip archive to a markup subdirectory
         $message = '';
         $destination = sys_get_temp_dir() . '/' . uniqid();
-        if (!MarkupPluginUtilities::zipArchiveExtract($zipFile, $destination, $message, $validFiles)) {
+        if (!$this->_zipArchiveExtract($zipFile, $destination, $message, $validFiles)) {
             echo __(
                 'plugins.generic.markup.archive.bad_zip',
                 array(
@@ -445,7 +497,7 @@ class MarkupGatewayPlugin extends GatewayPlugin {
         // If we got a html.zip extract this to html subdirectory
         $htmlZipFile = $destination . '/html.zip';
         if (file_exists($htmlZipFile)) {
-            if (!MarkupPluginUtilities::zipArchiveExtract($htmlZipFile, $destination . '/html', $message)) {
+            if (!$this->_zipArchiveExtract($htmlZipFile, $destination . '/html', $message)) {
                 echo __(
                     'plugins.generic.markup.archive.bad_zip',
                     array(
@@ -459,41 +511,6 @@ class MarkupGatewayPlugin extends GatewayPlugin {
         }
         
         return $destination;
-    }
-    
-    /**
-     * Returns a journal's CSS file to the browser. If the journal doesn't have
-     * one fall back to the one provided by the plugin
-     *
-     * @param $journal mixed Journal to fetch CSS for
-     * @param $fileName string File name of the CSS file to fetch
-     *
-     * @return bool Whether or not the CSS file exists
-     */
-    function _downloadMarkupCSS($journal, $fileName) {
-        import('classes.file.JournalFileManager');
-
-        // Load the journals CSS path
-        $journalFileManager = new JournalFileManager($journal);
-        $cssFolder = $journalFileManager->getBasePath() . 'css/';
-
-        // If journal CSS path doesn't exist fall back to plugin's CSS path
-        if (!file_exists($cssFolder . $fileName)) {
-            $cssFolder = $this->getCssPath();
-        }
-
-        return MarkupPluginUtilities::downloadFile($cssFolder, $fileName);
-    }
-    
-    /**
-     * Offers the plugins article JS file for download
-     *
-     * @param $fileName string File name of the JS file to fetch
-     *
-     * @return bool Whether or not the JS file exists
-     */
-    function _downloadMarkupJS($fileName) {
-        return MarkupPluginUtilities::downloadFile($this->getJsPath(), $fileName);
     }
     
 }

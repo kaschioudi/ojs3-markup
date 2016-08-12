@@ -39,6 +39,8 @@
     <message key="plugins.generic.markup.optional.reviewVersion">Toggle for review version is optional.</message>
     <message key="plugins.generic.markup.required.cslStyle">Citation Style is required.</message>
     <message key="plugins.generic.markup.required.markupHostURL">Server address is required.</message>
+    <message key="plugins.generic.markup.required.overrideGalley">Specify whether existing documents must be overriden.</message>
+    <message key="plugins.generic.markup.required.wantedFormats">At least one document format must be selected.</message>
     <message key="plugins.generic.markup.settings">Settings</message>
     <message key="plugins.generic.markup.settings.cslStyle">Select Citation Style (CSL):</message>
     <message key="plugins.generic.markup.settings.cslStyleSubmitErrorMessage">Invalid Document Markup Server! Please specifiy correct URL.</message>

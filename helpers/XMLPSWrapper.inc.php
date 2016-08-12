@@ -16,6 +16,9 @@
 class XMLPSWrapper {
     
     const JOB_CONVERSION_STAGE_ZIP = 10;
+    const JOB_STATUS_PENDING = 0;
+    const JOB_STATUS_PROCESSING = 1;
+    const JOB_STATUS_COMPLETED = 2;
     
     protected $username = null;
     protected $password = null;
@@ -67,6 +70,7 @@ class XMLPSWrapper {
      * 
      * @return array
      * 
+     * @throws Exception login credentials are not set for and api call requires authentication
      * @throws Exception When request fails.
      */
     protected function _makeApiRequest($endpoint, $params, $authRequired = false, $isPost = false) {
@@ -178,7 +182,7 @@ class XMLPSWrapper {
      * 
      * @return string
      */
-    public function getFileUrl($jobId) {
+    protected function _getFileUrl($jobId, $conversionStage) {
         
         $params = array(
             'id' => $jobId,
@@ -188,6 +192,35 @@ class XMLPSWrapper {
         );
         
         return $this->_buildRequestUrl('api/job/retrieve', $params);
+    }
+    
+    /**
+     * Get a job final stage archive zip file
+     * 
+     * @param $jobId int job id
+     * @param $filename Name for downloaded file
+     * @param $destinationDir Destination directory
+     * 
+     * @return string
+     */
+    public function downloadFile($jobId, $filename = 'documents.zip', $destinationDir = null)
+    {
+        if (is_null($destinationDir)) {
+            $destinationDir = sys_get_temp_dir();
+        }
+        
+        $fileUrl = $this->_getFileUrl($jobId, $conversionStage);
+        $filePath = rtrim($destinationDir, '/') . '/' . $filename;
+        
+        if (file_exists($filePath)) {
+            @unlink($filePath);
+        }
+        
+        if (!@copy($fileUrl, $filePath)) {
+            throw new Exception("Unable to copy from {$fileUrl} to {$filePath}");
+        }
+        
+        return $filePath;
     }
     
     /**
