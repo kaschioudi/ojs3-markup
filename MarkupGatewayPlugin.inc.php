@@ -21,6 +21,7 @@ class MarkupGatewayPlugin extends GatewayPlugin {
     /** @var $parentPluginName string Name of parent plugin */
     protected $parentPluginName = null;
     
+    protected $user = null;
     protected $plugin = null;
     protected $xmlpsWrapper = null;
 
@@ -193,12 +194,22 @@ class MarkupGatewayPlugin extends GatewayPlugin {
             exit;
         }
 
-        // Load submission
+        // load submission
         $fileId = isset($args['fileId']) ? (int) $args['fileId'] : false;
         if (!$fileId) {
             echo __('plugins.generic.markup.archive.no_articleID');
             exit;
         }
+        
+        // load user 
+        $userDao = DAORegistry::getDAO('UserDAO');
+        $userId = isset($args['userId']) ? (int) $args['userId'] : false;
+        if (!$userId) {
+            // TODO explicit error message
+            echo __('plugins.generic.markup.archive.no_articleID');
+            exit;
+        }
+        $this->user = $userDao->getById($args['userId']);
 
         $submissionFileDao = DAORegistry::getDAO('SubmissionFileDAO');
         $submissionFile = $submissionFileDao->getLatestRevision($fileId);
@@ -323,49 +334,32 @@ class MarkupGatewayPlugin extends GatewayPlugin {
      * @param $genreId int Genre ID 
      * @param $format string Asset format 
      * @param $fileName string File to process
-     * @param $overrideGalley boolean whether galley should be overriden
+     * @param $overrideGalley boolean whether galley should be overwritten
      *
      * @return object Submission file object 
      */
     function _addFileToGalley($existing_galley_by_labels, $submission, $genreId, $format, $filePath, $overrideGalley) {
-        $submissionId = $submission->getId();
         
-        // galley type
-        $galley_type = 'downloadablefilearticlegalleyplugin';
-        if ($format == 'pdf') {
-            $galley_type = 'pdfjsviewerplugin';
-        }
-        elseif ($format == 'html') {
-            $galley_type = 'htmlarticlegalleyplugin';
-        }
+        $submissionId = $submission->getId();
         
         $galleyFiles = [];
         $articleGalley = null;
-        $label = 'XMLPS ' . strtoupper($format);
-        if (!in_array($label, array_keys($existing_galley_by_labels))) {
-            // create new galley
-            $articleGalleyDao = DAORegistry::getDAO('ArticleGalleyDAO');
-            $articleGalley = $articleGalleyDao->newDataObject();
-            $articleGalley->setSubmissionId($submissionId);
-            $articleGalley->setLabel('XMLPS ' . strtoupper($format));
-            $articleGalley->setLocale($submission->getLocale());
-            $articleGalley->setGalleyType($galley_type);
-            $articleGalleyDao->insertObject($articleGalley);
-        }
-        else {
-            // work with existing
-            $articleGalley = $existing_galley_by_labels[$label];
-            
-            // if override enabled delete previous entry in the galley
-            $galleyFiles = $articleGalley->getLatestGalleyFiles();
-        }
+        $articleGalleyDao = DAORegistry::getDAO('ArticleGalleyDAO');
+        $label = 'XMLPS-' . strtoupper($format) . '-' .  date("MdSY@H:i",time());
         
+        // create new galley
+        $articleGalley = $articleGalleyDao->newDataObject();
+        $articleGalley->setSubmissionId($submissionId);
+        $articleGalley->setLabel($label);
+        $articleGalley->setLocale($submission->getLocale());
+        $articleGalleyDao->insertObject($articleGalley);
         
         $submissionFileDao = DAORegistry::getDAO('SubmissionFileDAO');
-        $submissionFile = $this->_getSubmissionFile($genreId, $galleyFiles, $overrideGalley);
-        
+        $submissionFile = $submissionFileDao->newDataObjectByGenreId($genreId);
+        $submissionFile->setUploaderUserId($this->user->getId());
         $submissionFile->setSubmissionId($submissionId);
         $submissionFile->setGenreId($genreId);
+        $submissionFile->setFileSize(filesize($filePath));
         $submissionFile->setFileStage(SUBMISSION_FILE_PROOF);
         $submissionFile->setDateUploaded(Core::getCurrentDate());
         $submissionFile->setDateModified(Core::getCurrentDate());
@@ -390,6 +384,10 @@ class MarkupGatewayPlugin extends GatewayPlugin {
         $submissionFile->setAssocId($articleGalley->getId());
         $insertedFile = $submissionFileDao->insertObject($submissionFile, $filePath, false);
         
+        // attach file id to galley
+        $articleGalley->setFileId($submissionFile->getFileId());
+        $articleGalleyDao->updateObject($articleGalley);
+        
         return $insertedFile;
     }
     
@@ -402,6 +400,7 @@ class MarkupGatewayPlugin extends GatewayPlugin {
      *
      * @return SubmissionFile Submission File object instance
      */
+    /* 
     protected function _getSubmissionFile ($genreId, $galleyFiles, $overrideGalley)
     {
         $submissionFileDao = DAORegistry::getDAO('SubmissionFileDAO');
@@ -421,6 +420,7 @@ class MarkupGatewayPlugin extends GatewayPlugin {
         $submissionFile->setRevision($revision);
         return $submissionFile;
     }
+    */
     
     /**
      * Extract zip a archive

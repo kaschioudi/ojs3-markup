@@ -70,9 +70,17 @@ class MarkupSettingsForm extends Form {
 
         $this->setData('cslStyle', $plugin->getSetting($journalId, 'cslStyle'));
         $this->setData('markupHostUser', $plugin->getSetting($journalId, 'markupHostUser'));
+        $this->setData('markupHostPass', $plugin->getSetting($journalId, 'markupHostPass'));
         $this->setData('markupHostURL', $plugin->getSetting($journalId, 'markupHostURL'));
         $this->setData('overrideGalley', $plugin->getSetting($journalId, 'overrideGalley'));
-        $this->setData('wantedFormats', $plugin->getSetting($journalId, 'wantedFormats'));
+        
+        // wanted formats
+        $wantedFormats = $plugin->getSetting($journalId, 'wantedFormats');
+        if (is_null($wantedFormats)) {
+            $wantedFormats = $this->plugin->getFormatList();
+        }
+        
+        $this->setData('wantedFormats', $wantedFormats);
     }
     
     /**
@@ -115,21 +123,20 @@ class MarkupSettingsForm extends Form {
      */
     function fetch($request) {
         $templateMgr = TemplateManager::getManager($request);
-        $templateMgr->assign('pluginName', $this->plugin->getName());
+        $templateMgr->assign('pluginJavaScriptURL', $this->plugin->getJsUrl($request));
         
+        $templateMgr->assign('pluginName', $this->plugin->getName());
         
         // Signals indicating plugin compatibility
         $templateMgr->assign('curlSupport', function_exists('curl_init') ? __('plugins.generic.markup.settings.installed') : __('plugins.generic.markup.settings.notInstalled'));
         $templateMgr->assign('zipSupport', extension_loaded('zlib') ? __('plugins.generic.markup.settings.installed') : __('plugins.generic.markup.settings.notInstalled'));
         $templateMgr->assign('pathInfo', Request::isPathInfoEnabled() ? __('plugins.generic.markup.settings.enabled') : __('plugins.generic.markup.settings.disabled'));
         
-        $additionalScriptPath = $this->plugin->getJsUrl(). 'MarkupSettingsFormHandler.js';
-        $templateMgr->addJavaScript($additionalScriptPath);
-        
         return parent::fetch($request);
     }
     
     function execute() {
+        
         $plugin = $this->plugin;
         $journalId = $this->journalId;
         

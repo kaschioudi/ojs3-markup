@@ -29,7 +29,7 @@
     <message key="plugins.generic.markup.archive.status">Document Markup Server returned: {$message} </message>
     <message key="plugins.generic.markup.archive.supp_file_missing">Although a "Document Markup Files" supplementary record exists, its file is missing.</message>
     <message key="plugins.generic.markup.archive.supp_missing">Article or its "Document Markup Files" supplementary file RECORD is missing. Try re-uploading the article to regenerate the markup files.</message>
-    <message key="plugins.generic.markup.description">When an author, copyeditor or editor uploads a new version (DOC/DOCX/ODT format) of an article, this module submits it to the document markup server specified in the settings. It then receives parsed and formatted XML, HTML and PDF galleys of the article.</message>
+    <message key="plugins.generic.markup.description">When an author, copyeditor or editor uploads a new version (DOC/DOCX/ODT format) of an article, this module submits it to the document markup server specified in the settings. It then receives parsed and formatted XML, HTML, EPUB and PDF galleys of the article.</message>
     <message key="plugins.generic.markup.displayName">Document Markup Plugin</message>
     <message key="plugins.generic.markup.error">Error!</message>
     <message key="plugins.generic.markup.errors.errorMessage">Unable to fetch article XML and HTML versions. The Document Markup plugin needs to be enabled and the citation style needs to be provided in Journal Settings.</message>
@@ -39,7 +39,7 @@
     <message key="plugins.generic.markup.optional.reviewVersion">Toggle for review version is optional.</message>
     <message key="plugins.generic.markup.required.cslStyle">Citation Style is required.</message>
     <message key="plugins.generic.markup.required.markupHostURL">Server address is required.</message>
-    <message key="plugins.generic.markup.required.overrideGalley">Specify whether existing documents must be overriden.</message>
+    <message key="plugins.generic.markup.required.overrideGalley">Specify whether existing documents must be overwritten.</message>
     <message key="plugins.generic.markup.required.wantedFormats">At least one document format must be selected.</message>
     <message key="plugins.generic.markup.settings">Settings</message>
     <message key="plugins.generic.markup.settings.cslStyle">Select Citation Style (CSL):</message>
@@ -53,7 +53,7 @@
     <message key="plugins.generic.markup.settings.enabled">Enabled</message>
     <message key="plugins.generic.markup.settings.installed">Installed</message>
     <message key="plugins.generic.markup.settings.markupHostAccountHelp">A user ID is required to use the conversion service. You can obtain one for free at <![CDATA[<a href="http://pkp-udev.lib.sfu.ca/" target="_blank">PKP Document Markup Service</a>]]>.</message>
-    <message key="plugins.generic.markup.settings.markupHostPass">Password:</message>
+    <message key="plugins.generic.markup.settings.markupHostPass">Token:</message>
     <message key="plugins.generic.markup.settings.markupHostURL">Document Markup Server:</message>
     <message key="plugins.generic.markup.settings.markupHostURLHelp">The journal will retrieve converted documents from this server URL. Normally you should not change this setting.</message>
     <message key="plugins.generic.markup.settings.markupHostUser">User ID:</message>
@@ -73,4 +73,6 @@
     <message key="plugins.generic.markup.settings.wantedFormatsHTML">HTML</message>
     <message key="plugins.generic.markup.settings.wantedFormatsPDF">PDF</message>
     <message key="plugins.generic.markup.settings.wantedFormatsEPUB">EPUB</message>
+    <message key="plugins.generic.markup.job.success">Your document has been successfuly submitted to document markup server. Transformation progress is available at: {$url}</message>
+    <message key="plugins.generic.markup.job.failure">Unable to submit your document to document markup server. Please make sure the plugin is correctly installed and configured.</message>
 </locale>

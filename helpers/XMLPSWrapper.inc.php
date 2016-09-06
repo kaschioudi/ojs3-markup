@@ -20,8 +20,10 @@ class XMLPSWrapper {
     const JOB_STATUS_PROCESSING = 1;
     const JOB_STATUS_COMPLETED = 2;
     
+    const DEFAULT_DEMO_HOST = 'http://pkp-xml-demo.lib.sfu.ca';
+    
     protected $username = null;
-    protected $password = null;
+    protected $token = null;
     protected $host = null;
     
     /**
@@ -29,18 +31,18 @@ class XMLPSWrapper {
      * 
      * @param $host string server hostname
      * @param $username string username
-     * @param $password string password
+     * @param $token string token
      * 
      */
-    public function __construct($host, $username = null, $password = null) {
+    public function __construct($host, $username = null, $token = null) {
         
         if (is_null($host) || empty($host)) {
-            throw new Exception('Server host name is required.');
+            $this->host = self::DEFAULT_DEMO_HOST;
         }
         
         $this->host = rtrim($host, '/');
         $this->username = $username;
-        $this->password = $password;
+        $this->token = $token;
     }
     
     /**
@@ -61,6 +63,21 @@ class XMLPSWrapper {
     }
     
     /**
+     * adds login credentials to array of parameters
+     *
+     * @params $params array parameters
+     * @returns array
+     */
+    protected function _withLoginCredentials($params) {
+        $credentials = array(
+            'email' => $this->username,
+            'access_token' => $this->token,
+        );
+        
+        return array_merge($params, $credentials);
+    }
+    
+    /**
      * Internal helper method that makes request to api endpoint
      * 
      * @param $endpoint string api endpoint
@@ -77,16 +94,11 @@ class XMLPSWrapper {
 
         if ($authRequired) {
             
-            if (empty($this->username) || empty($this->password)) {
-                throw new Exception('Login credentials (username & password) are required for server authentication.');
+            if (empty($this->username) || empty($this->token)) {
+                throw new Exception('Login credentials (username & token) are required for server authentication.');
             }
             
-            $credentials = array(
-                'email' => $this->username,
-                'password' => $this->password,
-            );
-            
-            $params = array_merge($params, $credentials);
+            $params = $this->_withLoginCredentials($params);
         }
         
         $apiUrl = null;
@@ -182,14 +194,14 @@ class XMLPSWrapper {
      * 
      * @return string
      */
-    protected function _getFileUrl($jobId, $conversionStage) {
+    protected function _getFileUrl($jobId) {
         
         $params = array(
             'id' => $jobId,
             'conversionStage' => self::JOB_CONVERSION_STAGE_ZIP,
-            'email' => $this->username,
-            'password' => $this->password,
         );
+        
+        $params = $this->_withLoginCredentials($params);
         
         return $this->_buildRequestUrl('api/job/retrieve', $params);
     }
@@ -209,7 +221,7 @@ class XMLPSWrapper {
             $destinationDir = sys_get_temp_dir();
         }
         
-        $fileUrl = $this->_getFileUrl($jobId, $conversionStage);
+        $fileUrl = $this->_getFileUrl($jobId);
         $filePath = rtrim($destinationDir, '/') . '/' . $filename;
         
         if (file_exists($filePath)) {

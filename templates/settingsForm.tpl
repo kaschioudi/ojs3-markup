@@ -7,8 +7,8 @@
 * Document Markup gateway plugin settings
 * TODO
 *}
+<script src="{$pluginJavaScriptURL}/MarkupSettingsFormHandler.js"></script>
 
-{$additionalHeadData}
 <script type="text/javascript">
     $(function() {ldelim}
         // Attach the form handler.
@@ -21,7 +21,7 @@
     {rdelim});
 </script>
 
-<form id="markupSettingsForm" class="pkp_form" method="post" action="{url router=$smarty.const.ROUTE_COMPONENT op="plugin" category="generic" plugin=$pluginName verb="save"}"  enctype="multipart/form-data" autocomplete="off">
+<form id="markupSettingsForm" class="pkp_form" method="post" action="{url router=$smarty.const.ROUTE_COMPONENT op="manage" category="generic" plugin=$pluginName verb="settings" save=true}"  enctype="multipart/form-data" autocomplete="off">
     
     {include file="controllers/notification/inPlaceNotification.tpl" notificationId="MarkupSettingsFormNotification"}
     

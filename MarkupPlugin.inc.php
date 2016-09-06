@@ -31,6 +31,17 @@ import('lib.pkp.classes.plugins.GenericPlugin');
 
 class MarkupPlugin extends GenericPlugin {
     
+    protected $format_list = ['html','epub','xml','pdf'];
+    
+    /**
+     * Returns list of available formats
+     *
+     * @return array format list
+     */
+    public function getFormatList() {
+        return $this->format_list;
+    }
+    
     /**
      * Get the system name of this plugin.
      * The name must be unique within its category.
@@ -60,14 +71,25 @@ class MarkupPlugin extends GenericPlugin {
     }
     
     /**
-     * Display verbs for the management interface.
+     * @see Plugin::getActions()
      */
-    function getManagementVerbs() {
-        $verbs = parent::getManagementVerbs();
-        if ($this->getEnabled()) {
-            $verbs[] = array('settings', __('plugins.generic.markup.settings'));
-        }
-        return $verbs;
+    function getActions($request, $verb) {
+        $router = $request->getRouter();
+        import('lib.pkp.classes.linkAction.request.AjaxModal');
+        return array_merge(
+            $this->getEnabled()?array(
+                new LinkAction(
+                    'settings',
+                    new AjaxModal(
+                        $router->url($request, null, null, 'manage', null, array('verb' => 'settings', 'plugin' => $this->getName(), 'category' => 'generic')),
+                        $this->getDisplayName()
+                    ),
+                    __('manager.plugins.settings'),
+                    null
+                ),
+            ):array(),
+            parent::getActions($request, $verb)
+        );
     }
     
     /**
@@ -120,11 +142,10 @@ class MarkupPlugin extends GenericPlugin {
         $file_stage = $args[8];
         $assoc_type = $args[12];
         
-        // trigger only for galley files @TODO
-        // if ($assoc_type != ASSOC_TYPE_GALLEY) {
-            // return;
-        // }
-        
+        // trigger only for production ready files
+        if ($file_stage != SUBMISSION_FILE_PRODUCTION_READY) {
+            return;
+        }        
         
         $genreDao = DAORegistry::getDAO('GenreDAO');
         $submissionFileDao = DAORegistry::getDAO('SubmissionFileDAO');
@@ -153,26 +174,30 @@ class MarkupPlugin extends GenericPlugin {
     function _triggerGatewayRetrieval($fileId, $galleyFlag = false) {
         
         $request = $this->getRequest();
-        $user = Request::getUser();
+        // $user = Request::getUser();
+        $user = $request->getUser();
 
-        $path = array(
-            'markupplugin',
-            'fileId', $fileId,
-            'userId', $user->getId()
-        );
-
-        $url = Request::url(null, 'gateway', 'plugin', null, array('MarkupGatewayPlugin', 'fileId', $fileId));
         $router = $request->getRouter();
         $dispatcher = $router->getDispatcher();
         $journal = $request->getJournal();
-        $url = $dispatcher->url($request, ROUTE_PAGE, $journal, 'gateway', 'plugin', array('MarkupGatewayPlugin','fileId', $fileId));
+        $url = $dispatcher->url($request, ROUTE_PAGE, $journal, 'gateway', 'plugin', array('MarkupGatewayPlugin','fileId', $fileId, 'userId', $user->getId()));
 
         $ch = curl_init();
         curl_setopt($ch, CURLOPT_URL, $url);
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
         curl_setopt($ch, CURLOPT_TIMEOUT_MS, 1000);
         curl_exec($ch);
+        
+        $url = $this->getSetting($journal->getid(), 'markupHostURL');
+        $notificationManager = new NotificationManager();
+        $notificationManager->createTrivialNotification(
+                $request->getUser()->getId(),
+                NOTIFICATION_TYPE_SUCCESS,
+                array('contents' => __('plugins.generic.markup.job.success', array('url' => $url)))
+        );
+        
         curl_close($ch);
+        
     }
     
     /**
@@ -207,8 +232,8 @@ class MarkupPlugin extends GenericPlugin {
      *
      * @return string Public plugin JS URL
      */
-    function getJsUrl() {
-        return parent::getPluginPath() . '/js/';
+    function getJsUrl($request) {
+        return $request->getBaseUrl() . '/' . $this->getPluginPath() . '/js';
     }
     
     /**
@@ -223,42 +248,78 @@ class MarkupPlugin extends GenericPlugin {
     /**
     * @see PKPPlugin::manage()
     */
-    function manage($verb, $args, &$message, &$messageParams, &$pluginModalContent = null) {
-        $returner = parent::manage($verb, $args, $message, $messageParams);
-        if (!$returner) return false;
+    // function manage($verb, $args, &$message, &$messageParams, &$pluginModalContent = null) {
+        // $returner = parent::manage($verb, $args, $message, $messageParams);
+        // if (!$returner) return false;
         
-        $request = $this->getRequest();
+        // $request = $this->getRequest();
+        // $this->import('MarkupSettingsForm');
+        
+        // $journal = $request->getJournal();
+        
+        // switch($verb) {
+            // case 'settings':
+                // $templateMgr = TemplateManager::getManager();
+                // $templateMgr->register_function('plugin_url', array(&$this, 'smartyPluginUrl'));
+                // $settingsForm = new MarkupSettingsForm($this, $journal->getid());
+                // $settingsForm->initData();
+                // $pluginModalContent = $settingsForm->fetch($request);
+                // break;
+                
+            // case 'save':
+                // $settingsForm = new MarkupSettingsForm($this, $journal->getid());
+                // $settingsForm->readInputData();
+                // if ($settingsForm->validate()) {
+                    // $settingsForm->execute();
+                    // $message = NOTIFICATION_TYPE_SUCCESS;
+                    // $messageParams = array('contents' => __('plugins.generic.markup.settings.saved'));
+                    // return false;
+                // } 
+                // else {
+                    // $pluginModalContent = $settingsForm->fetch($request);
+                // }
+                // break;
+                
+            // default:
+                // return $returner;
+        // }
+        // return true;
+    // }
+    
+    /**
+     * @see Plugin::manage()
+     */
+    function manage($args, $request) {
+        
         $this->import('MarkupSettingsForm');
-        
         $journal = $request->getJournal();
         
-        switch($verb) {
+        
+        switch ($request->getUserVar('verb')) {
             case 'settings':
-                $templateMgr = TemplateManager::getManager();
-                $templateMgr->register_function('plugin_url', array(&$this, 'smartyPluginUrl'));
-                $settingsForm = new MarkupSettingsForm($this, $journal->getid());
-                $settingsForm->initData();
-                $pluginModalContent = $settingsForm->fetch($request);
-                break;
-                
-            case 'save':
-                $settingsForm = new MarkupSettingsForm($this, $journal->getid());
-                $settingsForm->readInputData();
-                if ($settingsForm->validate()) {
-                    $settingsForm->execute();
-                    $message = NOTIFICATION_TYPE_SUCCESS;
-                    $messageParams = array('contents' => __('plugins.generic.markup.settings.saved'));
-                    return false;
-                } 
-                else {
-                    $pluginModalContent = $settingsForm->fetch($request);
+                $context = $request->getContext();
+                AppLocale::requireComponents(LOCALE_COMPONENT_APP_COMMON,  LOCALE_COMPONENT_PKP_MANAGER);
+                $templateMgr = TemplateManager::getManager($request);
+                $templateMgr->register_function('plugin_url', array($this, 'smartyPluginUrl'));
+                $form = new MarkupSettingsForm($this, $context->getId());
+                if ($request->getUserVar('save')) {
+                    $form->readInputData();
+                    if ($form->validate()) {
+                        $form->execute();
+                        $notificationManager = new NotificationManager();
+                        $notificationManager->createTrivialNotification(
+                                $request->getUser()->getId(),
+                                NOTIFICATION_TYPE_SUCCESS,
+                                array('contents' => __('plugins.generic.markup.settings.saved'))
+                        );
+                        return new JSONMessage(true);
+                    }
+                } else {
+                    $form->initData();
                 }
-                break;
-                
-            default:
-                return $returner;
+                return new JSONMessage(true, $form->fetch($request));
         }
-        return true;
+        return parent::manage($args, $request);
     }
     
     /**
