@@ -246,47 +246,6 @@ class MarkupPlugin extends GenericPlugin {
     }
     
     /**
-    * @see PKPPlugin::manage()
-    */
-    // function manage($verb, $args, &$message, &$messageParams, &$pluginModalContent = null) {
-        // $returner = parent::manage($verb, $args, $message, $messageParams);
-        // if (!$returner) return false;
-        
-        // $request = $this->getRequest();
-        // $this->import('MarkupSettingsForm');
-        
-        // $journal = $request->getJournal();
-        
-        // switch($verb) {
-            // case 'settings':
-                // $templateMgr = TemplateManager::getManager();
-                // $templateMgr->register_function('plugin_url', array(&$this, 'smartyPluginUrl'));
-                // $settingsForm = new MarkupSettingsForm($this, $journal->getid());
-                // $settingsForm->initData();
-                // $pluginModalContent = $settingsForm->fetch($request);
-                // break;
-                
-            // case 'save':
-                // $settingsForm = new MarkupSettingsForm($this, $journal->getid());
-                // $settingsForm->readInputData();
-                // if ($settingsForm->validate()) {
-                    // $settingsForm->execute();
-                    // $message = NOTIFICATION_TYPE_SUCCESS;
-                    // $messageParams = array('contents' => __('plugins.generic.markup.settings.saved'));
-                    // return false;
-                // } 
-                // else {
-                    // $pluginModalContent = $settingsForm->fetch($request);
-                // }
-                // break;
-                
-            // default:
-                // return $returner;
-        // }
-        // return true;
-    // }
-    
-    /**
      * @see Plugin::manage()
      */
     function manage($args, $request) {
