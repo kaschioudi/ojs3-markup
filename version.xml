@@ -9,10 +9,10 @@
   * Plugin version information.
 -->
 <version>
-        <application>markup</application>
-        <type>plugins.generic</type>
-        <release>1.0.2.0</release>
-        <date>2016-7-10</date>
-        <lazy-load>1</lazy-load>
-        <class>MarkupPlugin</class>
+		<application>markup</application>
+		<type>plugins.generic</type>
+		<release>1.0.2.0</release>
+		<date>2016-7-10</date>
+		<lazy-load>1</lazy-load>
+		<class>MarkupPlugin</class>
 </version>
