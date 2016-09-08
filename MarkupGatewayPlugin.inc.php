@@ -205,8 +205,7 @@ class MarkupGatewayPlugin extends GatewayPlugin {
 		$userDao = DAORegistry::getDAO('UserDAO');
 		$userId = isset($args['userId']) ? (int) $args['userId'] : false;
 		if (!$userId) {
-			// TODO explicit error message
-			echo __('plugins.generic.markup.archive.no_articleID');
+			fatalError(__('plugins.generic.markup.archive.no_articleID'));
 			exit;
 		}
 		$this->user = $userDao->getById($args['userId']);
