@@ -308,9 +308,6 @@ class MarkupGatewayPlugin extends GatewayPlugin {
 			$existing_galley_by_labels[$galley->getLabel()] = $galley;
 		}
 		
-		if (in_array('html', $wantedFormats)) {
-			$this->_addFileToGalley($existing_galley_by_labels, $submission, $genre->getId(), 'html', "{$extractionPath}/html/document.html", $overrideGalley);
-		}
 		if (in_array('pdf', $wantedFormats)) {
 			$this->_addFileToGalley($existing_galley_by_labels, $submission, $genre->getId(), 'pdf', "{$extractionPath}/document.pdf", $overrideGalley);
 		}
@@ -370,9 +367,6 @@ class MarkupGatewayPlugin extends GatewayPlugin {
 				break;
 			case 'epub':
 				$submissionFile->setFileType('application/epub+zip');
-				break;
-			case 'html':
-				$submissionFile->setFileType('text/html');
 				break;
 			case 'xml':
 				$submissionFile->setFileType('text/xml');
@@ -445,7 +439,6 @@ class MarkupGatewayPlugin extends GatewayPlugin {
 			'document.pdf',
 			'document.xml',
 			'document.epub',
-			'html.zip',
 		);
 		
 		// Extract the zip archive to a markup subdirectory
@@ -460,22 +453,6 @@ class MarkupGatewayPlugin extends GatewayPlugin {
 				)
 			);
 			return false;
-		}
-		
-		// If we got a html.zip extract this to html subdirectory
-		$htmlZipFile = $destination . '/html.zip';
-		if (file_exists($htmlZipFile)) {
-			if (!$this->_zipArchiveExtract($htmlZipFile, $destination . '/html', $message)) {
-				echo __(
-					'plugins.generic.markup.archive.bad_zip',
-					array(
-						'file' => $htmlZipFile,
-						'error' => $message
-					)
-				);
-				return false;
-			}
-			// unlink($htmlZipFile);
 		}
 		
 		return $destination;

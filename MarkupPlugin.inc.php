@@ -23,7 +23,7 @@
  * (NLM-XML3/JATS-compliant) document.html (web-viewable article version)
  *
  * This plugin extracts
- * the html, xml, epub and pdf versions and places them in the galley. 
+ * the xml, epub and pdf versions and places them in the galley. 
  *
  */
 
@@ -31,7 +31,7 @@ import('lib.pkp.classes.plugins.GenericPlugin');
 
 class MarkupPlugin extends GenericPlugin {
 	
-	protected $formatList = ['html','epub','xml','pdf'];
+	protected $formatList = ['epub','xml','pdf'];
 	
 	/**
 	 * Returns list of available formats

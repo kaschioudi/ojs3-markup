@@ -70,7 +70,6 @@
 	<message key="plugins.generic.markup.settings.wantedFormats">Document formats:</message>
 	<message key="plugins.generic.markup.settings.wantedFormatsHelp">Select documents formats.</message>
 	<message key="plugins.generic.markup.settings.wantedFormatsXML">XML</message>
-	<message key="plugins.generic.markup.settings.wantedFormatsHTML">HTML</message>
 	<message key="plugins.generic.markup.settings.wantedFormatsPDF">PDF</message>
 	<message key="plugins.generic.markup.settings.wantedFormatsEPUB">EPUB</message>
 	<message key="plugins.generic.markup.job.success">Your document has been successfuly submitted to document markup server. Transformation progress is available at: {$url}</message>

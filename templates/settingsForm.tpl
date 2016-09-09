@@ -63,12 +63,6 @@
 		{assign var="markupDocFormatXmlChecked" value=false}
 	{/if}
 	
-	{if 'html'|in_array:$wantedFormats}
-		{assign var="markupDocFormatHtmlChecked" value=true}
-	{else}
-		{assign var="markupDocFormatHtmlChecked" value=false}
-	{/if}
-	
 	{if 'pdf'|in_array:$wantedFormats}
 		{assign var="markupDocFormatPdfChecked" value=true}
 	{else}
@@ -83,7 +77,6 @@
 	
 	{fbvFormSection list=true description="plugins.generic.markup.settings.wantedFormats" description="plugins.generic.markup.settings.wantedFormatsHelp"}
 		{fbvElement type="checkbox" name="wantedFormats[]" id="markupDocFormatXml" value="xml" label="plugins.generic.markup.settings.wantedFormatsXML" checked=$markupDocFormatXmlChecked}
-		{fbvElement type="checkbox" name="wantedFormats[]" id="markupDocFormatHtml" value="html" label="plugins.generic.markup.settings.wantedFormatsHTML" checked=$markupDocFormatHtmlChecked}
 		{fbvElement type="checkbox" name="wantedFormats[]" id="markupDocFormatPdf" value="pdf" label="plugins.generic.markup.settings.wantedFormatsPDF" checked=$markupDocFormatPdfChecked}
 		{fbvElement type="checkbox" name="wantedFormats[]" id="markupDocFormatEpub" value="epub" label="plugins.generic.markup.settings.wantedFormatsEPUB" checked=$markupDocFormatEpubChecked}
 	{/fbvFormSection}
