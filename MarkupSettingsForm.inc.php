@@ -46,7 +46,6 @@ class MarkupSettingsForm extends Form {
 			'markupHostPass' => 'string',
 			'markupHostURL' => 'string',
 			'markupHostUser' => 'string',
-			'overrideGalley' => 'bool',
 			'wantedFormats' => 'object',
 		);
 	}
@@ -72,7 +71,6 @@ class MarkupSettingsForm extends Form {
 		$this->setData('markupHostUser', $plugin->getSetting($journalId, 'markupHostUser'));
 		$this->setData('markupHostPass', $plugin->getSetting($journalId, 'markupHostPass'));
 		$this->setData('markupHostURL', $plugin->getSetting($journalId, 'markupHostURL'));
-		$this->setData('overrideGalley', $plugin->getSetting($journalId, 'overrideGalley'));
 		
 		// wanted formats
 		$wantedFormats = $plugin->getSetting($journalId, 'wantedFormats');
@@ -95,7 +93,6 @@ class MarkupSettingsForm extends Form {
 				'markupHostPass',
 				'markupHostURL',
 				'markupHostUser',
-				'overrideGalley',
 				'wantedFormats',
 			)
 		);
@@ -112,7 +109,6 @@ class MarkupSettingsForm extends Form {
 		$this->addCheck(new FormValidator($this, 'markupHostPass', 'optional', 'plugins.generic.markup.optional.markupHostPass'));
 		$this->addCheck(new FormValidator($this, 'markupHostURL', 'required', 'plugins.generic.markup.required.markupHostURL'));
 		$this->addCheck(new FormValidator($this, 'markupHostUser', 'optional', 'plugins.generic.markup.optional.markupHostUrl'));
-		$this->addCheck(new FormValidator($this, 'overrideGalley', 'required', 'plugins.generic.markup.required.overrideGalley'));
 		$this->addCheck(new FormValidator($this, 'wantedFormats', 'required', 'plugins.generic.markup.required.wantedFormats'));
 
 		return parent::validate();
@@ -154,7 +150,6 @@ class MarkupSettingsForm extends Form {
 		$plugin->updateSetting($journalId, 'markupHostURL', $markupHostURL);
 		$plugin->updateSetting($journalId, 'markupHostUser', $this->getData('markupHostUser'));
 		$plugin->updateSetting($journalId, 'markupHostPass', $this->getData('markupHostPass'));
-		$plugin->updateSetting($journalId, 'overrideGalley', $this->getData('overrideGalley'));
 		$plugin->updateSetting($journalId, 'wantedFormats', $this->getData('wantedFormats'));
 	}
 }

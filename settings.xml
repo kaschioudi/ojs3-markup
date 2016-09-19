@@ -2,10 +2,6 @@
 <!DOCTYPE plugin_settings SYSTEM "../../../lib/pkp/dtd/pluginSettings.dtd">
 
 <plugin_settings>
-	<setting type="bool">
-			<name>overrideGalley</name>
-			<value>false</value>
-	</setting>
 	<setting type="object">
 			<name>wantedFormats</name>
 			<value>

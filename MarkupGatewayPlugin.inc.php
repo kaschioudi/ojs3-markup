@@ -295,7 +295,6 @@ class MarkupGatewayPlugin extends GatewayPlugin {
 		$plugin = $this->getMarkupPlugin();
 		
 		$wantedFormats = $plugin->getSetting($journalId, 'wantedFormats');
-		$overrideGalley = (bool) intval($plugin->getSetting($journalId, 'overrideGalley'));
 		
 		$genreDao = DAORegistry::getDAO('GenreDAO');
 		$genre = $genreDao->getByKey('SUBMISSION', $journalId);
@@ -309,13 +308,13 @@ class MarkupGatewayPlugin extends GatewayPlugin {
 		}
 		
 		if (in_array('pdf', $wantedFormats)) {
-			$this->_addFileToGalley($existing_galley_by_labels, $submission, $genre->getId(), 'pdf', "{$extractionPath}/document.pdf", $overrideGalley);
+			$this->_addFileToGalley($existing_galley_by_labels, $submission, $genre->getId(), 'pdf', "{$extractionPath}/document.pdf");
 		}
 		if (in_array('xml', $wantedFormats)) {
-			$this->_addFileToGalley($existing_galley_by_labels, $submission, $genre->getId(), 'xml', "{$extractionPath}/document.xml", $overrideGalley);
+			$this->_addFileToGalley($existing_galley_by_labels, $submission, $genre->getId(), 'xml', "{$extractionPath}/document.xml");
 		}
 		if (in_array('epub', $wantedFormats)) {
-			$this->_addFileToGalley($existing_galley_by_labels, $submission, $genre->getId(), 'epub', "{$extractionPath}/document.epub", $overrideGalley);
+			$this->_addFileToGalley($existing_galley_by_labels, $submission, $genre->getId(), 'epub', "{$extractionPath}/document.epub");
 		}
 		
 		@unlink($tmpZipFile);
@@ -330,11 +329,10 @@ class MarkupGatewayPlugin extends GatewayPlugin {
 	 * @param $genreId int Genre ID 
 	 * @param $format string Asset format 
 	 * @param $fileName string File to process
-	 * @param $overrideGalley boolean whether galley should be overwritten
 	 *
 	 * @return object Submission file object 
 	 */
-	function _addFileToGalley($existing_galley_by_labels, $submission, $genreId, $format, $filePath, $overrideGalley) {
+	function _addFileToGalley($existing_galley_by_labels, $submission, $genreId, $format, $filePath) {
 		
 		$submissionId = $submission->getId();
 		

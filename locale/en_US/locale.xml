@@ -39,7 +39,6 @@
 	<message key="plugins.generic.markup.optional.reviewVersion">Toggle for review version is optional.</message>
 	<message key="plugins.generic.markup.required.cslStyle">Citation Style is required.</message>
 	<message key="plugins.generic.markup.required.markupHostURL">Server address is required.</message>
-	<message key="plugins.generic.markup.required.overrideGalley">Specify whether existing documents must be overwritten.</message>
 	<message key="plugins.generic.markup.required.wantedFormats">At least one document format must be selected.</message>
 	<message key="plugins.generic.markup.settings">Settings</message>
 	<message key="plugins.generic.markup.settings.cslStyle">Select Citation Style (CSL):</message>
@@ -63,10 +62,6 @@
 	<message key="plugins.generic.markup.settings.saved">Settings saved!</message>
 	<message key="plugins.generic.markup.settings.zipSupport">PHP Unzip Support:</message>
 	<message key="plugins.generic.markup.settings.zipSupportHelp">PHP zlib needs to be installed on your OJS server. This plugin uses zlib to unzip the Document Markup Server files.</message>
-	<message key="plugins.generic.markup.settings.overrideGalley">Galley override:</message>
-	<message key="plugins.generic.markup.settings.overrideGalleyNo">Do not override documents</message>
-	<message key="plugins.generic.markup.settings.overrideGalleyYes">Override documents</message>
-	<message key="plugins.generic.markup.settings.overrideGalleyFieldHelp">Whether existing documents in galley must be overridden or not on new layout upload.</message>
 	<message key="plugins.generic.markup.settings.wantedFormats">Document formats:</message>
 	<message key="plugins.generic.markup.settings.wantedFormatsHelp">Select documents formats.</message>
 	<message key="plugins.generic.markup.settings.wantedFormatsXML">XML</message>

@@ -45,18 +45,6 @@
 		{fbvElement type="select" id="cslStyle"}
 	{/fbvFormSection}
 	
-	{if $overrideGalley eq false}
-		{assign var="noChecked" value=true}
-		{assign var="yesChecked" value=false}
-	{else}
-		{assign var="noChecked" value=false}
-		{assign var="yesChecked" value=true}
-	{/if}
-	{fbvFormSection list=true description="plugins.generic.markup.settings.overrideGalley" description="plugins.generic.markup.settings.overrideGalleyFieldHelp"}
-		{fbvElement type="radio" name="overrideGalley" id="overrideGalleyNo" value="0" label="plugins.generic.markup.settings.overrideGalleyNo" checked=$noChecked}
-		{fbvElement type="radio" name="overrideGalley" id="overrideGalleyYes" value="1" label="plugins.generic.markup.settings.overrideGalleyYes" checked=$yesChecked}
-	{/fbvFormSection}
-	
 	{if 'xml'|in_array:$wantedFormats}
 		{assign var="markupDocFormatXmlChecked" value=true}
 	{else}
