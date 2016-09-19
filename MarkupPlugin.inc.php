@@ -144,7 +144,7 @@ class MarkupPlugin extends GenericPlugin {
 		
 		// trigger only for production ready files
 		if ($file_stage != SUBMISSION_FILE_PRODUCTION_READY) {
-			return;
+			return false;
 		}        
 		
 		$genreDao = DAORegistry::getDAO('GenreDAO');
