@@ -141,18 +141,23 @@ class XMLPSWrapper {
 	 * @param $fileName string file name
 	 * @param $fileContent string content
 	 * @param $citationStyleHash string citation style hash
+	 * @param $metadata document metadata
 	 * 
 	 * @return int
 	 * 
 	 * @throws Exception When response status is not equal to success.
 	 */
-	public function submitJob($fileName, $fileContent, $citationStyleHash) {
+	public function submitJob($fileName, $fileContent, $citationStyleHash, array $metadata = null) {
 		
-		$params = array(
+	    $params = array(
 			'fileName' => $fileName,
 			'fileContent' => $fileContent,
 			'citationStyleHash' => $citationStyleHash,
 		);
+	    
+	    if (!is_null($metadata)) {
+	       $params['fileMetadata'] = json_encode($metadata);
+	    }
 		
 		$response = $this->_makeApiRequest('api/job/submit', $params, true, true);
 		
