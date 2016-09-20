@@ -223,30 +223,30 @@ class MarkupGatewayPlugin extends GatewayPlugin {
 	
 	/**
 	 * Build an array of metadata about submitted file
-	 * @param $journal mixed Journal
-	 * @param $submission mixed Submission
+	 * @param $journal Journal Journal
+	 * @param $submission Submission Submission
 	 *
 	 * @return array
 	 */
 	protected function _buildMetadata($journal, $submission)
 	{
-	    $locale = AppLocale::getLocale();
-	    
-	    $authors = array_map(function($author)
-	    {
-	        return [
-	                'name' => $author->getFullName(),
-	                'email' => $author->getEmail(),
-	        ];
-	    }, $submission->getAuthors());
-	    
-	    return [
-            'article-title'     => $submission->getTitle($locale),
-            'abstract'          => $submission->getAbstract($locale),
-            'journal-title'     => $journal->getName($locale),
-            'institution'       => $journal->getSetting('publisherInstitution'),
-            'contributors'      => $authors,
-	    ];
+		$locale = AppLocale::getLocale();
+
+		$authors = array_map(function($author)
+		{
+			return array (
+					'name' => $author->getFullName(),
+					'email' => $author->getEmail(),
+			);
+		}, $submission->getAuthors());
+
+		return array (
+				'article-title'     => $submission->getTitle($locale),
+				'abstract'          => $submission->getAbstract($locale),
+				'journal-title'     => $journal->getName($locale),
+				'institution'       => $journal->getSetting('publisherInstitution'),
+				'contributors'      => $authors,
+		);
 	}
 	
 	/**
@@ -273,8 +273,8 @@ class MarkupGatewayPlugin extends GatewayPlugin {
 		$tmpZipFile = null;
 		
 		try {
-		    $metadata = $this->_buildMetadata($journal, $submission);
-		    
+			$metadata = $this->_buildMetadata($journal, $submission);
+
 			$jobId = $this->xmlpsWrapper->submitJob($filename, $fileContent, $citationStyle, $metadata);
 			
 			// retrieve job archive from markup server
