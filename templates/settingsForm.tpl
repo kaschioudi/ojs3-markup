@@ -15,27 +15,35 @@
 		$('#markupSettingsForm').pkpHandler(
 			'$.pkp.plugins.markup.js.MarkupSettingsFormHandler',
 			{ldelim}
-				cslStyleSelection: '{$cslStyle|escape}'
+				cslStyleSelection: '{$cslStyle|escape}',
+				selectedAuthType: '{$authType|escape}'
 			{rdelim}
 		);
 	{rdelim});
 </script>
 
-<form id="markupSettingsForm" class="pkp_form" method="post" action="{url router=$smarty.const.ROUTE_COMPONENT op="manage" category="generic" plugin=$pluginName verb="settings" save=true}"  enctype="multipart/form-data" autocomplete="off">
+<form id="markupSettingsForm" class="pkp_form" method="post" action="{url router=$smarty.const.ROUTE_PAGE op="settings" save=true}"  enctype="multipart/form-data" autocomplete="off">
 	
 	{include file="controllers/notification/inPlaceNotification.tpl" notificationId="MarkupSettingsFormNotification"}
 	
 	
 	{fbvFormSection description="plugins.generic.markup.settings.markupHostAccountHelp"}{/fbvFormSection}
 	
-	{fbvFormSection for="markupHostUser " title="plugins.generic.markup.settings.markupHostUser"}
-		{fbvElement type="text" id="markupHostUser" value=$markupHostUser|escape}
+	{fbvFormSection list=true title="plugins.generic.markup.settings.authType" description="plugins.generic.markup.settings.authTypeFieldHelp"}
+		{if $authType eq 'site'}
+			 {assign var="siteChecked" value=true}
+			 {assign var="userChecked" value=false}
+		{else}
+			{assign var="siteChecked" value=false}
+			{assign var="userChecked" value=true}
+		{/if}
+		{fbvElement type="radio" name="authType" id="authTypeSite" value="site" label="plugins.generic.markup.settings.authTypeSite" checked=$siteChecked}
+		{fbvElement type="radio" name="authType" id="authTypeUser" value="user" label="plugins.generic.markup.settings.authTypeUser" checked=$userChecked}
 	{/fbvFormSection}
 	
-	{fbvFormSection title="plugins.generic.markup.settings.markupHostPass"}
-		{fbvElement type="text" password=true id="markupHostPass" value=$markupHostPass|escape}
-	{/fbvFormSection}
-	
+	{fbvFormArea id="siteAuthArea" title="plugins.generic.markup.settings.siteAuthArea"}
+		{include file="`$templatePath`credentialsForm.tpl"}
+	{/fbvFormArea}
 	
 	{fbvFormSection title="plugins.generic.markup.settings.markupHostURL" description="plugins.generic.markup.settings.markupHostURLHelp"}
 		{fbvElement type="text" id="markupHostURL" value=$markupHostURL|escape class="markupHostURL"}
@@ -68,18 +76,23 @@
 		{fbvElement type="checkbox" name="wantedFormats[]" id="markupDocFormatPdf" value="pdf" label="plugins.generic.markup.settings.wantedFormatsPDF" checked=$markupDocFormatPdfChecked}
 		{fbvElement type="checkbox" name="wantedFormats[]" id="markupDocFormatEpub" value="epub" label="plugins.generic.markup.settings.wantedFormatsEPUB" checked=$markupDocFormatEpubChecked}
 	{/fbvFormSection}
-
-	<dl>
-		<dt>{fieldLabel key="plugins.generic.markup.settings.curlSupport"}</dt>
-		<dd><strong>{$curlSupport|escape}</strong><br/>{translate key="plugins.generic.markup.settings.curlSupportHelp"}</dd>
-		
-		<dt>{fieldLabel key="plugins.generic.markup.settings.zipSupport"}</dt>
-		<dd><strong>{$zipSupport|escape}</strong><br/>{translate key="plugins.generic.markup.settings.zipSupportHelp"}</dd>
-		
-		<dt>{fieldLabel key="plugins.generic.markup.settings.pathInfo"}</dt>
-		<dd><strong>{$pathInfo|escape}</strong><br/>{translate key="plugins.generic.markup.settings.pathInfoHelp"}</dd>
-	</dl>
 	
+	{fbvFormSection list=true description="plugins.generic.markup.settings.conversionStages" description="plugins.generic.markup.settings.conversionStagesHelp"}
+		{fbvElement type="checkbox" name="xmlConversionStages[]" id="conversionSubmissionStage" value=$smarty.const.WORKFLOW_STAGE_ID_SUBMISSION label="manager.publication.submissionStage" checked=$smarty.const.WORKFLOW_STAGE_ID_SUBMISSION|@in_array:$xmlConversionStages}
+		{fbvElement type="checkbox" name="xmlConversionStages[]" id="conversionReviewStage" value=$smarty.const.WORKFLOW_STAGE_ID_INTERNAL_REVIEW label="workflow.review.internalReview" checked=$smarty.const.WORKFLOW_STAGE_ID_INTERNAL_REVIEW|@in_array:$xmlConversionStages}
+		{fbvElement type="checkbox" name="xmlConversionStages[]" id="conversionReviewStage" value=$smarty.const.WORKFLOW_STAGE_ID_EXTERNAL_REVIEW label="manager.publication.reviewStage" checked=$smarty.const.WORKFLOW_STAGE_ID_EXTERNAL_REVIEW|@in_array:$xmlConversionStages}
+		{fbvElement type="checkbox" name="xmlConversionStages[]" id="conversionEditorialStage" value=$smarty.const.WORKFLOW_STAGE_ID_EDITING label="manager.publication.editorialStage" checked=$smarty.const.WORKFLOW_STAGE_ID_EDITING|@in_array:$xmlConversionStages}
+		{fbvElement type="checkbox" name="xmlConversionStages[]" id="conversionProductionStage" value=$smarty.const.WORKFLOW_STAGE_ID_PRODUCTION label="manager.publication.productionStage" checked=$smarty.const.WORKFLOW_STAGE_ID_PRODUCTION|@in_array:$xmlConversionStages}
+	{/fbvFormSection}
+
+	{fbvFormSection list=true description="plugins.generic.markup.settings.editWithSubstanceStages" description="plugins.generic.markup.settings.editWithSubstanceStagesHelp"}
+		{fbvElement type="checkbox" name="editWithSubstanceStages[]" id="editWithSubstanceSubmissionStage" value=$smarty.const.WORKFLOW_STAGE_ID_SUBMISSION label="manager.publication.submissionStage" checked=$smarty.const.WORKFLOW_STAGE_ID_SUBMISSION|@in_array:$editWithSubstanceStages}
+		{fbvElement type="checkbox" name="editWithSubstanceStages[]" id="editWithSubstanceReviewStage" value=$smarty.const.WORKFLOW_STAGE_ID_INTERNAL_REVIEW label="workflow.review.internalReview" checked=$smarty.const.WORKFLOW_STAGE_ID_INTERNAL_REVIEW|@in_array:$editWithSubstanceStages}
+		{fbvElement type="checkbox" name="editWithSubstanceStages[]" id="editWithSubstanceReviewStage" value=$smarty.const.WORKFLOW_STAGE_ID_EXTERNAL_REVIEW label="manager.publication.reviewStage" checked=$smarty.const.WORKFLOW_STAGE_ID_EXTERNAL_REVIEW|@in_array:$editWithSubstanceStages}
+		{fbvElement type="checkbox" name="editWithSubstanceStages[]" id="editWithSubstanceEditorialStage" value=$smarty.const.WORKFLOW_STAGE_ID_EDITING label="manager.publication.editorialStage" checked=$smarty.const.WORKFLOW_STAGE_ID_EDITING|@in_array:$editWithSubstanceStages}
+		{fbvElement type="checkbox" name="editWithSubstanceStages[]" id="editWithSubstanceProductionStage" value=$smarty.const.WORKFLOW_STAGE_ID_PRODUCTION label="manager.publication.productionStage" checked=$smarty.const.WORKFLOW_STAGE_ID_PRODUCTION|@in_array:$editWithSubstanceStages}
+	{/fbvFormSection}
+
 	{fbvFormButtons id="markupFormSubmit" submitText="common.save" hideCancel=true}
 	
 </form>

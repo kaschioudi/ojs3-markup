@@ -31,8 +31,15 @@ import('lib.pkp.classes.plugins.GenericPlugin');
 
 class MarkupPlugin extends GenericPlugin {
 	
-	protected $formatList = ['epub','xml','pdf'];
-	
+	/** @var $formatList array Default list of wanted formats */
+	protected $formatList = array('epub','xml','pdf');
+
+	/** @var $conversionStages array Default list of stages for convert to xml feature */
+	protected $xmlConversionStages = array(WORKFLOW_STAGE_ID_SUBMISSION,WORKFLOW_STAGE_ID_INTERNAL_REVIEW,WORKFLOW_STAGE_ID_EXTERNAL_REVIEW,WORKFLOW_STAGE_ID_EDITING,WORKFLOW_STAGE_ID_PRODUCTION);
+
+	/** @var $editWithSubstanceStages array Default list of stages for edit with substance feature */
+	protected $editWithSubstanceStages = array(WORKFLOW_STAGE_ID_SUBMISSION,WORKFLOW_STAGE_ID_INTERNAL_REVIEW,WORKFLOW_STAGE_ID_EXTERNAL_REVIEW,WORKFLOW_STAGE_ID_EDITING,WORKFLOW_STAGE_ID_PRODUCTION);
+
 	/**
 	 * Returns list of available formats
 	 *
@@ -40,6 +47,24 @@ class MarkupPlugin extends GenericPlugin {
 	 */
 	public function getFormatList() {
 		return $this->formatList;
+	}
+
+	/**
+	 * Returns default list of stages for convert to xml feature
+	 *
+	 * @return array Default list of stages for convert to xml feature
+	 */
+	public function getXmlConversionStages() {
+		return $this->xmlConversionStages;
+	}
+
+	/**
+	 * Returns default list of stages for edit with substance feature
+	 *
+	 * @return array Default list of stages for edit with substance feature
+	 */
+	public function getEditWithSubstanceStages() {
+		return $this->editWithSubstanceStages;
 	}
 	
 	/**
@@ -70,27 +95,6 @@ class MarkupPlugin extends GenericPlugin {
 		return __('plugins.generic.markup.description');
 	}
 	
-	/**
-	 * @see Plugin::getActions()
-	 */
-	function getActions($request, $verb) {
-		$router = $request->getRouter();
-		import('lib.pkp.classes.linkAction.request.AjaxModal');
-		return array_merge(
-			$this->getEnabled()?array(
-				new LinkAction(
-					'settings',
-					new AjaxModal(
-						$router->url($request, null, null, 'manage', null, array('verb' => 'settings', 'plugin' => $this->getName(), 'category' => 'generic')),
-						$this->getDisplayName()
-					),
-					__('manager.plugins.settings'),
-					null
-				),
-			):array(),
-			parent::getActions($request, $verb)
-		);
-	}
 	
 	/**
 	 * Register the plugin
@@ -104,9 +108,17 @@ class MarkupPlugin extends GenericPlugin {
 		
 		if (parent::register($category, $path)) {
 			if ($this->getEnabled()) {
+				$this->import('classes.MarkupJobInfoDAO');
+
+				$markupJobInfoDao = new MarkupJobInfoDAO($this);
+				DAORegistry::registerDAO('MarkupJobInfoDAO', $markupJobInfoDao);
+
 				// Register callbacks.
+				HookRegistry::register('LoadHandler', array($this, 'callbackLoadHandler'));
+				HookRegistry::register('TemplateManager::fetch', array($this, 'templateFetchCallback'));
 				HookRegistry::register('PluginRegistry::loadCategory', array($this, 'callbackLoadCategory'));
-				HookRegistry::register('submissionfiledaodelegate::_updateobject', array($this, 'fileToMarkupCallback'));
+				HookRegistry::register('Templates::Management::Settings::website', array($this, 'callbackShowWebsiteSettingsTabs'));
+				HookRegistry::register('Templates::User::profile', array($this, 'callbackUserProfile'));
 			}
 			return true;
 		}
@@ -124,80 +136,6 @@ class MarkupPlugin extends GenericPlugin {
 			$gatewayPlugin = new MarkupGatewayPlugin($this->getName());
 			$plugins[$gatewayPlugin->getSeq()][$gatewayPlugin->getPluginPath()] =& $gatewayPlugin;
 		}
-	}
-	
-	/**
-	 * Trigger document conversion from various hooks for editor, section
-	 * editor, layout editor etc. uploading of documents.
-	 *
-	 * @param string $hookName Name of the hook
-	 * @param array $params [article object , ...]
-	 *
-	 * @return void
-	 */
-	function fileToMarkupCallback($hookName, $params) {
-		
-		$args = $params[1];
-		$fileId = $args[0];
-		$file_stage = $args[8];
-		$assoc_type = $args[12];
-		
-		// trigger only for production ready files
-		if ($file_stage != SUBMISSION_FILE_PRODUCTION_READY) {
-			return false;
-		}        
-		
-		$genreDao = DAORegistry::getDAO('GenreDAO');
-		$submissionFileDao = DAORegistry::getDAO('SubmissionFileDAO');
-		$submissionFile = $submissionFileDao->getLatestRevision($fileId);
-		$filePath = $submissionFile->getFilePath();
-		$mediaType = $submissionFile->getFileType();
-		
-		$genre = $genreDao->getById($submissionFile->getGenreId());
-		if ($genre->getSupplementary()) {
-			return;
-		}
-		
-		// Trigger the conversion and retrieval of the converted document
-		$this->_triggerGatewayRetrieval($fileId, true);
-	}
-	
-	/**
-	 * Triggers the retrieval of the converted document via
-	 * MarkupGatewayPlugin::fetch()
-	 *
-	 * @param $fileId int fileId to retrieve converted archive for
-	 * @param $galleyFlag bool Whether or nor to create the galleys too
-	 *
-	 * @return void
-	 */
-	function _triggerGatewayRetrieval($fileId, $galleyFlag = false) {
-		
-		$request = $this->getRequest();
-		// $user = Request::getUser();
-		$user = $request->getUser();
-
-		$router = $request->getRouter();
-		$dispatcher = $router->getDispatcher();
-		$journal = $request->getJournal();
-		$url = $dispatcher->url($request, ROUTE_PAGE, $journal, 'gateway', 'plugin', array('MarkupGatewayPlugin','fileId', $fileId, 'userId', $user->getId()));
-
-		$ch = curl_init();
-		curl_setopt($ch, CURLOPT_URL, $url);
-		curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
-		curl_setopt($ch, CURLOPT_TIMEOUT_MS, 1000);
-		curl_exec($ch);
-		
-		$url = $this->getSetting($journal->getid(), 'markupHostURL');
-		$notificationManager = new NotificationManager();
-		$notificationManager->createTrivialNotification(
-				$request->getUser()->getId(),
-				NOTIFICATION_TYPE_SUCCESS,
-				array('contents' => __('plugins.generic.markup.job.success', array('url' => $url)))
-		);
-		
-		curl_close($ch);
-		
 	}
 	
 	/**
@@ -235,6 +173,15 @@ class MarkupPlugin extends GenericPlugin {
 	function getJsUrl($request) {
 		return $request->getBaseUrl() . '/' . $this->getPluginPath() . '/js';
 	}
+
+	/**
+	 * Get texture editor folder url
+	 *
+	 * @return string url to texture folder
+	 */
+	function getTextureFolderUrl($request) {
+		return $request->getBaseUrl() . '/' . $this->getPluginPath() . '/texture';
+	}
 	
 	/**
 	 * Override the builtin to get the correct template path.
@@ -252,8 +199,7 @@ class MarkupPlugin extends GenericPlugin {
 		
 		$this->import('MarkupSettingsForm');
 		$journal = $request->getJournal();
-		
-		
+
 		switch ($request->getUserVar('verb')) {
 			case 'settings':
 				$context = $request->getContext();
@@ -267,9 +213,9 @@ class MarkupPlugin extends GenericPlugin {
 						$form->execute();
 						$notificationManager = new NotificationManager();
 						$notificationManager->createTrivialNotification(
-								$request->getUser()->getId(),
-								NOTIFICATION_TYPE_SUCCESS,
-								array('contents' => __('plugins.generic.markup.settings.saved'))
+							$request->getUser()->getId(),
+							NOTIFICATION_TYPE_SUCCESS,
+							array('contents' => __('plugins.generic.markup.settings.saved'))
 						);
 						return new JSONMessage(true);
 					}
@@ -282,21 +228,232 @@ class MarkupPlugin extends GenericPlugin {
 	}
 	
 	/**
-	 * @see Plugin::getManagementVerbLinkAction()
+	 * Extend the website settings tabs to include markup settings
+	 * @param $hookName string The name of the invoked hook
+	 * @param $args array Hook parameters
+	 * @return boolean Hook handling status
 	 */
-	function getManagementVerbLinkAction($request, $verb) {
-		$router = $request->getRouter();
+	public function callbackShowWebsiteSettingsTabs($hookName, $args) {
+		$output =& $args[2];
+		$request =& Registry::get('request');
+		$dispatcher = $request->getDispatcher();
+		$output .= '<li><a name="markup" href="' . $dispatcher->url($request, ROUTE_PAGE, null, 'markup', 'settings') . '">' . __('plugins.generic.markup.settings') . '</a></li>';
+		return false;
+	}
 
-		list($verbName, $verbLocalized) = $verb;
+	/**
+	 * @see PKPPageRouter::route()
+	 */
+	public function callbackLoadHandler($hookName, $args) {
+		// Check the page.
+		$page = $args[0];
+		if ($page !== 'markup') return;
 
-		if ($verbName === 'settings') {
-			import('lib.pkp.classes.linkAction.request.AjaxModal');
-			$actionRequest = new AjaxModal(
-				$router->url($request, null, null, 'plugin', null, array('verb' => 'settings', 'plugin' => $this->getName(), 'category' => 'generic')),
-				$this->getDisplayName()
+		// Check the operation.
+		$op = $args[1];
+
+		if ($op == 'settings') { // settings tab
+			define('HANDLER_CLASS', 'MarkupSettingsTabHandler');
+			$args[2] = $this->getPluginPath() . '/' . 'MarkupSettingsTabHandler.inc.php';
+		}
+		else {
+			$publicOps = array(
+				'convertToXml',
+				'generateGalleyFiles',
+				'editor',
+				'xml',
+				'save',
+				'profile',
+				'triggerConversion',
+				'fetchConversionJobStatus',
 			);
-			return new LinkAction($verbName, $actionRequest, $verbLocalized, null);
+
+			if (!in_array($op, $publicOps)) return;
+
+			// Get the journal object from the context (optimized).
+			$request = $this->getRequest();
+			$router = $request->getRouter();
+			$journal = $router->getContext($request); /* @var $journal Journal */
+
+			// Looks as if our handler had been requested.
+			define('HANDLER_CLASS', 'MarkupHandler');
+
+			// set handler file path
+			$args[2] = $this->getPluginPath() . '/' . 'MarkupHandler.inc.php';
+		}
+	}
+
+	/**
+	 * Adds additional links to submission files grid row
+	 * @param $hookName string The name of the invoked hook
+	 * @param $args array Hook parameters
+	 */
+	public function templateFetchCallback($hookName, $params) {
+		$request = $this->getRequest();
+		$router = $request->getRouter();
+		$dispatcher = $router->getDispatcher();
+		$journal = $request->getJournal();
+		$journalId = $journal->getId();
+
+		$templateMgr = $params[0];
+		$resourceName = $params[1];
+		if ($resourceName == 'controllers/grid/gridRow.tpl') {
+			$row = $templateMgr->get_template_vars('row');
+			$data = $row->getData();
+			if (is_array($data) && (isset($data['submissionFile']))) {
+				$submissionFile = $data['submissionFile'];
+				$fileExtension = $submissionFile->getExtension();
+
+				// get stage ID
+				$stage = $submissionFile->getFileStage();
+				$stageId = (int) $request->getUserVar('stageId');
+
+				if (in_array(strtolower($fileExtension), array('doc','docx','odt','pdf'))) {
+
+					import('lib.pkp.classes.linkAction.request.AjaxModal');
+
+					// get list of stages for "Convert to xml" feature.
+					$xmlConversionStages = $this->getSetting($journalId, 'xmlConversionStages');
+					if (in_array($stageId, $xmlConversionStages)) {
+						$row->addAction(new LinkAction(
+							'convert',
+							new AjaxModal(
+								$dispatcher->url($request, ROUTE_PAGE, null, 'markup', 'convertToXml', null, array('submissionId' => $submissionFile->getSubmissionId(), 'fileId' => $submissionFile->getFileId(), 'stage' => $stage)),
+								__('plugins.generic.markup.modal.xmlConversion')
+							),
+							__('plugins.generic.markup.links.convertToXml'),
+							null
+						));
+					}
+
+					if ($stageId == WORKFLOW_STAGE_ID_PRODUCTION) {
+						$row->addAction(new LinkAction(
+							'generateGaleyFiles',
+							new AjaxModal(
+								$dispatcher->url($request, ROUTE_PAGE, null, 'markup', 'generateGalleyFiles', null, array('submissionId' => $submissionFile->getSubmissionId(), 'fileId' => $submissionFile->getFileId(), 'stage' => WORKFLOW_STAGE_ID_PRODUCTION)),
+								__('plugins.generic.markup.modal.galleyProduction')
+							),
+							__('plugins.generic.markup.links.generateGalley'),
+							null
+						));
+					}
+				}
+				elseif (strtolower($fileExtension) == 'xml') {
+					// get list of stages for "Edit with Substance" feature.
+					$editWithSubstanceStages = $this->getSetting($journalId, 'editWithSubstanceStages');
+
+					if (in_array($stageId, $editWithSubstanceStages)) {
+						import('lib.pkp.classes.linkAction.request.OpenWindowAction');
+						$row->addAction(new LinkAction(
+							'editor',
+							new OpenWindowAction(
+								$dispatcher->url($request, ROUTE_PAGE, null, 'markup', 'editor', null, array('submissionId' => $submissionFile->getSubmissionId(), 'fileId' => $submissionFile->getFileId(), 'stage' => $stage))
+							),
+							__('plugins.generic.markup.links.editWithSubstance'),
+							null
+						));
+					}
+				}
+			}
+		}
+	}
+
+	/**
+	 * Triggers document conversion process through MarkupGatewayPlugin::fetch()
+	 *
+	 * @param $fileId int fileId to retrieve converted archive for
+	 * @param $stage int the file stage
+	 * @param $target string job target (xml-conversion or galey-generate)
+	 *
+	 * @return string job id
+	 */
+	public function fetchGateway($fileId, $stage, $target) {
+		$request = $this->getRequest();
+		$user = $request->getUser();
+
+		$router = $request->getRouter();
+		$dispatcher = $router->getDispatcher();
+		$journal = $request->getJournal();
+
+		$jobId = uniqid();
+
+		// create job info
+		$markupJobInfoDao = DAORegistry::getDAO('MarkupJobInfoDAO');
+		$this->import('classes.MarkupJobInfo');
+		$jobInfo = new MarkupJobInfo();
+		$jobInfo->setId($jobId);
+		$jobInfo->setFileId($fileId);
+		$jobInfo->setUserId($user->getId());
+		$jobInfo->setJournalId($journal->getId());
+		$jobInfo->setXmlJobId(NULL);
+		$markupJobInfoDao->insertMarkupJobInfo($jobInfo);
+
+		$url = $request->url(null, 'gateway', 'plugin', array('MarkupGatewayPlugin','fileId', $fileId, 'userId', $user->getId(), 'stage', $stage, 'jobId', $jobId, 'target', $target));
+
+		$ch = curl_init();
+		curl_setopt($ch, CURLOPT_URL, $url);
+		curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
+		curl_setopt($ch, CURLOPT_TIMEOUT_MS, 1000);
+		curl_exec($ch);
+		curl_close($ch);
+
+		return $jobId;
+	}
+
+	/**
+	 * Retrieve OTS login credentials for specific website
+	 * 
+	 * @param $journalId int Journal ID
+	 * @param $user User
+	 * @return array 
+	 */
+	public function getOTSLoginParametersForJournal($journalId, $user = null) {
+		$authType = $this->getSetting($journalId, 'authType');
+		switch ($authType) {
+			case 'user':
+				return array(
+					'host' => $this->getSetting($journalId, 'markupHostURL'),
+					'user' => isset($user) ? $user->getSetting('markupHostUser') : null,
+					'password' => isset($user) ? $user->getSetting('markupHostPass') : null,
+				);
+
+			case 'site':
+				return array(
+					'host' => $this->getSetting($journalId, 'markupHostURL'),
+					'user' => $this->getSetting($journalId, 'markupHostUser'),
+					'password' => $this->getSetting($journalId, 'markupHostPass'),
+				);
+
+			default:
+				return array(
+					'host' => null,
+					'user' => null,
+					'password' => null,
+				);
 		}
 	}
 	
+	/**
+	 * Extend user profile page with a new tab for user specific OTS login credentials
+	 * @param $hookName string The name of the invoked hook
+	 * @param $args array Hook parameters
+	 * @return boolean Hook handling status
+	 */
+	public function callbackUserProfile($hookName, $params)
+	{
+		$request = $this->getRequest();
+		$context = $request->getContext();
+		$authType = $this->getSetting($context->getId(), 'authType');
+
+		if ($authType == 'user') {
+			$output =& $params[2];
+			$dispatcher = $request->getDispatcher();
+			$url = $dispatcher->url($request, ROUTE_PAGE, null, 'markup', 'profile');
+
+			$output .= '<li><a name="otsServerCredentials" ' .
+					'href="'.$url.'">' . __('plugins.generic.markup.tab.profile') . '</a></li>';
+		}
+
+		return false;
+	}
 }

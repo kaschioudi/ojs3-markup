@@ -20,33 +20,49 @@ class MarkupGatewayPlugin extends GatewayPlugin {
 	
 	/** @var $parentPluginName string Name of parent plugin */
 	protected $parentPluginName = null;
-	
+
+	/** @var $user User user object */
 	protected $user = null;
+
+	/** @var $plugin MarkupPlugin Reference to markup plugin */
 	protected $plugin = null;
+
+	/** @var $xmlpsWrapper XMLPSWrapper Reference to wrapper class for OTS Service */
 	protected $xmlpsWrapper = null;
 
-	function MarkupGatewayPlugin($parentPluginName) {
-		parent::GatewayPlugin();
+	/** @var $fileId int submission file id */
+	protected $fileId = null;
+
+	/** @var $stage int submission stage */
+	protected $stage = null;
+
+	/** @var $jobId string job identifier */
+	protected $jobId = null;
+
+	function __construct($parentPluginName) {
+		parent::__construct();
 		
 		$this->parentPluginName = $parentPluginName;
 		$this->plugin = PluginRegistry::getPlugin('generic', $parentPluginName);
-		$this->_initXMLPSWrapper();
 	}
 	
 	/**
 	 * Initialize xmlps wrapper
+	 * 
+	 * @return void
 	 */
 	protected function _initXMLPSWrapper() {
 		
-		$journal = $this->getRequest()->getJournal();
+		$request = $this->getRequest();
+		$journal = $request->getJournal();
 		$journalId = $journal->getId();
 		
 		$plugin = $this->getMarkupPlugin();
-		$host = $plugin->getSetting($journalId, 'markupHostURL');
-		$user = $plugin->getSetting($journalId, 'markupHostUser');
-		$password = $plugin->getSetting($journalId, 'markupHostPass');
 
-		$this->import('helpers.XMLPSWrapper');
+		// Import host, user and password variables into the current symbol table from an array
+		extract($this->plugin->getOTSLoginParametersForJournal($journal->getId(), $this->user));
+
+		$this->import('classes.XMLPSWrapper');
 		$this->xmlpsWrapper = new XMLPSWrapper($host, $user, $password);
 	}
 	
@@ -182,6 +198,8 @@ class MarkupGatewayPlugin extends GatewayPlugin {
 		}
 		$args = array_combine($keys, $values);
 
+		// TODO validate that filestage and target arguments are available
+
 		if (!$this->getEnabled()) {
 			echo __('plugins.generic.markup.archive.enable');
 			exit;
@@ -200,7 +218,7 @@ class MarkupGatewayPlugin extends GatewayPlugin {
 			echo __('plugins.generic.markup.archive.no_articleID');
 			exit;
 		}
-		
+
 		// load user 
 		$userDao = DAORegistry::getDAO('UserDAO');
 		$userId = isset($args['userId']) ? (int) $args['userId'] : false;
@@ -208,7 +226,6 @@ class MarkupGatewayPlugin extends GatewayPlugin {
 			fatalError(__('plugins.generic.markup.archive.no_articleID'));
 			exit;
 		}
-		$this->user = $userDao->getById($args['userId']);
 
 		$submissionFileDao = DAORegistry::getDAO('SubmissionFileDAO');
 		$submissionFile = $submissionFileDao->getLatestRevision($fileId);
@@ -216,9 +233,19 @@ class MarkupGatewayPlugin extends GatewayPlugin {
 			echo __('plugins.generic.markup.archive.no_article');
 			exit;
 		}
-		
+
+		$this->fileId = $fileId;
+		$this->user = $userDao->getById($args['userId']);
+		$this->jobId = isset($args['jobId']) ? $args['jobId'] : '';
+		$this->stage = isset($args['stage']) ? (int) $args['stage'] : false;
+
+		// initialize OTS wrapper
+		$this->_initXMLPSWrapper();
+
 		// process
-		$this->_process($submissionFile);
+		$stage = (int)$args['stage'];
+		$target = strval($args['target']);
+		$this->_process($submissionFile, $stage, $target);
 	}
 	
 	/**
@@ -253,29 +280,37 @@ class MarkupGatewayPlugin extends GatewayPlugin {
 	 * Takes care of document markup conversion
 	 *
 	 * @param $submissionFile mixed SubmissionFile 
+	 * @param $stage int Submission stage ID
+	 * @param $target string Job target (xml-conversion or galley-generate)
 	 *
 	 * @return void
 	 */
-	function _process($submissionFile) {
-		
+	function _process($submissionFile, $stage, $target) {
 		$journal = $this->getRequest()->getJournal();
 		$journalId = $journal->getId();
-		
+
 		$submissionDao = Application::getSubmissionDAO();
 		$submission = $submissionDao->getById($submissionFile->getSubmissionId());
-		
+
 		// submit file to markup server
 		$filePath = $submissionFile->getFilePath();
 		$filename = basename($filePath);
 		$fileContent = file_get_contents($filePath);
 		$citationStyle = $this->plugin->getSetting($journalId, 'cslStyle');
-		
+
 		$tmpZipFile = null;
-		
+
 		try {
 			$metadata = $this->_buildMetadata($journal, $submission);
 
 			$jobId = $this->xmlpsWrapper->submitJob($filename, $fileContent, $citationStyle, $metadata);
+
+			// link XML job id with markup job
+			$markupJobInfoDao = DAORegistry::getDAO('MarkupJobInfoDAO');
+			$this->plugin->import('classes.MarkupJobInfo');
+			$markupJobInfo = $markupJobInfoDao->getMarkupJobInfo($this->jobId);
+			$markupJobInfo->setXmlJobId($jobId);
+			$markupJobInfoDao->updateMarkupJobInfo($markupJobInfo);
 			
 			// retrieve job archive from markup server
 			$i = 0;
@@ -305,48 +340,103 @@ class MarkupGatewayPlugin extends GatewayPlugin {
 		}
 		catch (Exception $e) {
 			// @TODO log error
+			error_log('EXCEPTION!!! ' . $e->getMessage());
 			return;
 		}
-		
+
 		// save archive as production ready file
 		// @TODO @TBD
-		
+
 		// Extract archive
 		$extractionPath = null;
 		if (($extractionPath = $this->_unzipArchive($tmpZipFile)) === false) {
 			return;
 		}
-		
+
 		// save relevant documents
 		$journal = $this->getRequest()->getJournal();
 		$journalId = $journal->getId();
 		$plugin = $this->getMarkupPlugin();
-		
-		$wantedFormats = $plugin->getSetting($journalId, 'wantedFormats');
-		
-		$genreDao = DAORegistry::getDAO('GenreDAO');
-		$genre = $genreDao->getByKey('SUBMISSION', $journalId);
-		
-		// retrieve galleys
-		$articleGalleyDao = DAORegistry::getDAO('ArticleGalleyDAO');
-		$galleys = $articleGalleyDao->getBySubmissionId($submission->getId());
-		$existing_galley_by_labels = array();
-		while ($galley = $galleys->next()) {
-			$existing_galley_by_labels[$galley->getLabel()] = $galley;
+
+		switch ($target) {
+			case 'xml-conversion':
+				$params = array(
+					'stage' => $stage,
+					'assocType' => (int)$submissionFile->getAssocType(),
+					'assocId' => (int)$submissionFile->getAssocId(),
+					'UserGroupId' => (int)$submissionFile->getUserGroupId()
+				);
+				$this->addXmlDocumentToFileList($submission, "{$extractionPath}/document.xml", $params);
+				break;
+
+			case 'galley-generate':
+				$wantedFormats = $plugin->getSetting($journalId, 'wantedFormats');
+
+				$genreDao = DAORegistry::getDAO('GenreDAO');
+				$genre = $genreDao->getByKey('SUBMISSION', $journalId);
+
+				// retrieve galleys
+				$articleGalleyDao = DAORegistry::getDAO('ArticleGalleyDAO');
+				$galleys = $articleGalleyDao->getBySubmissionId($submission->getId());
+				$existing_galley_by_labels = array();
+				while ($galley = $galleys->next()) {
+					$existing_galley_by_labels[$galley->getLabel()] = $galley;
+				}
+
+				if (in_array('pdf', $wantedFormats)) {
+					$this->_addFileToGalley($existing_galley_by_labels, $submission, $genre->getId(), 'pdf', "{$extractionPath}/document.pdf");
+				}
+				if (in_array('xml', $wantedFormats)) {
+					$this->_addFileToGalley($existing_galley_by_labels, $submission, $genre->getId(), 'xml', "{$extractionPath}/document.xml");
+				}
+				if (in_array('epub', $wantedFormats)) {
+					$this->_addFileToGalley($existing_galley_by_labels, $submission, $genre->getId(), 'epub', "{$extractionPath}/document.epub");
+				}
+				break;
 		}
-		
-		if (in_array('pdf', $wantedFormats)) {
-			$this->_addFileToGalley($existing_galley_by_labels, $submission, $genre->getId(), 'pdf', "{$extractionPath}/document.pdf");
-		}
-		if (in_array('xml', $wantedFormats)) {
-			$this->_addFileToGalley($existing_galley_by_labels, $submission, $genre->getId(), 'xml', "{$extractionPath}/document.xml");
-		}
-		if (in_array('epub', $wantedFormats)) {
-			$this->_addFileToGalley($existing_galley_by_labels, $submission, $genre->getId(), 'epub', "{$extractionPath}/document.epub");
-		}
-		
+
 		@unlink($tmpZipFile);
 		@rmdir($extractionPath);
+	}
+
+	/**
+	 * Add converted xml document to file list for stage
+	 * 
+	 * @param $submission object Submission object
+	 * @param $filePath string Path to file in archive
+	 * @param $params array Additional parameters (file stage, assoc type, assoc id)
+	 * 
+	 * @return void
+	 */
+	protected function addXmlDocumentToFileList($submission, $filePath, $params) {
+		$journal = $this->getRequest()->getJournal();
+		$journalId = $journal->getId();
+
+		$submissionId = $submission->getId();
+
+		$genreDao = DAORegistry::getDAO('GenreDAO');
+		$genre = $genreDao->getByKey('SUBMISSION', $journalId);
+		$genreId = $genre->getId();
+
+		$userGroupDao = DAORegistry::getDAO('UserGroupDAO');
+
+		$submissionFileDao = DAORegistry::getDAO('SubmissionFileDAO');
+		$submissionFile = $submissionFileDao->newDataObjectByGenreId($genreId);
+		$submissionFile->setUploaderUserId($this->user->getId());
+		$submissionFile->setSubmissionId($submissionId);
+		$submissionFile->setGenreId($genreId);
+		$submissionFile->setFileSize(filesize($filePath));
+		$submissionFile->setFileStage($params['stage']);
+		$submissionFile->setDateUploaded(Core::getCurrentDate());
+		$submissionFile->setDateModified(Core::getCurrentDate());
+		$submissionFile->setOriginalFileName(basename($filePath));
+		$submissionFile->setFileType('text/xml');
+		$submissionFile->setViewable(true);
+		$submissionFile->setUserGroupId($params['UserGroupId']);
+
+		$submissionFile->setAssocType($params['assocType']);
+		$submissionFile->setAssocId($params['assocId']);
+		$insertedFile = $submissionFileDao->insertObject($submissionFile, $filePath, false);
 	}
 	
 	/**
@@ -361,21 +451,21 @@ class MarkupGatewayPlugin extends GatewayPlugin {
 	 * @return object Submission file object 
 	 */
 	function _addFileToGalley($existing_galley_by_labels, $submission, $genreId, $format, $filePath) {
-		
+
 		$submissionId = $submission->getId();
-		
+
 		$galleyFiles = [];
 		$articleGalley = null;
 		$articleGalleyDao = DAORegistry::getDAO('ArticleGalleyDAO');
 		$label = 'XMLPS-' . strtoupper($format) . '-' .  date("MdSY@H:i",time());
-		
+
 		// create new galley
 		$articleGalley = $articleGalleyDao->newDataObject();
 		$articleGalley->setSubmissionId($submissionId);
 		$articleGalley->setLabel($label);
 		$articleGalley->setLocale($submission->getLocale());
 		$articleGalleyDao->insertObject($articleGalley);
-		
+
 		$submissionFileDao = DAORegistry::getDAO('SubmissionFileDAO');
 		$submissionFile = $submissionFileDao->newDataObjectByGenreId($genreId);
 		$submissionFile->setUploaderUserId($this->user->getId());
@@ -386,7 +476,7 @@ class MarkupGatewayPlugin extends GatewayPlugin {
 		$submissionFile->setDateUploaded(Core::getCurrentDate());
 		$submissionFile->setDateModified(Core::getCurrentDate());
 		$submissionFile->setOriginalFileName(basename($filePath));
-		
+
 		switch($format) {
 			case 'pdf':
 				$submissionFile->setFileType('application/pdf');
@@ -398,15 +488,15 @@ class MarkupGatewayPlugin extends GatewayPlugin {
 				$submissionFile->setFileType('text/xml');
 				break;
 		}
-		
+
 		$submissionFile->setAssocType(ASSOC_TYPE_GALLEY);
 		$submissionFile->setAssocId($articleGalley->getId());
 		$insertedFile = $submissionFileDao->insertObject($submissionFile, $filePath, false);
-		
+
 		// attach file id to galley
 		$articleGalley->setFileId($submissionFile->getFileId());
 		$articleGalleyDao->updateObject($articleGalley);
-		
+
 		return $insertedFile;
 	}
 	
@@ -451,7 +541,7 @@ class MarkupGatewayPlugin extends GatewayPlugin {
 
 		return true;
 	}
-	
+
 	/**
 	 * Extract archive file.
 	 *
@@ -466,7 +556,7 @@ class MarkupGatewayPlugin extends GatewayPlugin {
 			'document.xml',
 			'document.epub',
 		);
-		
+
 		// Extract the zip archive to a markup subdirectory
 		$message = '';
 		$destination = sys_get_temp_dir() . '/' . uniqid();
@@ -483,5 +573,5 @@ class MarkupGatewayPlugin extends GatewayPlugin {
 		
 		return $destination;
 	}
-	
+
 }

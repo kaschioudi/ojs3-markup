@@ -1,7 +1,7 @@
 <?php
 
 /**
- * @file plugins/generic/markup/helpers/XMLPSWrapper.inc.php
+ * @file plugins/generic/markup/classes/XMLPSWrapper.inc.php
  *
  * Copyright (c) 2003-2016 Simon Fraser University Library
  * Copyright (c) 2003-2016 John Willinsky
@@ -19,11 +19,17 @@ class XMLPSWrapper {
 	const JOB_STATUS_PENDING = 0;
 	const JOB_STATUS_PROCESSING = 1;
 	const JOB_STATUS_COMPLETED = 2;
+	const JOB_STATUS_FAILED = 3;
 	
 	const DEFAULT_DEMO_HOST = 'http://pkp-xml-demo.lib.sfu.ca';
 	
+	/** @var $username string user login */
 	protected $username = null;
+	
+	/** @var $token string user token*/
 	protected $token = null;
+	
+	/** @var $host string server host */
 	protected $host = null;
 	
 	/**
@@ -256,6 +262,24 @@ class XMLPSWrapper {
 		}
 		
 		return $response['citationStyles'];
+	}
+	
+	/**
+	 * Returns the label for a status code
+	 * 
+	 * @param int $code Status code
+	 */
+	public function statusCodeToLabel($code) {
+		switch ($code) {
+			case self::JOB_STATUS_PENDING:
+				return 'Pending';
+			case self::JOB_STATUS_PROCESSING:
+				return 'Processing';
+			case self::JOB_STATUS_COMPLETED:
+				return 'Completed';
+			case self::JOB_STATUS_FAILED:
+				return 'Failed';
+		}
 	}
 	
 }

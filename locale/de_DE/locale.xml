@@ -39,6 +39,9 @@
 	<message key="plugins.generic.markup.optional.reviewVersion">Schalter für die Begutachtungsversion ist optional.</message>
 	<message key="plugins.generic.markup.required.cslStyle">Angabe des Zitationsstils ist zwingend.</message>
 	<message key="plugins.generic.markup.required.markupHostURL">Angabe der Serveradresse ist zwingend.</message>
+	<message key="plugins.generic.markup.required.markupHostUser">Username is required.</message>
+	<message key="plugins.generic.markup.required.markupHostPass">Password is required.</message>
+	<message key="plugins.generic.markup.required.authType">Authentication type is required.</message>
 	<message key="plugins.generic.markup.required.wantedFormats">At least one document format must be selected.</message>
 	<message key="plugins.generic.markup.settings">Einstellungen</message>
 	<message key="plugins.generic.markup.settings.cslStyle">Zitationsstil (CSL) auswählen:</message>
