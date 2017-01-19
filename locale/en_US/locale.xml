@@ -6,15 +6,15 @@
   * Copyright (c) 2003-2013 John Willinsky
   * Distributed under the GNU GPL v2. For full terms see the file docs/COPYING.
   *
-  * Document Markup plugin localization strings for the en_US (U.S. English) locale.
+  * Open Typesetting Stack plugin localization strings for the en_US (U.S. English) locale.
   -->
 <locale name="en_US" full_name="U.S. English">
 	<message key="plugins.generic.markup.archive.bad_filename">Filename is missing</message>
 	<message key="plugins.generic.markup.archive.bad_zip">Error handling zipfile ({$file}): {$error} </message>
-	<message key="plugins.generic.markup.archive.description">This file archive includes parsed and converted NLM-XML, HTML, and PDF copies of your article. It also contains any accompanying images, and structured citation data in BibTeX format (for importing into reference databases such as Zotero or Mendeley).</message>
-	<message key="plugins.generic.markup.archive.downloaded">Document Markup Server. Status: RECEIVED FROM SERVER.</message>
-	<message key="plugins.generic.markup.archive.enable">Document Markup Plugin needs to be enabled.</message>
-	<message key="plugins.generic.markup.archive.is_zip">Supplementary file is already a zip archive.</message>
+	<message key="plugins.generic.markup.archive.description">This zipfile includes parsed and converted NLM-XML, HTML, PDF, and ePub copies of your article. It also contains any accompanying images, and structured citation data in BibTeX format (for importing into reference databases such as Zotero or Mendeley).</message>
+	<message key="plugins.generic.markup.archive.downloaded">Open Typesetting Stack: Job received.</message>
+	<message key="plugins.generic.markup.archive.enable">Open Typesetting Stack Plugin needs to be enabled.</message>
+	<message key="plugins.generic.markup.archive.is_zip">Supplementary file is already in zip format.</message>
 	<message key="plugins.generic.markup.archive.login">You need to login to access this file.</message>
 	<message key="plugins.generic.markup.archive.no_access">You are not allowed to access this file.</message>
 	<message key="plugins.generic.markup.archive.no_article">The article does not exist.</message>
@@ -22,17 +22,17 @@
 	<message key="plugins.generic.markup.archive.no_file">File does not exist: ({$file}).</message>
 	<message key="plugins.generic.markup.archive.no_job">Invalid job id: ({$jobId})</message>
 	<message key="plugins.generic.markup.archive.no_journal">Request must be linked to a journal.</message>
-	<message key="plugins.generic.markup.archive.no_url">You have not specified a markup server address (default should be http://pkp-udev.lib.sfu.ca).</message>
+	<message key="plugins.generic.markup.archive.no_url">You have not specified an OTS server address (default should be http://xml-demo.lib.sfu.ca).</message>
 	<message key="plugins.generic.markup.archive.portalSubTitle">Document Status</message>
-	<message key="plugins.generic.markup.archive.portalTitle">PKP Open Journal Systems Document Markup Plugin</message>
-	<message key="plugins.generic.markup.archive.processing">Document Markup Server. Status: PROCESSING...</message>
-	<message key="plugins.generic.markup.archive.status">Document Markup Server returned: {$message} </message>
-	<message key="plugins.generic.markup.archive.supp_file_missing">Although a "Document Markup Files" supplementary record exists, its file is missing.</message>
-	<message key="plugins.generic.markup.archive.supp_missing">Article or its "Document Markup Files" supplementary file RECORD is missing. Try re-uploading the article to regenerate the markup files.</message>
-	<message key="plugins.generic.markup.description">When an author, copyeditor or editor uploads a new version (DOC/DOCX/ODT format) of an article, this module submits it to the document markup server specified in the settings. It then receives parsed and formatted XML, HTML, EPUB and PDF galleys of the article.</message>
-	<message key="plugins.generic.markup.displayName">Document Markup Plugin</message>
+	<message key="plugins.generic.markup.archive.portalTitle"Open Typesetting Stack Plugin</message>
+	<message key="plugins.generic.markup.archive.processing">Open Typesetting Stack: Processing...</message>
+	<message key="plugins.generic.markup.archive.status">Open Typesetting Stack returned: {$message} </message>
+	<message key="plugins.generic.markup.archive.supp_file_missing">Although an OTS file record seems to exist, the file itself is missing.</message>
+	<message key="plugins.generic.markup.archive.supp_missing">OTS file record is missing. Try re-uploading the article to regenerate the markup files.</message>
+	<message key="plugins.generic.markup.description">This plugin provides integration with PKP's Open Typesetting Stack for converting Word and PDF articles to NLM JATS XML.</message>
+	<message key="plugins.generic.markup.displayName">Open Typesetting Stack Plugin</message>
 	<message key="plugins.generic.markup.error">Error!</message>
-	<message key="plugins.generic.markup.errors.errorMessage">Unable to fetch article XML and HTML versions. The Document Markup plugin needs to be enabled and the citation style needs to be provided in Journal Settings.</message>
+	<message key="plugins.generic.markup.errors.errorMessage">Unable to fetch article XML and HTML versions. The Open Typesetting Stack plugin needs to be enabled and the citation style needs to be provided in Journal Settings.</message>
 	<message key="plugins.generic.markup.optional.cslStyleName">Citation Style Name is optional.</message>
 	<message key="plugins.generic.markup.optional.markupHostPass">Password is optional.</message>
 	<message key="plugins.generic.markup.optional.markupHostUser">Username is optional.</message>
@@ -44,56 +44,56 @@
 	<message key="plugins.generic.markup.required.cslStyle">Citation Style is required.</message>
 	<message key="plugins.generic.markup.required.authType">Authentication type is required.</message>
 	<message key="plugins.generic.markup.required.wantedFormats">At least one document format must be selected.</message>
-	<message key="plugins.generic.markup.settings">Markup Settings</message>
-	<message key="plugins.generic.markup.settings.cslStyle">Select Citation Style (CSL):</message>
-	<message key="plugins.generic.markup.settings.cslStyleSubmitErrorMessage">Invalid Document Markup Server! Please specifiy correct URL.</message>
-	<message key="plugins.generic.markup.settings.cslStyleFieldHelp">Set preferred citation style for markup.</message>
+	<message key="plugins.generic.markup.settings">OTS Settings</message>
+	<message key="plugins.generic.markup.settings.cslStyle">Select Citation Style:</message>
+	<message key="plugins.generic.markup.settings.cslStyleSubmitErrorMessage">Invalid Open Typesetting Stack URL.</message>
+	<message key="plugins.generic.markup.settings.cslStyleFieldHelp">Choose your preferred citation style for PDF and ePub output. Input citation style is detected automatically.</message>
 	<message key="plugins.generic.markup.settings.cssStyles">Stylesheets:</message>
 	<message key="plugins.generic.markup.settings.cssStylesHelp">This CSS stylesheet affects the layout of articles generated by this plugin. Default styles are automatically provided. You may replace these with your own customized versions using the <![CDATA[<a href="{$url}" class="action" target="_blank">file manager</a>]]></message>
-	<message key="plugins.generic.markup.settings.curlSupport">PHP Curl Support:</message>
-	<message key="plugins.generic.markup.settings.curlSupportHelp">PHP curl needs to be installed on your server. This plugin uses curl to send the article files to the Document Markup Server service for processing.</message>
+	<message key="plugins.generic.markup.settings.curlSupport">PHP curl Support:</message>
+	<message key="plugins.generic.markup.settings.curlSupportHelp">PHP curl needs to be installed on your server. This plugin uses curl to send the article files to the Open Typesetting Stack for processing.</message>
 	<message key="plugins.generic.markup.settings.disabled">Disabled</message>
 	<message key="plugins.generic.markup.settings.enabled">Enabled</message>
 	<message key="plugins.generic.markup.settings.installed">Installed</message>
-	<message key="plugins.generic.markup.settings.markupHostAccountHelp">A user ID is required to use the conversion service. You can obtain one for free at <![CDATA[<a href="http://pkp-udev.lib.sfu.ca/" target="_blank">PKP Document Markup Service</a>]]>.</message>
-	<message key="plugins.generic.markup.settings.markupHostPass">Token:</message>
-	<message key="plugins.generic.markup.settings.markupHostURL">Document Markup Server:</message>
-	<message key="plugins.generic.markup.settings.markupHostURLHelp">The journal will retrieve converted documents from this server URL. Normally you should not change this setting.</message>
+	<message key="plugins.generic.markup.settings.markupHostAccountHelp">An Open Typesetting Stack User ID and API token are required to use the conversion service. You can register for our demonstration OTS instance <![CDATA[<a href="http://xml-demo.lib.sfu.ca/" target="_blank">here</a>]]>, though you may be limited in how many jobs you can submit per month. If you're interested in having unlimited access to OTS, please contact us.</message>
+	<message key="plugins.generic.markup.settings.markupHostPass">API Token:</message>
+	<message key="plugins.generic.markup.settings.markupHostURL">Open Typesetting Stack URL:</message>
+	<message key="plugins.generic.markup.settings.markupHostURLHelp">OJS will use this Open Typesetting Stack instance. Normally you should not change this setting.</message>
 	<message key="plugins.generic.markup.settings.markupHostUser">User ID:</message>
 	<message key="plugins.generic.markup.settings.notInstalled">Not installed</message>
 	<message key="plugins.generic.markup.settings.pathInfo">URL Paths</message>
-	<message key="plugins.generic.markup.settings.pathInfoHelp">"Enabled" is the default selection if supported by your server. If set to "Disabled," images may be missing from HTML version of articles.</message>
+	<message key="plugins.generic.markup.settings.pathInfoHelp">"Enabled" is the default selection if supported by your server. If set to "Disabled," images may be missing from OTS output.</message>
 	<message key="plugins.generic.markup.settings.saved">Settings saved!</message>
-	<message key="plugins.generic.markup.settings.zipSupport">PHP Unzip Support:</message>
-	<message key="plugins.generic.markup.settings.zipSupportHelp">PHP zlib needs to be installed on your OJS server. This plugin uses zlib to unzip the Document Markup Server files.</message>
-	<message key="plugins.generic.markup.settings.wantedFormats">Document formats:</message>
-	<message key="plugins.generic.markup.settings.wantedFormatsHelp">Select documents formats.</message>
+	<message key="plugins.generic.markup.settings.zipSupport">PHP unzip support:</message>
+	<message key="plugins.generic.markup.settings.zipSupportHelp">PHP zlib needs to be installed on your OJS server.</message>
+	<message key="plugins.generic.markup.settings.wantedFormats">Article output formats:</message>
+	<message key="plugins.generic.markup.settings.wantedFormatsHelp">Select the article output formats that will be generated when using OTS to publish final article galleys.</message>
 	<message key="plugins.generic.markup.settings.wantedFormatsXML">XML</message>
 	<message key="plugins.generic.markup.settings.wantedFormatsPDF">PDF</message>
 	<message key="plugins.generic.markup.settings.wantedFormatsEPUB">EPUB</message>
-	<message key="plugins.generic.markup.job.success">Your document has been successfuly submitted to document markup server. Transformation progress is available at: {$url}</message>
-	<message key="plugins.generic.markup.job.failure">Unable to submit your document to document markup server. Please make sure the plugin is correctly installed and configured.</message>
+	<message key="plugins.generic.markup.job.success">Your document has been successfuly submitted to the Open Typesetting Stack. Transformation progress is available at: {$url}</message>
+	<message key="plugins.generic.markup.job.failure">Unable to submit your document to the Open Typesetting Stack. Please make sure the plugin is correctly installed and configured.</message>
 	<message key="plugins.generic.markup.settings.authType">Type of authentication:</message>
-	<message key="plugins.generic.markup.settings.siteAuthArea">Login credentials for site wide authentication:</message>
-	<message key="plugins.generic.markup.settings.userAuthArea">OTS Server Login credentials</message>
-	<message key="plugins.generic.markup.settings.authTypeFieldHelp">Specify which kind of authentication to use. Site wide authentication (a single xml parsing service login credentials shared by all OJS users) vs user specific (each OJS user provide its own login credentials for xml parsing service)</message>
-	<message key="plugins.generic.markup.settings.authTypeSite">Site wide authentication</message>
-	<message key="plugins.generic.markup.settings.authTypeUser">User specific authentication</message>
+	<message key="plugins.generic.markup.settings.siteAuthArea">Login credentials for site-wide authentication:</message>
+	<message key="plugins.generic.markup.settings.userAuthArea">OTS login credentials</message>
+	<message key="plugins.generic.markup.settings.authTypeFieldHelp">Specify whether you want to use site-wide or user-specific authentication to OTS. Site-wide authentication is simpler, allowing you to share a single administrator-level OTS User ID across your entire journal. However, if you anticipate individual authors wanting to access OTS directly (rather than through OJS) and want to avoid any potential issues around blind review, you can select user-specific authentication, which requires them to each specify their own OTS User ID in their OJS user preferences. Most people will want to use site-wide authentication.</message>
+	<message key="plugins.generic.markup.settings.authTypeSite">Site-wide authentication</message>
+	<message key="plugins.generic.markup.settings.authTypeUser">User-specific authentication</message>
 	<message key="plugins.generic.markup.links.convertToXml">Convert to XML</message>
-	<message key="plugins.generic.markup.links.generateGalley">Generate Galley File</message>
-	<message key="plugins.generic.markup.links.editWithSubstance">Edit with Substance</message>
+	<message key="plugins.generic.markup.links.generateGalley">Generate Galley Files</message>
+	<message key="plugins.generic.markup.links.editWithSubstance">Edit with Texture</message>
 	<message key="plugins.generic.markup.conversion.trigger">Trigger Job</message>
 	<message key="plugins.generic.markup.modal.xmlConversion">XML conversion</message>
-	<message key="plugins.generic.markup.modal.galleyProduction">Generate Galley File</message>
-	<message key="plugins.generic.markup.modal.xmlConversionText">You are about to trigger an OTS job to convert this submission file to xml. Click the button bellow to continue.</message>
-	<message key="plugins.generic.markup.modal.galleyProductionText">You are about to trigger an OTS job in order to generate galley files for the selected production ready file. Click the button bellow to continue.</message>
+	<message key="plugins.generic.markup.modal.galleyProduction">Generate Galley Files</message>
+	<message key="plugins.generic.markup.modal.xmlConversionText">Confirm submission of OTS job?</message>
+	<message key="plugins.generic.markup.modal.galleyProductionText">Confirm submission of OTS job?</message>
 	<message key="plugins.generic.markup.tab.profile">OTS Login</message>
-	<message key="plugins.generic.markup.settings.pluginNotConfigured">PLUGIN NOT CONFIGURED!!</message>
-	<message key="plugins.generic.markup.settings.loginCredsNotAvailable">OTS SERVER LOGIN CREDENTIALS NOT AVAILABLE!!</message>
-	<message key="plugins.generic.markup.settings.conversionStages">XML conversion stages</message>
-	<message key="plugins.generic.markup.settings.conversionStagesHelp">Select stages where "Convert to XML" feature is available</message>
-	<message key="plugins.generic.markup.settings.editWithSubstanceStages">Substance editor stages</message>
-	<message key="plugins.generic.markup.settings.editWithSubstanceStagesHelp">Select stages where "Edit with Substance" feature is available</message>
-	<message key="plugins.generic.markup.required.xmlConversionStages">At least one stage must be selected for "Convert to XML feature".</message>
-	<message key="plugins.generic.markup.required.editWithSubstanceStages">At least one stage must be selected for "Edit with Substance".</message>
+	<message key="plugins.generic.markup.settings.pluginNotConfigured">The OTS plugin has not been configured.</message>
+	<message key="plugins.generic.markup.settings.loginCredsNotAvailable">OTS login credentials have not been specified.</message>
+	<message key="plugins.generic.markup.settings.conversionStages">OTS-enabled workflow stages</message>
+	<message key="plugins.generic.markup.settings.conversionStagesHelp">Select workflow stages where article conversion to XML via OTS is available. You may wish to limit access to OTS at certain times depending on your production workflow.</message>
+	<message key="plugins.generic.markup.settings.editWithSubstanceStages">Texture editor-enabled workflow stages</message>
+	<message key="plugins.generic.markup.settings.editWithSubstanceStagesHelp">Select workflow stages where the Texture XML editor is available.</message>
+	<message key="plugins.generic.markup.required.xmlConversionStages">OTS conversion must be enabled in at least one stage.</message>
+	<message key="plugins.generic.markup.required.editWithSubstanceStages">The Texture XML editor must be enabled in at least one stage.</message>
 </locale>

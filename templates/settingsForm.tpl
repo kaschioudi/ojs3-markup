@@ -49,6 +49,22 @@
 		{fbvElement type="text" id="markupHostURL" value=$markupHostURL|escape class="markupHostURL"}
 	{/fbvFormSection}
 	
+	{fbvFormSection list=true description="plugins.generic.markup.settings.conversionStages" description="plugins.generic.markup.settings.conversionStagesHelp"}
+		{fbvElement type="checkbox" name="xmlConversionStages[]" id="conversionSubmissionStage" value=$smarty.const.WORKFLOW_STAGE_ID_SUBMISSION label="manager.publication.submissionStage" checked=$smarty.const.WORKFLOW_STAGE_ID_SUBMISSION|@in_array:$xmlConversionStages}
+		{fbvElement type="checkbox" name="xmlConversionStages[]" id="conversionReviewStage" value=$smarty.const.WORKFLOW_STAGE_ID_INTERNAL_REVIEW label="workflow.review.internalReview" checked=$smarty.const.WORKFLOW_STAGE_ID_INTERNAL_REVIEW|@in_array:$xmlConversionStages}
+		{fbvElement type="checkbox" name="xmlConversionStages[]" id="conversionReviewStage" value=$smarty.const.WORKFLOW_STAGE_ID_EXTERNAL_REVIEW label="manager.publication.reviewStage" checked=$smarty.const.WORKFLOW_STAGE_ID_EXTERNAL_REVIEW|@in_array:$xmlConversionStages}
+		{fbvElement type="checkbox" name="xmlConversionStages[]" id="conversionEditorialStage" value=$smarty.const.WORKFLOW_STAGE_ID_EDITING label="manager.publication.editorialStage" checked=$smarty.const.WORKFLOW_STAGE_ID_EDITING|@in_array:$xmlConversionStages}
+		{fbvElement type="checkbox" name="xmlConversionStages[]" id="conversionProductionStage" value=$smarty.const.WORKFLOW_STAGE_ID_PRODUCTION label="manager.publication.productionStage" checked=$smarty.const.WORKFLOW_STAGE_ID_PRODUCTION|@in_array:$xmlConversionStages}
+	{/fbvFormSection}
+
+	{fbvFormSection list=true description="plugins.generic.markup.settings.editWithSubstanceStages" description="plugins.generic.markup.settings.editWithSubstanceStagesHelp"}
+		{fbvElement type="checkbox" name="editWithSubstanceStages[]" id="editWithSubstanceSubmissionStage" value=$smarty.const.WORKFLOW_STAGE_ID_SUBMISSION label="manager.publication.submissionStage" checked=$smarty.const.WORKFLOW_STAGE_ID_SUBMISSION|@in_array:$editWithSubstanceStages}
+		{fbvElement type="checkbox" name="editWithSubstanceStages[]" id="editWithSubstanceReviewStage" value=$smarty.const.WORKFLOW_STAGE_ID_INTERNAL_REVIEW label="workflow.review.internalReview" checked=$smarty.const.WORKFLOW_STAGE_ID_INTERNAL_REVIEW|@in_array:$editWithSubstanceStages}
+		{fbvElement type="checkbox" name="editWithSubstanceStages[]" id="editWithSubstanceReviewStage" value=$smarty.const.WORKFLOW_STAGE_ID_EXTERNAL_REVIEW label="manager.publication.reviewStage" checked=$smarty.const.WORKFLOW_STAGE_ID_EXTERNAL_REVIEW|@in_array:$editWithSubstanceStages}
+		{fbvElement type="checkbox" name="editWithSubstanceStages[]" id="editWithSubstanceEditorialStage" value=$smarty.const.WORKFLOW_STAGE_ID_EDITING label="manager.publication.editorialStage" checked=$smarty.const.WORKFLOW_STAGE_ID_EDITING|@in_array:$editWithSubstanceStages}
+		{fbvElement type="checkbox" name="editWithSubstanceStages[]" id="editWithSubstanceProductionStage" value=$smarty.const.WORKFLOW_STAGE_ID_PRODUCTION label="manager.publication.productionStage" checked=$smarty.const.WORKFLOW_STAGE_ID_PRODUCTION|@in_array:$editWithSubstanceStages}
+	{/fbvFormSection}
+
 	{fbvFormSection title="plugins.generic.markup.settings.cslStyle" description="plugins.generic.markup.settings.cslStyleFieldHelp"}
 		{fbvElement type="select" id="cslStyle"}
 	{/fbvFormSection}
@@ -75,22 +91,6 @@
 		{fbvElement type="checkbox" name="wantedFormats[]" id="markupDocFormatXml" value="xml" label="plugins.generic.markup.settings.wantedFormatsXML" checked=$markupDocFormatXmlChecked}
 		{fbvElement type="checkbox" name="wantedFormats[]" id="markupDocFormatPdf" value="pdf" label="plugins.generic.markup.settings.wantedFormatsPDF" checked=$markupDocFormatPdfChecked}
 		{fbvElement type="checkbox" name="wantedFormats[]" id="markupDocFormatEpub" value="epub" label="plugins.generic.markup.settings.wantedFormatsEPUB" checked=$markupDocFormatEpubChecked}
-	{/fbvFormSection}
-	
-	{fbvFormSection list=true description="plugins.generic.markup.settings.conversionStages" description="plugins.generic.markup.settings.conversionStagesHelp"}
-		{fbvElement type="checkbox" name="xmlConversionStages[]" id="conversionSubmissionStage" value=$smarty.const.WORKFLOW_STAGE_ID_SUBMISSION label="manager.publication.submissionStage" checked=$smarty.const.WORKFLOW_STAGE_ID_SUBMISSION|@in_array:$xmlConversionStages}
-		{fbvElement type="checkbox" name="xmlConversionStages[]" id="conversionReviewStage" value=$smarty.const.WORKFLOW_STAGE_ID_INTERNAL_REVIEW label="workflow.review.internalReview" checked=$smarty.const.WORKFLOW_STAGE_ID_INTERNAL_REVIEW|@in_array:$xmlConversionStages}
-		{fbvElement type="checkbox" name="xmlConversionStages[]" id="conversionReviewStage" value=$smarty.const.WORKFLOW_STAGE_ID_EXTERNAL_REVIEW label="manager.publication.reviewStage" checked=$smarty.const.WORKFLOW_STAGE_ID_EXTERNAL_REVIEW|@in_array:$xmlConversionStages}
-		{fbvElement type="checkbox" name="xmlConversionStages[]" id="conversionEditorialStage" value=$smarty.const.WORKFLOW_STAGE_ID_EDITING label="manager.publication.editorialStage" checked=$smarty.const.WORKFLOW_STAGE_ID_EDITING|@in_array:$xmlConversionStages}
-		{fbvElement type="checkbox" name="xmlConversionStages[]" id="conversionProductionStage" value=$smarty.const.WORKFLOW_STAGE_ID_PRODUCTION label="manager.publication.productionStage" checked=$smarty.const.WORKFLOW_STAGE_ID_PRODUCTION|@in_array:$xmlConversionStages}
-	{/fbvFormSection}
-
-	{fbvFormSection list=true description="plugins.generic.markup.settings.editWithSubstanceStages" description="plugins.generic.markup.settings.editWithSubstanceStagesHelp"}
-		{fbvElement type="checkbox" name="editWithSubstanceStages[]" id="editWithSubstanceSubmissionStage" value=$smarty.const.WORKFLOW_STAGE_ID_SUBMISSION label="manager.publication.submissionStage" checked=$smarty.const.WORKFLOW_STAGE_ID_SUBMISSION|@in_array:$editWithSubstanceStages}
-		{fbvElement type="checkbox" name="editWithSubstanceStages[]" id="editWithSubstanceReviewStage" value=$smarty.const.WORKFLOW_STAGE_ID_INTERNAL_REVIEW label="workflow.review.internalReview" checked=$smarty.const.WORKFLOW_STAGE_ID_INTERNAL_REVIEW|@in_array:$editWithSubstanceStages}
-		{fbvElement type="checkbox" name="editWithSubstanceStages[]" id="editWithSubstanceReviewStage" value=$smarty.const.WORKFLOW_STAGE_ID_EXTERNAL_REVIEW label="manager.publication.reviewStage" checked=$smarty.const.WORKFLOW_STAGE_ID_EXTERNAL_REVIEW|@in_array:$editWithSubstanceStages}
-		{fbvElement type="checkbox" name="editWithSubstanceStages[]" id="editWithSubstanceEditorialStage" value=$smarty.const.WORKFLOW_STAGE_ID_EDITING label="manager.publication.editorialStage" checked=$smarty.const.WORKFLOW_STAGE_ID_EDITING|@in_array:$editWithSubstanceStages}
-		{fbvElement type="checkbox" name="editWithSubstanceStages[]" id="editWithSubstanceProductionStage" value=$smarty.const.WORKFLOW_STAGE_ID_PRODUCTION label="manager.publication.productionStage" checked=$smarty.const.WORKFLOW_STAGE_ID_PRODUCTION|@in_array:$editWithSubstanceStages}
 	{/fbvFormSection}
 
 	{fbvFormButtons id="markupFormSubmit" submitText="common.save" hideCancel=true}
