@@ -24,7 +24,7 @@
 	<message key="plugins.generic.markup.archive.no_journal">Request must be linked to a journal.</message>
 	<message key="plugins.generic.markup.archive.no_url">You have not specified an OTS server address (default should be http://xml-demo.lib.sfu.ca).</message>
 	<message key="plugins.generic.markup.archive.portalSubTitle">Document Status</message>
-	<message key="plugins.generic.markup.archive.portalTitle"Open Typesetting Stack Plugin</message>
+	<message key="plugins.generic.markup.archive.portalTitle">Open Typesetting Stack Plugin</message>
 	<message key="plugins.generic.markup.archive.processing">Open Typesetting Stack: Processing...</message>
 	<message key="plugins.generic.markup.archive.status">Open Typesetting Stack returned: {$message} </message>
 	<message key="plugins.generic.markup.archive.supp_file_missing">Although an OTS file record seems to exist, the file itself is missing.</message>
