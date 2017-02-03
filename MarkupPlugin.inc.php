@@ -191,7 +191,15 @@ class MarkupPlugin extends GenericPlugin {
 	function getTemplatePath() {
 		return parent::getTemplatePath() . 'templates/';
 	}
-	
+
+	/**
+	 * Get the filename of the ADODB schema for this plugin.
+	 * @return string Full path and filename to schema descriptor.
+	 */
+	function getInstallSchemaFile() {
+		return $this->getPluginPath() . '/schema.xml';
+	}
+
 	/**
 	 * @see Plugin::manage()
 	 */
