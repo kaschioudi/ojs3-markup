@@ -12,7 +12,17 @@ function OJSXMLStore() {
 	};
 	
 	this.writeXML = function(documentId, xml, cb) {
-		var data = {'content': xml};
-		alert('NOT YET IMPLEMENTED!');
+		fetch(documentId, {
+			credentials: 'same-origin',
+			method: 'POST',
+			body: JSON.stringify({
+				'content': xml
+			})
+		})
+		.then(function(response) {
+			if(response.status !== 200) {
+				alert('Unable to save document due to an unexpected error. Please try again.');
+			}
+		});
 	};
 }
