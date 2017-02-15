@@ -55,7 +55,18 @@
 	<message key="plugins.generic.markup.settings.disabled">Disabled</message>
 	<message key="plugins.generic.markup.settings.enabled">Enabled</message>
 	<message key="plugins.generic.markup.settings.installed">Installed</message>
-	<message key="plugins.generic.markup.settings.markupHostAccountHelp">An Open Typesetting Stack User ID and API token are required to use the conversion service. You can register for our demonstration OTS instance <![CDATA[<a href="http://xml-demo.lib.sfu.ca/" target="_blank">here</a>]]>, though you may be limited in how many jobs you can submit per month. If you're interested in having unlimited access to OTS, please contact us.</message>
+	<message key="plugins.generic.markup.settings.markupHostAccountHelp"><![CDATA[<p><strong>PKP Open Typesetting Stack Plugin (Beta)</strong></p>
+
+<p>Thank you for your interest in OTS! This service, and associated OJS plugin, are both in beta, and expectations of reliability, availability and accuracy should be calibrated with that in mind. An Open Typesetting Stack User ID and API token are required to use the conversion service. You can register for our <strong>demo</strong> OTS instance <a href="http://xml-demo.lib.sfu.ca/" target="_blank">here</a>. For future news on non-demo, non-beta plans and services for this stack, please follow the <a href="https://pkp.sfu.ca/category/news/" target=_blank">PKP blog</a>, or keep an eye on the <a href="https://forum.pkp.sfu.ca" target="_blank">PKP support forum</a>. 
+
+<p><strong>Bugs:</strong>We welcome bug reports and feature requests in the following locations (please search for similar bugs/requests before submitting, to reduce duplicates):</p>
+
+<ul>
+	<li><a href="https://github.com/kaschioudi/ojs3-markup/issues" target="_blank">OJS plugin issues</a></li>
+	<li><a href=https://github.com/pkp/xmlps/issues" target="_blank"">OTS service issues</a></li>
+</ul>
+
+<p><strong>Caveats:</strong> This beta service is currently provided at no cost. The costs for using this service may change at any time. The demo OTS instance referred to in this beta test may be reset or disabled at any time. If you are interested in having unlimited access to OTS, or are interested in receiving paid support for OTS, please contact us at <a href="mailto:pkp.contact@gmail.com">pkp.contact@gmail.com</a>.</p>]]></message>
 	<message key="plugins.generic.markup.settings.markupHostPass">API Token:</message>
 	<message key="plugins.generic.markup.settings.markupHostURL">Open Typesetting Stack URL:</message>
 	<message key="plugins.generic.markup.settings.markupHostURLHelp">OJS will use this Open Typesetting Stack instance. Normally you should not change this setting.</message>
