@@ -18,6 +18,10 @@
 </head>
 <body>
 	
+	<!-- polyfills -->
+	<script type="text/javascript" src="{$textureFolderPath}/js/promise.min.js"></script>
+	<script type="text/javascript" src="{$textureFolderPath}/js/fetch.min.js"></script>
+	
 	<script type="text/javascript" src="{$textureFolderPath}/js/substance.js"></script>
 	<script type="text/javascript" src="{$textureFolderPath}/js/texture.js"></script>
 	<script type="text/javascript" src="{$textureFolderPath}/js/store.js"></script>
