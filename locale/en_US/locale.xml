@@ -67,7 +67,7 @@
 	<message key="plugins.generic.markup.settings.zipSupport">PHP unzip support:</message>
 	<message key="plugins.generic.markup.settings.zipSupportHelp">PHP zlib needs to be installed on your OJS server.</message>
 	<message key="plugins.generic.markup.settings.wantedFormats">Article output formats:</message>
-	<message key="plugins.generic.markup.settings.wantedFormatsHelp">Select the article output formats that will be generated when using OTS to publish final article galleys.</message>
+	<message key="plugins.generic.markup.settings.wantedFormatsHelp">Select the article output formats that will be generated when using OTS to publish final article galleys. You may want to deselect some of these if, for example your journal is producing its own PDF galleys independently from OTS.</message>
 	<message key="plugins.generic.markup.settings.wantedFormatsXML">XML</message>
 	<message key="plugins.generic.markup.settings.wantedFormatsPDF">PDF</message>
 	<message key="plugins.generic.markup.settings.wantedFormatsEPUB">EPUB</message>
