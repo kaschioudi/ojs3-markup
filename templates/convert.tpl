@@ -24,7 +24,11 @@
 	<blockquote>{translate key="plugins.generic.markup.settings.loginCredsNotAvailable"}</blockquote>
 {else}
 	<form id="markupFileConversionForm" class="pkp_form" method="post" action="{$conversionTriggerUrl}">
-		<div>{translate key="$messageKey"}</div>
-		<button type="submit" id="markupFileConversionTrigger">{translate key="plugins.generic.markup.conversion.trigger"}</button>
+		<div id="step1">
+			<div>{translate key="$messageKey"}</div>
+			<button type="submit" id="markupFileConversionTrigger">{translate key="plugins.generic.markup.conversion.trigger"}</button>
+		</div>
+		<div id="step2">
+		</div>
 	</form>
 {/if}

@@ -277,6 +277,7 @@ class MarkupHandler extends Handler {
 		
 		if ($isCompleted) {
 			$json->setEvent('dataChanged');
+			$json->setAdditionalAttributes(array('reloadContainer' => true));
 		}
 		
 		return $json;

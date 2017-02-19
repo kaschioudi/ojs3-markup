@@ -27,23 +27,10 @@
 	 */
 	$.pkp.plugins.markup.js.MarkupFileConversionFormHandler =
 			function($form, options) {
-
+		options.submitHandler = this.submitForm;
 		this.parent($form, options);
-		var that = this;
-		
-		// on trigger conversion response
-		$(document).on('DOMNodeInserted', function(e) {
-			
-			var $node = $(e.target);
-			if ($node.hasClass('conversionJob')) {
-				var jobId = $node.find('span#conversionJobId').text();
-				if ((jobId != "") && 
-						($.pkp.plugins.markup.js.MarkupFileConversionFormHandler.timer_ == null) ) {
-					$.pkp.plugins.markup.js.MarkupFileConversionFormHandler.timer_ = setInterval(that.fetchJobStatus_, 5000);
-				}
-			}
-		});
 	};
+
 	$.pkp.classes.Helper.inherits(
 			$.pkp.plugins.markup.js.MarkupFileConversionFormHandler,
 			$.pkp.controllers.form.AjaxFormHandler);
@@ -56,14 +43,40 @@
 	$.pkp.plugins.markup.js.MarkupFileConversionFormHandler.timer_ = null;
 	
 	/**
+	 * Callback to handle form submission
+	 */
+	$.pkp.plugins.markup.js.MarkupFileConversionFormHandler.prototype.
+			submitForm = 
+			function(validator, formElement) {
+				var $form = this.getHtmlElement();
+				$.post($form.attr('action'), $form.serialize(),
+						this.callbackWrapper(this.handleJobTriggerResponse, this), 'json');
+	}
+
+	/**
+	 * Callback to handle server response after form submission
+	 */
+	$.pkp.plugins.markup.js.MarkupFileConversionFormHandler.
+			prototype.handleJobTriggerResponse =
+			function(formElement, jsonData) {
+				var $form = this.getHtmlElement();
+				$('div#step1', $form).hide();
+				$('div#step2', $form).append(jsonData.content);
+				$('.pkp_spinner', $form).addClass('is_visible');
+
+				var jobId = $form.find('span#conversionJobId').text();
+				if ((jobId != "") && (this.timer_ == null) ) {
+					this.timer_ = setInterval(this.callbackWrapper(this.fetchJobStatus_, this), 5000);
+				}
+	}
+
+	/**
 	 * Callback to fetch xml job status
-	 *
-	 * @private
 	 */
 	$.pkp.plugins.markup.js.MarkupFileConversionFormHandler.prototype.
 			fetchJobStatus_ = 
 			function() {
-				var that = this;
+				var self = this;
 				$.ajax({
 					url: $('span#conversionJobStatus').data('url'),
 					type: 'POST',
@@ -71,30 +84,42 @@
 				})
 				.done(function(data) {
 					if (data['content'].hasOwnProperty('status') && data['content'].hasOwnProperty('isCompleted')) {
-						$('span#conversionJobStatus').text(data['content']['status']);
 						if (data['content']['isCompleted']) {
-							$.pkp.plugins.markup.js.MarkupFileConversionFormHandler.prototype.stopAndClear_();
+							self.stopAndClear_();
+							// job is completed. give backgroud task few seconds to fetch 
+							// and save xml document then update job status and refresh grid
+							setTimeout(function(){
+								self.handleJson(data);
+								$('span#conversionJobStatus').text(data['content']['status']);
+							}, 5000); 
+						}
+						else {
+							$('span#conversionJobStatus').text(data['content']['status']);
 						}
 					}
 				})
 				.fail(function() {
 					$('span#conversionJobStatus').text('An unexpected error occured.');
-					$.pkp.plugins.markup.js.MarkupFileConversionFormHandler.prototype.stopAndClear_();
+					self.callbackWrapper(self.stopAndClear_(), self);
 				});
 			}
-	
+
+	$.pkp.plugins.markup.js.MarkupFileConversionFormHandler.closeModal_ =
+		function(handledElement, siteHandlerElement, sourceElement, event) {
+		console.log('Modal Close!!!');
+	}
+
 	/**
 	 * stop timer and hide spinner
-	 *
-	 * @private
 	 */
 	$.pkp.plugins.markup.js.MarkupFileConversionFormHandler.prototype.
 			stopAndClear_ = 
 			function() {
-				var timer = $.pkp.plugins.markup.js.MarkupFileConversionFormHandler.timer_;
+				var timer = this.timer_;
 				clearInterval(timer);
-				$('span#conversionJobSpinner').hide();
+				var $form = this.getHtmlElement();
+				$('.pkp_spinner', $form).removeClass('is_visible');
 			}
-			
+
 	/** @param {jQuery} $ jQuery closure. */
 }(jQuery));
