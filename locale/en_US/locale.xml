@@ -22,7 +22,7 @@
 	<message key="plugins.generic.markup.archive.no_file">File does not exist: ({$file}).</message>
 	<message key="plugins.generic.markup.archive.no_job">Invalid job id: ({$jobId})</message>
 	<message key="plugins.generic.markup.archive.no_journal">Request must be linked to a journal.</message>
-	<message key="plugins.generic.markup.archive.no_url">You have not specified an OTS server address (default should be http://xml-demo.lib.sfu.ca).</message>
+	<message key="plugins.generic.markup.archive.no_url">You have not specified an OTS server address (default should be http://pkp-xml-demo.lib.sfu.ca).</message>
 	<message key="plugins.generic.markup.archive.portalSubTitle">Document Status</message>
 	<message key="plugins.generic.markup.archive.portalTitle">Open Typesetting Stack Plugin</message>
 	<message key="plugins.generic.markup.archive.processing">Open Typesetting Stack: Processing...</message>
@@ -57,7 +57,7 @@
 	<message key="plugins.generic.markup.settings.installed">Installed</message>
 	<message key="plugins.generic.markup.settings.markupHostAccountHelp"><![CDATA[<p><strong>PKP Open Typesetting Stack Plugin (Beta)</strong></p>
 
-<p>Thank you for your interest in OTS! This service, and associated OJS plugin, are both in beta, and expectations of reliability, availability and accuracy should be calibrated with that in mind. An Open Typesetting Stack User ID and API token are required to use the conversion service. You can register for our <strong>demo</strong> OTS instance <a href="http://xml-demo.lib.sfu.ca/" target="_blank">here</a>. For future news on non-demo, non-beta plans and services for this stack, please follow the <a href="https://pkp.sfu.ca/category/news/" target=_blank">PKP blog</a>, or keep an eye on the <a href="https://forum.pkp.sfu.ca" target="_blank">PKP support forum</a>. 
+<p>Thank you for your interest in OTS! This service, and associated OJS plugin, are both in beta, and expectations of reliability, availability and accuracy should be calibrated with that in mind. An Open Typesetting Stack User ID and API token are required to use the conversion service. You can register for our <strong>demo</strong> OTS instance <a href="http://pkp-xml-demo.lib.sfu.ca/" target="_blank">here</a>. For future news on non-demo, non-beta plans and services for this stack, please follow the <a href="https://pkp.sfu.ca/category/news/" target=_blank">PKP blog</a>, or keep an eye on the <a href="https://forum.pkp.sfu.ca" target="_blank">PKP support forum</a>. 
 
 <p><strong>Bugs:</strong>We welcome bug reports and feature requests in the following locations (please search for similar bugs/requests before submitting, to reduce duplicates):</p>
 
