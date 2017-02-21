@@ -147,4 +147,15 @@ class MarkupJobInfoDAO extends DAO {
 				)
 		);
 	}
+
+	/**
+	 * Delete a markup job info entry
+	 * @param int $fileId
+	 */
+	public function deleteByFileId($fileId) {
+		$this->update(
+			'DELETE FROM markup_jobinfos WHERE file_id = ?',
+			array((int) $fileId)
+		);
+	}
 }
