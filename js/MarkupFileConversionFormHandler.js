@@ -91,7 +91,7 @@
 							setTimeout(function(){
 								self.handleJson(data);
 								$('span#conversionJobStatus').text(data['content']['status']);
-							}, 5000); 
+							}, 3000); 
 						}
 						else {
 							$('span#conversionJobStatus').text(data['content']['status']);
