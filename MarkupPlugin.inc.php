@@ -317,13 +317,13 @@ class MarkupPlugin extends GenericPlugin {
 				$stage = $submissionFile->getFileStage();
 				$stageId = (int) $request->getUserVar('stageId');
 
-				if (in_array(strtolower($fileExtension), array('doc','docx','odt','pdf'))) {
+				if (in_array(strtolower($fileExtension), array('doc','docx','odt','pdf', 'xml'))) {
 
 					import('lib.pkp.classes.linkAction.request.AjaxModal');
 
 					// get list of stages for "Convert to xml" feature.
 					$xmlConversionStages = $this->getSetting($journalId, 'xmlConversionStages');
-					if (in_array($stageId, $xmlConversionStages)) {
+					if (in_array($stageId, $xmlConversionStages) && ($fileExtension != 'xml')) {
 						$row->addAction(new LinkAction(
 							'convert',
 							new AjaxModal(
@@ -347,7 +347,8 @@ class MarkupPlugin extends GenericPlugin {
 						));
 					}
 				}
-				elseif (strtolower($fileExtension) == 'xml') {
+				
+				if (strtolower($fileExtension) == 'xml') {
 					// get list of stages for "Edit with Substance" feature.
 					$editWithSubstanceStages = $this->getSetting($journalId, 'editWithSubstanceStages');
 
