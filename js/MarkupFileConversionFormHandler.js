@@ -104,11 +104,6 @@
 				});
 			}
 
-	$.pkp.plugins.markup.js.MarkupFileConversionFormHandler.closeModal_ =
-		function(handledElement, siteHandlerElement, sourceElement, event) {
-		console.log('Modal Close!!!');
-	}
-
 	/**
 	 * stop timer and hide spinner
 	 */

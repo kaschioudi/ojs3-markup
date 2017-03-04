@@ -327,8 +327,13 @@ class MarkupPlugin extends GenericPlugin {
 						$row->addAction(new LinkAction(
 							'convert',
 							new AjaxModal(
-								$dispatcher->url($request, ROUTE_PAGE, null, 'markup', 'convertToXml', null, array('submissionId' => $submissionFile->getSubmissionId(), 'fileId' => $submissionFile->getFileId(), 'stage' => $stage)),
-								__('plugins.generic.markup.modal.xmlConversion')
+								$dispatcher->url($request, ROUTE_PAGE, null, 'markup', 'convertToXml', null, 
+										array(
+											'submissionId' => $submissionFile->getSubmissionId(), 
+											'fileId' => $submissionFile->getFileId(), 
+											'stage' => $stage)
+										),
+								__('plugins.generic.markup.modal.xmlConversion'),
 							),
 							__('plugins.generic.markup.links.convertToXml'),
 							null
@@ -339,8 +344,13 @@ class MarkupPlugin extends GenericPlugin {
 						$row->addAction(new LinkAction(
 							'generateGaleyFiles',
 							new AjaxModal(
-								$dispatcher->url($request, ROUTE_PAGE, null, 'markup', 'generateGalleyFiles', null, array('submissionId' => $submissionFile->getSubmissionId(), 'fileId' => $submissionFile->getFileId(), 'stage' => WORKFLOW_STAGE_ID_PRODUCTION)),
-								__('plugins.generic.markup.modal.galleyProduction')
+								$dispatcher->url($request, ROUTE_PAGE, null, 'markup', 'generateGalleyFiles', null, 
+										array(
+											'submissionId' => $submissionFile->getSubmissionId(), 
+											'fileId' => $submissionFile->getFileId(), 
+											'stage' => WORKFLOW_STAGE_ID_PRODUCTION)
+										),
+								__('plugins.generic.markup.modal.galleyProduction'),
 							),
 							__('plugins.generic.markup.links.generateGalley'),
 							null
@@ -357,7 +367,12 @@ class MarkupPlugin extends GenericPlugin {
 						$row->addAction(new LinkAction(
 							'editor',
 							new OpenWindowAction(
-								$dispatcher->url($request, ROUTE_PAGE, null, 'markup', 'editor', null, array('submissionId' => $submissionFile->getSubmissionId(), 'fileId' => $submissionFile->getFileId(), 'stage' => $stage))
+								$dispatcher->url($request, ROUTE_PAGE, null, 'markup', 'editor', null, 
+										array(
+											'submissionId' => $submissionFile->getSubmissionId(), 
+											'fileId' => $submissionFile->getFileId(), 
+											'stage' => $stage)
+										)
 							),
 							__('plugins.generic.markup.links.editWithSubstance'),
 							null
@@ -398,7 +413,10 @@ class MarkupPlugin extends GenericPlugin {
 		$jobInfo->setXmlJobId(NULL);
 		$markupJobInfoDao->insertMarkupJobInfo($jobInfo);
 
-		$url = $request->url(null, 'gateway', 'plugin', array('MarkupGatewayPlugin','fileId', $fileId, 'userId', $user->getId(), 'stage', $stage, 'jobId', $jobId, 'target', $target));
+		$url = $request->url(null, 'gateway', 'plugin', 
+					array('MarkupGatewayPlugin','fileId', $fileId, 'userId', $user->getId(), 
+							'stage', $stage, 'jobId', $jobId, 'target', $target)
+				);
 
 		$ch = curl_init();
 		curl_setopt($ch, CURLOPT_URL, $url);
