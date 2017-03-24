@@ -273,6 +273,9 @@ class MarkupGatewayPlugin extends GatewayPlugin {
 				'journal-title'     => $journal->getName($locale),
 				'institution'       => $journal->getSetting('publisherInstitution'),
 				'contributors'      => $authors,
+				'ISSN'				=> $journal->getSetting('onlineIssn'),
+				'journal-id'		=> $journal->getID(),
+				'year'				=> date('Y', strtotime($publishedArticle->getDatePublished())
 		);
 	}
 	
