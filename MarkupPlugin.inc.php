@@ -333,7 +333,7 @@ class MarkupPlugin extends GenericPlugin {
 											'fileId' => $submissionFile->getFileId(), 
 											'stage' => $stage)
 										),
-								__('plugins.generic.markup.modal.xmlConversion'),
+								__('plugins.generic.markup.modal.xmlConversion')
 							),
 							__('plugins.generic.markup.links.convertToXml'),
 							null
@@ -350,7 +350,7 @@ class MarkupPlugin extends GenericPlugin {
 											'fileId' => $submissionFile->getFileId(), 
 											'stage' => WORKFLOW_STAGE_ID_PRODUCTION)
 										),
-								__('plugins.generic.markup.modal.galleyProduction'),
+								__('plugins.generic.markup.modal.galleyProduction')
 							),
 							__('plugins.generic.markup.links.generateGalley'),
 							null
