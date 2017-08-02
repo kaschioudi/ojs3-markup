@@ -259,6 +259,8 @@ class MarkupGatewayPlugin extends GatewayPlugin {
 	{
 		$locale = AppLocale::getLocale();
 
+		$userGroupDao = DAORegistry::getDAO('UserGroupDAO');
+				
 		$authors = array_map(function($author)
 		{
 			return array (
@@ -269,6 +271,7 @@ class MarkupGatewayPlugin extends GatewayPlugin {
 					'affiliation' => $author->getLocalizedAffiliation(),
 					'country' => $author->getCountry(),
 					'bio' => $author->getLocalizedBiography(),
+					'contribType' => $userGroupDao->getById($author->getUserGroupId()),
 			);
 		}, $submission->getAuthors());
 
