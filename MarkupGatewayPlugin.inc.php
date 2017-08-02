@@ -258,7 +258,7 @@ class MarkupGatewayPlugin extends GatewayPlugin {
 	protected function _buildMetadata($journal, $submission)
 	{
 		$locale = AppLocale::getLocale();
-
+		
 		$userGroupDao = DAORegistry::getDAO('UserGroupDAO');
 				
 		$authors = array_map(function($author)
@@ -274,16 +274,36 @@ class MarkupGatewayPlugin extends GatewayPlugin {
 					'contribType' => $userGroupDao->getById($author->getUserGroupId()),
 			);
 		}, $submission->getAuthors());
-
+			
+		$publishedArticleDao = DAORegistry::getDAO('PublishedArticleDAO');
+		$issueDao = DAORegistry::getDAO('IssueDAO');		
+		$publishedArticle = $publishedArticleDao->getPublishedArticleByArticleId($submission->getId());
+		
+		if ($publishedArticle){
+			$issue = $issueDao->getById($publishedArticle->getIssueId());
+			$issueDetails = array (
+						'issue-year'   		=> $issue->getYear(),
+						'issue-volume'  	=> $issue->getVolume(),
+						'issue-number'  	=> $issue->getNumber(),
+						'issue-title'  		=> $issue->getLocalizedTitle(),
+					);
+		}
+		
 		return array (
 				'article-title'     => $submission->getTitle($locale),
 				'abstract'          => $submission->getAbstract($locale),
 				'journal-title'     => $journal->getName($locale),
+				'journal-id'     	=> htmlspecialchars($journal->getSetting('abbreviation', $locale) ? Core::cleanVar($journal->getSetting('abbreviation', $locale)) : Core::cleanVar($journal->getSetting('acronym', $locale))),
 				'institution'       => $journal->getSetting('publisherInstitution'),
 				'contributors'      => $authors,
-				'ISSN'              => $journal->getSetting('onlineIssn'),
-				'journal-id'        => $journal->getId(),
+				'issue-details'     => $issueDetails,
+				'online-ISSN'       => $journal->getSetting('onlineIssn'),
+				'print-ISSN'        => $journal->getSetting('printIssn'),
+				'doi'        		=> $journal->getStoredPubId('doi'),
 		);
+		
+		
+		
 	}
 	
 	/**
