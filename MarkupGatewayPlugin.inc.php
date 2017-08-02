@@ -262,8 +262,13 @@ class MarkupGatewayPlugin extends GatewayPlugin {
 		$authors = array_map(function($author)
 		{
 			return array (
-					'name' => $author->getFullName(),
+					'firstName' => $author->getFirstName(),
+					'lastName' => $author->getLastName(),
 					'email' => $author->getEmail(),
+					'orcid' => $author->getOrcid(),
+					'affiliation' => $author->getLocalizedAffiliation(),
+					'country' => $author->getCountry(),
+					'bio' => $author->getLocalizedBiography(),
 			);
 		}, $submission->getAuthors());
 
