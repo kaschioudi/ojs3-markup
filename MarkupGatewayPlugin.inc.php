@@ -257,10 +257,14 @@ class MarkupGatewayPlugin extends GatewayPlugin {
 	 */
 	protected function _buildMetadata($journal, $submission)
 	{
-		$locale = AppLocale::getLocale();
+		$locale = ($submission->getLanguage() != '') ? $submission->getLanguage() : $journal->getPrimaryLocale();
 		
+		$publishedArticleDao = DAORegistry::getDAO('PublishedArticleDAO');
+		$issueDao = DAORegistry::getDAO('IssueDAO');		
+		$sectionDao = DAORegistry::getDAO('SectionDAO');
 		$userGroupDao = DAORegistry::getDAO('UserGroupDAO');
-				
+		
+		/* Authors */
 		$authors = array_map(function($author)
 		{
 			return array (
@@ -274,13 +278,11 @@ class MarkupGatewayPlugin extends GatewayPlugin {
 					'contribType' => $userGroupDao->getById($author->getUserGroupId()),
 			);
 		}, $submission->getAuthors());
-			
-		$publishedArticleDao = DAORegistry::getDAO('PublishedArticleDAO');
-		$issueDao = DAORegistry::getDAO('IssueDAO');		
-		$publishedArticle = $publishedArticleDao->getPublishedArticleByArticleId($submission->getId());
 		
-		if ($publishedArticle){
-			$issue = $issueDao->getById($publishedArticle->getIssueId());
+		/* Issue information, if available*/
+		$publishedArticle = $publishedArticleDao->getPublishedArticleByArticleId($submission->getId());
+		if ($publishedArticle){	
+			$issue = $issueDao->getById($publishedArticle->getIssueId());				
 			$issueDetails = array (
 						'issue-year'   		=> $issue->getYear(),
 						'issue-volume'  	=> $issue->getVolume(),
@@ -289,19 +291,59 @@ class MarkupGatewayPlugin extends GatewayPlugin {
 					);
 		}
 		
+		/* Page numbers */
+		$matches = null;
+		if (PKPString::regexp_match_get('/^[Pp][Pp]?[.]?[ ]?(\d+)$/', $submission->getPages(), $matches)) {
+			$matchedPage = htmlspecialchars(Core::cleanVar($matches[1]));
+			$fpage = $matchedPage;
+			$lpage = $matchedPage;
+			$pageCount = 1;
+		} elseif (PKPString::regexp_match_get('/^[Pp][Pp]?[.]?[ ]?(\d+)[ ]?(-|–)[ ]?([Pp][Pp]?[.]?[ ]?)?(\d+)$/', $submission->getPages(), $matches)) {
+			$fpage = htmlspecialchars(Core::cleanVar($matches[1]));
+			$lpage = htmlspecialchars(Core::cleanVar($matches[4]));
+			$pageCount = $fpage - $lpage + 1;
+		}		
+		
+		/* Localized journal titles */
+		foreach ($journal->getName(null) as $loc => $title) {
+			$journalTitles[strtoupper(substr($loc, 0, 2))] = htmlspecialchars(Core::cleanVar($title));
+		}
+		
+		/* Localized article titles */
+		foreach ($submission->getTitle(null) as $loc => $title) {
+			$articleTitles[strtoupper(substr($loc, 0, 2))] = htmlspecialchars(Core::cleanVar($title));
+		}
+		
+		/* Localized abstracts */
+		if (is_array($submission->getAbstract(null))) foreach ($submission->getAbstract(null) as $loc => $abstract) {
+			$abstract = htmlspecialchars(Core::cleanVar(strip_tags($abstract)));
+			if (empty($abstract)) continue;
+			$abstracts[strtoupper(substr($loc, 0, 2))] = $abstract;			
+		}
+		
+		
 		return array (
-				'article-title'     => $submission->getTitle($locale),
-				'abstract'          => $submission->getAbstract($locale),
-				'journal-title'     => $journal->getName($locale),
+				'locale'     		=> $locale,
+				'article-titles'    => $articleTitles,
+				'abstracts'         => $abstracts,
+				'journal-titles'    => $journalTitles,
 				'journal-id'     	=> htmlspecialchars($journal->getSetting('abbreviation', $locale) ? Core::cleanVar($journal->getSetting('abbreviation', $locale)) : Core::cleanVar($journal->getSetting('acronym', $locale))),
 				'institution'       => $journal->getSetting('publisherInstitution'),
 				'contributors'      => $authors,
 				'issue-details'     => $issueDetails,
 				'online-ISSN'       => $journal->getSetting('onlineIssn'),
 				'print-ISSN'        => $journal->getSetting('printIssn'),
-				'doi'        		=> $journal->getStoredPubId('doi'),
+				'doi'        		=> $submission->getStoredPubId('doi'),
+				'article-id'        => $submission->getBestArticleId(),
+				'copyright-year'    => $submission->getCopyrightYear(),
+				'license-url'    	=> $submission->getLicenseURL(),
+				'license'    		=> Application::getCCLicenseBadge($submission->getLicenseURL()),
+				'fpage'  			=> $fpage,
+				'lpage'  			=> $lpage,
+				'page-count'  		=> $pageCount,
+				'date-published'  	=> $submission->getDatePublished(),
+				'subj-group-heading'=> $sectionDao->getById($submission->getSectionId()),
 		);
-		
 		
 		
 	}
