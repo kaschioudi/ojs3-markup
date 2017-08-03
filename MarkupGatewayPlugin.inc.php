@@ -321,6 +321,8 @@ class MarkupGatewayPlugin extends GatewayPlugin {
 			$abstracts[strtoupper(substr($loc, 0, 2))] = $abstract;			
 		}
 		
+		/* TODO: keywords and other classifications */
+		
 		
 		return array (
 				'locale'     		=> $locale,
@@ -336,6 +338,7 @@ class MarkupGatewayPlugin extends GatewayPlugin {
 				'doi'        		=> $submission->getStoredPubId('doi'),
 				'article-id'        => $submission->getBestArticleId(),
 				'copyright-year'    => $submission->getCopyrightYear(),
+				'copyright-statement'  => htmlspecialchars(__('submission.copyrightStatement', array('copyrightYear' => $submission->getCopyrightYear(), 'copyrightHolder' => $submission->getLocalizedCopyrightHolder(),
 				'license-url'    	=> $submission->getLicenseURL(),
 				'license'    		=> Application::getCCLicenseBadge($submission->getLicenseURL()),
 				'fpage'  			=> $fpage,
