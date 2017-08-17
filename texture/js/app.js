@@ -1,13 +1,11 @@
 var t = window.texture;
 
-var configurator = new t.TextureConfigurator()
-	.import(t.AuthorPackage)
-	.setXMLStore(OJSXMLStore)
-
 if (typeof window !== 'undefined') {
 	window.onload = function() {
+		var xmlStore = new OJSXMLStore()
 		var app = t.Texture.mount({
-			configurator: configurator,
+			readXML: xmlStore.readXML,
+			writeXML: xmlStore.writeXML,
 			documentId: document.querySelector('meta[name=jobId').getAttribute('content')
 		}, document.body)
 		window.app = app
