@@ -4,12 +4,12 @@ Markup plugin for OJS3
 About
 -----
 
-When the copyediting process finishes, this plugin transforms the submission into XML, PDF, EPUB and HTML and uploads thoses files as galleys.
+This allows OJS to work with PKP’s [Open Typesetting Stack](https://pkp.sfu.ca/open-typesetting-stack/) for transforming Word and PDF articles to JATS XML.
 
 System Requirements
 -------------------
 
-PHP CURL, PHP Zlib, PHP JSON
+PHP cURL, PHP Zlib, PHP JSON
 
 Versions
 --------
@@ -50,7 +50,7 @@ After the job is complete, you should see an XML version of the same article ava
 
 ![](https://github.com/kaschioudi/ojs3-markup/blob/master/readme-images/edit.png?raw=true)
 
-​Texture is a WYSIWYG, user-friendly, native JATS XML editor. Users who don't want to think about XML never have to, but are still deliberately constrained by the JATS spec when making changes to the document, so that (unlike when editing with Word), they can publish directly from here. For expert users who *are *interested in tweaking XML, or for anyone wanting to add a JATS element that is not yet implemented in the WYSIWYG, you can do this with the "Insert" button in the top bar. More and more JATS elements will be added over time so that they are rendered natively, and at the same time Texture will incorporate different custom views offering expert users greater ease of use when directly editing XML.
+​[Texture](https://github.com/substance/texture) is a WYSIWYG, user-friendly, native JATS XML editor. Users who don't want to think about XML never have to, but are still deliberately constrained by the JATS spec when making changes to the document, so that (unlike when editing with Word), they can publish directly from here. For expert users who *are *interested in tweaking XML, or for anyone wanting to add a JATS element that is not yet implemented in the WYSIWYG, you can do this with the "Insert" button in the top bar. More and more JATS elements will be added over time so that they are rendered natively, and at the same time Texture will incorporate different custom views offering expert users greater ease of use when directly editing XML.
 
 The save behaviour in Texture is also currently incomplete -- our plan is for it to eventually act like Google Docs wherein all changes are saved automatically, with the save button in the top bar acting as a "Save as" button, when you want to register a new draft of the article in OJS. Currently, though, you need to use that button to save, and "save as" isn't there yet.
 
