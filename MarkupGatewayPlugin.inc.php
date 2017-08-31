@@ -265,20 +265,20 @@ class MarkupGatewayPlugin extends GatewayPlugin {
 		$userGroupDao = DAORegistry::getDAO('UserGroupDAO');
 		
 		/* Authors */
-		$authors = array_map(function($author)
-		{
-			return array (
-					'firstName' => $author->getFirstName(),
-					'lastName' => $author->getLastName(),
-					'email' => $author->getEmail(),
-					'orcid' => $author->getOrcid(),
-					'affiliation' => $author->getLocalizedAffiliation(),
-					'country' => $author->getCountry(),
-					'bio' => $author->getLocalizedBiography(),
-					'contribType' => $userGroupDao->getById($author->getUserGroupId()),
-			);
-		}, $submission->getAuthors());
-		
+		$count = 0;
+		foreach ($submission->getAuthors() as $author) {
+				$authors[$count]['firstName'] = $author->getFirstName();
+				$authors[$count]['lastName'] = $author->getLastName();
+				$authors[$count]['email'] = $author->getEmail();
+				$authors[$count]['orcid'] = $author->getOrcid();
+				$authors[$count]['affiliation'] = $author->getLocalizedAffiliation();
+				$authors[$count]['country'] = $author->getCountry();
+				$authors[$count]['bio'] = $author->getLocalizedBiography();
+				$userGroup = $userGroupDao->getById($author->getUserGroupId());
+				$authors[$count]['contribType'] = $userGroup->getLocalizedName();
+				$count++;
+		}
+				
 		/* Issue information, if available*/
 		$publishedArticle = $publishedArticleDao->getPublishedArticleByArticleId($submission->getId());
 		if ($publishedArticle){	
@@ -338,12 +338,12 @@ class MarkupGatewayPlugin extends GatewayPlugin {
 				'doi'        		=> $submission->getStoredPubId('doi'),
 				'article-id'        => $submission->getBestArticleId(),
 				'copyright-year'    => $submission->getCopyrightYear(),
-				'copyright-statement'  => htmlspecialchars(__('submission.copyrightStatement', array('copyrightYear' => $submission->getCopyrightYear(), 'copyrightHolder' => $submission->getLocalizedCopyrightHolder(),
+				'copyright-statement'  => htmlspecialchars(__('submission.copyrightStatement', array('copyrightYear' => $submission->getCopyrightYear(), 'copyrightHolder' => $submission->getLocalizedCopyrightHolder()))),
 				'license-url'    	=> $submission->getLicenseURL(),
 				'license'    		=> Application::getCCLicenseBadge($submission->getLicenseURL()),
-				'fpage'  			=> $fpage,
-				'lpage'  			=> $lpage,
-				'page-count'  		=> $pageCount,
+				'fpage'  			=> isset($fpage) ? $fpage: '',
+				'lpage'  			=> isset($lpage) ? $lpage: '',
+				'page-count'  		=> isset($pageCount) ? $pageCount: '',
 				'date-published'  	=> $submission->getDatePublished(),
 				'subj-group-heading'=> $sectionDao->getById($submission->getSectionId()),
 		);
