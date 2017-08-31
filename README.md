@@ -19,7 +19,7 @@ Works with OJS 3 or greater
 Installation
 ------------
 
--   Clone the plugin contents into the plugins/generic folder (e.g. plugins/generic/markup)
+-   Clone the plugin contents into the plugins/generic folder (e.g. plugins/generic/markup). If not doing this before installing OJS, you will need to then run `php tools/upgrade.php upgrade` or `php tools/dbXMLtoSQL.php -schema execute plugins/generic/markup/schema.xml`.
 
 Usage
 -----
