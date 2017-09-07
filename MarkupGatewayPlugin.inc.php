@@ -257,25 +257,98 @@ class MarkupGatewayPlugin extends GatewayPlugin {
 	 */
 	protected function _buildMetadata($journal, $submission)
 	{
-		$locale = AppLocale::getLocale();
-
-		$authors = array_map(function($author)
-		{
-			return array (
-					'name' => $author->getFullName(),
-					'email' => $author->getEmail(),
-			);
-		}, $submission->getAuthors());
-
+		$locale = ($submission->getLanguage() != '') ? $submission->getLanguage() : $journal->getPrimaryLocale();
+		
+		$publishedArticleDao = DAORegistry::getDAO('PublishedArticleDAO');
+		$issueDao = DAORegistry::getDAO('IssueDAO');		
+		$sectionDao = DAORegistry::getDAO('SectionDAO');
+		$userGroupDao = DAORegistry::getDAO('UserGroupDAO');
+		
+		/* Authors */
+		$count = 0;
+		foreach ($submission->getAuthors() as $author) {
+				$authors[$count]['firstName'] = $author->getFirstName();
+				$authors[$count]['lastName'] = $author->getLastName();
+				$authors[$count]['email'] = $author->getEmail();
+				$authors[$count]['orcid'] = $author->getOrcid();
+				$authors[$count]['affiliation'] = $author->getLocalizedAffiliation();
+				$authors[$count]['country'] = $author->getCountry();
+				$authors[$count]['bio'] = $author->getLocalizedBiography();
+				$userGroup = $userGroupDao->getById($author->getUserGroupId());
+				$authors[$count]['contribType'] = $userGroup->getLocalizedName();
+				$count++;
+		}
+				
+		/* Issue information, if available*/
+		$publishedArticle = $publishedArticleDao->getPublishedArticleByArticleId($submission->getId());
+		if ($publishedArticle){	
+			$issue = $issueDao->getById($publishedArticle->getIssueId());				
+			$issueDetails = array (
+						'issue-year'   		=> $issue->getYear(),
+						'issue-volume'  	=> $issue->getVolume(),
+						'issue-number'  	=> $issue->getNumber(),
+						'issue-title'  		=> $issue->getLocalizedTitle(),
+					);
+		}
+		
+		/* Page numbers */
+		$matches = null;
+		if (PKPString::regexp_match_get('/^[Pp][Pp]?[.]?[ ]?(\d+)$/', $submission->getPages(), $matches)) {
+			$matchedPage = htmlspecialchars(Core::cleanVar($matches[1]));
+			$fpage = $matchedPage;
+			$lpage = $matchedPage;
+			$pageCount = 1;
+		} elseif (PKPString::regexp_match_get('/^[Pp][Pp]?[.]?[ ]?(\d+)[ ]?(-|–)[ ]?([Pp][Pp]?[.]?[ ]?)?(\d+)$/', $submission->getPages(), $matches)) {
+			$fpage = htmlspecialchars(Core::cleanVar($matches[1]));
+			$lpage = htmlspecialchars(Core::cleanVar($matches[4]));
+			$pageCount = $fpage - $lpage + 1;
+		}		
+		
+		/* Localized journal titles */
+		foreach ($journal->getName(null) as $loc => $title) {
+			$journalTitles[strtoupper(substr($loc, 0, 2))] = htmlspecialchars(Core::cleanVar($title));
+		}
+		
+		/* Localized article titles */
+		foreach ($submission->getTitle(null) as $loc => $title) {
+			$articleTitles[strtoupper(substr($loc, 0, 2))] = htmlspecialchars(Core::cleanVar($title));
+		}
+		
+		/* Localized abstracts */
+		if (is_array($submission->getAbstract(null))) foreach ($submission->getAbstract(null) as $loc => $abstract) {
+			$abstract = htmlspecialchars(Core::cleanVar(strip_tags($abstract)));
+			if (empty($abstract)) continue;
+			$abstracts[strtoupper(substr($loc, 0, 2))] = $abstract;			
+		}
+		
+		/* TODO: keywords and other classifications */
+		
+		
 		return array (
-				'article-title'     => $submission->getTitle($locale),
-				'abstract'          => $submission->getAbstract($locale),
-				'journal-title'     => $journal->getName($locale),
+				'locale'     		=> $locale,
+				'article-titles'    => $articleTitles,
+				'abstracts'         => $abstracts,
+				'journal-titles'    => $journalTitles,
+				'journal-id'     	=> htmlspecialchars($journal->getSetting('abbreviation', $locale) ? Core::cleanVar($journal->getSetting('abbreviation', $locale)) : Core::cleanVar($journal->getSetting('acronym', $locale))),
 				'institution'       => $journal->getSetting('publisherInstitution'),
 				'contributors'      => $authors,
-				'ISSN'              => $journal->getSetting('onlineIssn'),
-				'journal-id'        => $journal->getId(),
+				'issue-details'     => $issueDetails,
+				'online-ISSN'       => $journal->getSetting('onlineIssn'),
+				'print-ISSN'        => $journal->getSetting('printIssn'),
+				'doi'        		=> $submission->getStoredPubId('doi'),
+				'article-id'        => $submission->getBestArticleId(),
+				'copyright-year'    => $submission->getCopyrightYear(),
+				'copyright-statement'  => htmlspecialchars(__('submission.copyrightStatement', array('copyrightYear' => $submission->getCopyrightYear(), 'copyrightHolder' => $submission->getLocalizedCopyrightHolder()))),
+				'license-url'    	=> $submission->getLicenseURL(),
+				'license'    		=> Application::getCCLicenseBadge($submission->getLicenseURL()),
+				'fpage'  			=> isset($fpage) ? $fpage: '',
+				'lpage'  			=> isset($lpage) ? $lpage: '',
+				'page-count'  		=> isset($pageCount) ? $pageCount: '',
+				'date-published'  	=> $submission->getDatePublished(),
+				'subj-group-heading'=> $sectionDao->getById($submission->getSectionId()),
 		);
+		
+		
 	}
 	
 	/**
@@ -317,7 +390,7 @@ class MarkupGatewayPlugin extends GatewayPlugin {
 			// retrieve job archive from markup server
 			$i = 0;
 			$jobStatus = null;
-			while($i++ < 60) {
+			while($i++ < 180) {
 				$jobStatus = $this->xmlpsWrapper->getJobStatus($jobId);
 				if (($jobStatus != XMLPSWrapper::JOB_STATUS_PENDING) && ($jobStatus != XMLPSWrapper::JOB_STATUS_PROCESSING)) break; 
 				sleep(5);

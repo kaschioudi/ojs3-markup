@@ -59,7 +59,7 @@
 
 <p>Thank you for your interest in OTS! This service, and associated OJS plugin, are both in beta, and expectations of reliability, availability and accuracy should be calibrated with that in mind. An Open Typesetting Stack User ID and API token are required to use the conversion service. You can register for our <strong>demo</strong> OTS instance <a href="http://pkp-xml-demo.lib.sfu.ca/" target="_blank">here</a>. For future news on non-demo, non-beta plans and services for this stack, please follow the <a href="https://pkp.sfu.ca/category/news/" target=_blank">PKP blog</a>, or keep an eye on the <a href="https://forum.pkp.sfu.ca" target="_blank">PKP support forum</a>. 
 
-<p><strong>Bugs:</strong>We welcome bug reports and feature requests in the following locations (please search for similar bugs/requests before submitting, to reduce duplicates):</p>
+<p><strong>Bugs:</strong> We welcome bug reports and feature requests in the following locations (please search for similar bugs/requests before submitting, to reduce duplicates):</p>
 
 <ul>
 	<li><a href="https://github.com/kaschioudi/ojs3-markup/issues" target="_blank">OJS plugin issues</a></li>
