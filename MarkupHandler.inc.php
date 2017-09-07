@@ -194,7 +194,7 @@ class MarkupHandler extends Handler {
 				return new JSONMessage(false);
 			}
 			
-			$xmlheader = '<?xml version="1.0"?>'. PHP_EOL .'<!DOCTYPE article PUBLIC "-//NLM//DTD Journal Publishing DTD v3.0 20080202//EN" "http://dtd.nlm.nih.gov/publishing/3.0/journalpublishing3.dtd">' . PHP_EOL;
+			$xmlheader = '<?xml version="1.0"?>'. PHP_EOL;
 			file_put_contents($filePath, $xmlheader . $data['content']);
 			return new JSONMessage(true);
 		}
