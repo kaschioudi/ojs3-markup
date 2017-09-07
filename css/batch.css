@@ -1,0 +1,17 @@
+.batch-processing {
+	background-color: silver;
+	border: 1px dashed black;
+	padding: 2px;
+}
+
+.batch-success {
+	background-color: #b6f7c5;
+	border: 1px solid silver;
+	padding: 2px;
+}
+
+.batch-failure {
+	background-color: #dc3545;
+	border: 1px solid silver;
+	padding: 2px;
+}
