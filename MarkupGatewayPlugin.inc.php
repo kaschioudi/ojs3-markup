@@ -390,7 +390,7 @@ class MarkupGatewayPlugin extends GatewayPlugin {
 			// retrieve job archive from markup server
 			$i = 0;
 			$jobStatus = null;
-			while($i++ < 60) {
+			while($i++ < 180) {
 				$jobStatus = $this->xmlpsWrapper->getJobStatus($jobId);
 				if (($jobStatus != XMLPSWrapper::JOB_STATUS_PENDING) && ($jobStatus != XMLPSWrapper::JOB_STATUS_PROCESSING)) break; 
 				sleep(5);
