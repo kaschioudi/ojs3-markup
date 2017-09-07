@@ -114,12 +114,15 @@ class MarkupPlugin extends GenericPlugin {
 				DAORegistry::registerDAO('MarkupJobInfoDAO', $markupJobInfoDao);
 
 				// Register callbacks.
-				HookRegistry::register('LoadHandler', array($this, 'callbackLoadHandler'));
+				HookRegistry::register('LoadHandler', array($this, 'callbackLoadMarkupHandler'));
+				HookRegistry::register('LoadHandler', array($this, 'callbackLoadBatchHandler'));
 				HookRegistry::register('TemplateManager::fetch', array($this, 'templateFetchCallback'));
 				HookRegistry::register('PluginRegistry::loadCategory', array($this, 'callbackLoadCategory'));
 				HookRegistry::register('Templates::Management::Settings::website', array($this, 'callbackShowWebsiteSettingsTabs'));
+				HookRegistry::register('Templates::Management::Settings::website', array($this, 'callbackShowArticlesBatchConversionTabs'));
 				HookRegistry::register('Templates::User::profile', array($this, 'callbackUserProfile'));
 				HookRegistry::register('submissionfiledaodelegate::_deleteobject', array($this, 'callbackSubmissionFileDeteted'));
+				HookRegistry::register('LoadComponentHandler', array($this, 'setupGridHandler'));
 			}
 			return true;
 		}
@@ -162,8 +165,8 @@ class MarkupPlugin extends GenericPlugin {
 	 *
 	 * @return string Public plugin CSS URL
 	 */
-	function getCssUrl() {
-		return parent::getPluginPath() . '/css/';
+	function getCssUrl($request) {
+		return $request->getBaseUrl() . '/' . $this->getPluginPath() . '/css';
 	}
 	
 	/**
@@ -202,6 +205,21 @@ class MarkupPlugin extends GenericPlugin {
 	}
 
 	/**
+	 * Permit requests to the batch conversion grid handler
+	 * @param $hookName string The name of the hook being invoked
+	 * @param $args array The parameters to the invoked hook
+	 */
+	function setupGridHandler($hookName, $params) {
+		$component =& $params[0];
+		if ($component == 'plugins.generic.markup.controllers.grid.MarkupBatchConversionGridHandler') {
+			import($component);
+			MarkupBatchConversionGridHandler::setPlugin($this);
+			return true;
+		}
+		return false;
+	}
+
+	/**
 	 * @see Plugin::manage()
 	 */
 	function manage($args, $request) {
@@ -232,6 +250,13 @@ class MarkupPlugin extends GenericPlugin {
 					$form->initData();
 				}
 				return new JSONMessage(true, $form->fetch($request));
+
+			case 'batch':
+				$context = $request->getContext();
+				$templateMgr = TemplateManager::getManager($request);
+				$form = new Form($this->plugin->getTemplatePath() . 'batchConversion.tpl');
+				$json = new JSONMessage(true, $form->fetch($request));
+				return new JSONMessage(true, $form->fetch($request));
 		}
 		return parent::manage($args, $request);
 	}
@@ -251,9 +276,23 @@ class MarkupPlugin extends GenericPlugin {
 	}
 
 	/**
+	 * Extend the website settings tabs to include articles batch conversion
+	 * @param $hookName string The name of the invoked hook
+	 * @param $args array Hook parameters
+	 * @return boolean Hook handling status
+	 */
+	public function callbackShowArticlesBatchConversionTabs($hookName, $args) {
+		$output =& $args[2];
+		$request =& Registry::get('request');
+		$dispatcher = $request->getDispatcher();
+		$output .= '<li><a name="markupBatchConversion" href="' . $dispatcher->url($request, ROUTE_COMPONENT, null, 'plugins.generic.markup.controllers.grid.MarkupBatchConversionGridHandler', 'index') . '">' . __('plugins.generic.markup.batch') . '</a></li>';
+		return false;
+	}
+
+	/**
 	 * @see PKPPageRouter::route()
 	 */
-	public function callbackLoadHandler($hookName, $args) {
+	public function callbackLoadMarkupHandler($hookName, $args) {
 		// Check the page.
 		$page = $args[0];
 		if ($page !== 'markup') return;
@@ -290,6 +329,22 @@ class MarkupPlugin extends GenericPlugin {
 			// set handler file path
 			$args[2] = $this->getPluginPath() . '/' . 'MarkupHandler.inc.php';
 		}
+	}
+
+	/**
+	 * @see PKPPageRouter::route()
+	 */
+	public function callbackLoadBatchHandler($hookName, $args) {
+		// Check the page.
+		$page = $args[0];
+		if ($page !== 'batch') return;
+
+		$op = $args[1];
+		$publicOps = array('filesToConvert');
+		if (!in_array($op, $publicOps)) return;
+
+		define('HANDLER_CLASS', 'MarkupBatchConversionHandler');
+		$args[2] = $this->getPluginPath() . '/' . 'MarkupBatchConversionHandler.inc.php';
 	}
 
 	/**

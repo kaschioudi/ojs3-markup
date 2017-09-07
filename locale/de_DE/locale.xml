@@ -72,4 +72,6 @@
 	<message key="plugins.generic.markup.settings.wantedFormatsEPUB">EPUB</message>
 	<message key="plugins.generic.markup.job.success">Your document has been successfuly submitted to document markup server. Transformation progress is available at: {$url}</message>
 	<message key="plugins.generic.markup.job.failure">Unable to submit your document to document markup server. Please make sure the plugin is correctly installed and configured.</message>
+	<message key="plugins.generic.markup.batch">OTS Backlog conversion</message>
+	<message key="plugins.generic.markup.batch.trigger-label">Start batch conversion</message>
 </locale>

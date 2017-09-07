@@ -107,4 +107,6 @@
 	<message key="plugins.generic.markup.settings.editWithSubstanceStagesHelp">Select workflow stages where the Texture XML editor is available.</message>
 	<message key="plugins.generic.markup.required.xmlConversionStages">OTS conversion must be enabled in at least one stage.</message>
 	<message key="plugins.generic.markup.required.editWithSubstanceStages">The Texture XML editor must be enabled in at least one stage.</message>
+	<message key="plugins.generic.markup.batch">OTS Backlog conversion</message>
+	<message key="plugins.generic.markup.batch.trigger-label">Start batch conversion</message>
 </locale>
