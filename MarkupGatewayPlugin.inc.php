@@ -363,15 +363,27 @@ class MarkupGatewayPlugin extends GatewayPlugin {
 		switch ($target) {
 			case 'xml-conversion':
 				$params = array(
-					'stage' => $stage,
-					'assocType' => (int)$submissionFile->getAssocType(),
-					'assocId' => (int)$submissionFile->getAssocId(),
-					'UserGroupId' => (int)$submissionFile->getUserGroupId()
+					'stage' 	=> $stage,
+					'assocType' 	=> (int)$submissionFile->getAssocType(),
+					'assocId' 	=> (int)$submissionFile->getAssocId(),
+					'UserGroupId' 	=> (int)$submissionFile->getUserGroupId()
 				);
 				$this->addXmlDocumentToFileList($submission, "{$extractionPath}/document.xml", $params);
 				break;
 
 			case 'galley-generate':
+				// Always populate production ready files with xml document.
+				$xmlFileName = "document" . '__' . date('Y-m-d_h:i:s') .'.xml';
+				$params = array(
+					'stage' 	=> SUBMISSION_FILE_PRODUCTION_READY,
+					'assocType' 	=> (int)$submissionFile->getAssocType(),
+					'assocId' 	=> 0,
+					'UserGroupId' 	=> 0,
+					'filename' 	=> $xmlFileName
+				);
+
+				$this->addXmlDocumentToFileList($submission, "{$extractionPath}/document.xml", $params);
+
 				$wantedFormats = $plugin->getSetting($journalId, 'wantedFormats');
 
 				$genreDao = DAORegistry::getDAO('GenreDAO');
@@ -431,10 +443,11 @@ class MarkupGatewayPlugin extends GatewayPlugin {
 		$submissionFile->setFileStage($params['stage']);
 		$submissionFile->setDateUploaded(Core::getCurrentDate());
 		$submissionFile->setDateModified(Core::getCurrentDate());
-		$submissionFile->setOriginalFileName(basename($filePath));
+		$submissionFile->setOriginalFileName($params['filename']);
 		$submissionFile->setFileType('text/xml');
 		$submissionFile->setViewable(true);
 		$submissionFile->setUserGroupId($params['UserGroupId']);
+		$submissionFile->setSubmissionLocale($submission->getLocale());
 
 		$submissionFile->setAssocType($params['assocType']);
 		$submissionFile->setAssocId($params['assocId']);
