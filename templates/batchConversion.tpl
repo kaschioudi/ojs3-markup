@@ -14,7 +14,7 @@
 	<div class="pkp_form">
 		<fieldset>
 			<legend>Selected submissions</legend>
-			<label class="description">Aenean vel ante id ante tristique tristique. Ut at mollis velit. Curabitur ornare ornare malesuada. Vestibulum elit leo, tempor vitae posuere ut, dapibus vitae nisi. Aenean tristique dapibus posuere. Ut eget tortor quis ipsum vestibulum finibus. Nullam ornare bibendum magna. Phasellus a quam tortor.</label>
+			<label class="description">{translate key="plugins.generic.markup.batch.selected-submissions"}</label>
 			<input type="hidden" id="batchFilesToConvert" name="batchFilesToConvert" value="{$batchFilesToConvert}" />
 			<input type="hidden" id="conversionTriggerUrl" name="conversionTriggerUrl" value="{$conversionTriggerUrl}" />
 			<ul id="submissionListConfirmation"></ul>
