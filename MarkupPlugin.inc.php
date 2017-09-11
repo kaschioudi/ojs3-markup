@@ -255,7 +255,6 @@ class MarkupPlugin extends GenericPlugin {
 				$context = $request->getContext();
 				$templateMgr = TemplateManager::getManager($request);
 				$form = new Form($this->plugin->getTemplatePath() . 'batchConversion.tpl');
-				$json = new JSONMessage(true, $form->fetch($request));
 				return new JSONMessage(true, $form->fetch($request));
 		}
 		return parent::manage($args, $request);
