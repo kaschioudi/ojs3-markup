@@ -3,8 +3,8 @@
 /**
  * @file controllers/grid/MarkupBatchConversionGridHandler.inc.php
  *
- * Copyright (c) 2014-2016 Simon Fraser University Library
- * Copyright (c) 2003-2016 John Willinsky
+ * Copyright (c) 2014-2017 Simon Fraser University
+ * Copyright (c) 2003-2017 John Willinsky
  * Distributed under the GNU GPL v2. For full terms see the file docs/COPYING.
  *
  * @class MarkupBatchConversionGridHandler
@@ -36,7 +36,7 @@ class MarkupBatchConversionGridHandler extends SubmissionsListGridHandler {
 		parent::__construct();
 		$this->addRoleAssignment(
 			array(ROLE_ID_MANAGER),
-			array('index', 'fetchGrid', 'fetchRow', 'fetchRows', 'batchConvert')
+			array('index', 'fetchGrid', 'fetchRow', 'fetchRows')
 		);
 	}
 
