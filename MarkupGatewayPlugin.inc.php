@@ -433,26 +433,27 @@ class MarkupGatewayPlugin extends GatewayPlugin {
 		$journalId = $journal->getId();
 		$plugin = $this->getMarkupPlugin();
 
+		$fileName = "document" . '__' . date('Y-m-d_h:i:s');
 		switch ($target) {
 			case 'xml-conversion':
 				$params = array(
 					'stage' 	=> $stage,
 					'assocType' 	=> (int)$submissionFile->getAssocType(),
 					'assocId' 	=> (int)$submissionFile->getAssocId(),
-					'UserGroupId' 	=> (int)$submissionFile->getUserGroupId()
+					'UserGroupId' 	=> (int)$submissionFile->getUserGroupId(),
+					'filename'	=> $fileName,
 				);
 				$this->addXmlDocumentToFileList($submission, "{$extractionPath}/document.xml", $params);
 				break;
 
 			case 'galley-generate':
 				// Always populate production ready files with xml document.
-				$xmlFileName = "document" . '__' . date('Y-m-d_h:i:s') .'.xml';
 				$params = array(
 					'stage' 	=> SUBMISSION_FILE_PRODUCTION_READY,
 					'assocType' 	=> (int)$submissionFile->getAssocType(),
 					'assocId' 	=> 0,
 					'UserGroupId' 	=> 0,
-					'filename' 	=> $xmlFileName
+					'filename' 	=> $fileName
 				);
 
 				$this->addXmlDocumentToFileList($submission, "{$extractionPath}/document.xml", $params);
@@ -470,14 +471,17 @@ class MarkupGatewayPlugin extends GatewayPlugin {
 					$existing_galley_by_labels[$galley->getLabel()] = $galley;
 				}
 
+				$gParams = array(
+					'filename' 	=> $fileName
+				);
 				if (in_array('pdf', $wantedFormats)) {
-					$this->_addFileToGalley($existing_galley_by_labels, $submission, $genre->getId(), 'pdf', "{$extractionPath}/document.pdf");
+					$this->_addFileToGalley($existing_galley_by_labels, $submission, $genre->getId(), 'pdf', "{$extractionPath}/document.pdf", $gParams);
 				}
 				if (in_array('xml', $wantedFormats)) {
-					$this->_addFileToGalley($existing_galley_by_labels, $submission, $genre->getId(), 'xml', "{$extractionPath}/document.xml");
+					$this->_addFileToGalley($existing_galley_by_labels, $submission, $genre->getId(), 'xml', "{$extractionPath}/document.xml", $gParams);
 				}
 				if (in_array('epub', $wantedFormats)) {
-					$this->_addFileToGalley($existing_galley_by_labels, $submission, $genre->getId(), 'epub', "{$extractionPath}/document.epub");
+					$this->_addFileToGalley($existing_galley_by_labels, $submission, $genre->getId(), 'epub', "{$extractionPath}/document.epub", $gParams);
 				}
 				break;
 		}
@@ -507,6 +511,8 @@ class MarkupGatewayPlugin extends GatewayPlugin {
 
 		$userGroupDao = DAORegistry::getDAO('UserGroupDAO');
 
+		$fileName = isset($params['filename']) ? "{$params['filename']}.xml" :'document.xml';
+
 		$submissionFileDao = DAORegistry::getDAO('SubmissionFileDAO');
 		$submissionFile = $submissionFileDao->newDataObjectByGenreId($genreId);
 		$submissionFile->setUploaderUserId($this->user->getId());
@@ -516,11 +522,12 @@ class MarkupGatewayPlugin extends GatewayPlugin {
 		$submissionFile->setFileStage($params['stage']);
 		$submissionFile->setDateUploaded(Core::getCurrentDate());
 		$submissionFile->setDateModified(Core::getCurrentDate());
-		$submissionFile->setOriginalFileName($params['filename']);
+		$submissionFile->setOriginalFileName($fileName);
 		$submissionFile->setFileType('text/xml');
 		$submissionFile->setViewable(true);
 		$submissionFile->setUserGroupId($params['UserGroupId']);
 		$submissionFile->setSubmissionLocale($submission->getLocale());
+		$submissionFile->setName($fileName, AppLocale::getLocale());
 
 		$submissionFile->setAssocType($params['assocType']);
 		$submissionFile->setAssocId($params['assocId']);
@@ -538,7 +545,7 @@ class MarkupGatewayPlugin extends GatewayPlugin {
 	 *
 	 * @return object Submission file object 
 	 */
-	function _addFileToGalley($existing_galley_by_labels, $submission, $genreId, $format, $filePath) {
+	function _addFileToGalley($existing_galley_by_labels, $submission, $genreId, $format, $filePath, $params = array()) {
 
 		$submissionId = $submission->getId();
 
@@ -546,6 +553,8 @@ class MarkupGatewayPlugin extends GatewayPlugin {
 		$articleGalley = null;
 		$articleGalleyDao = DAORegistry::getDAO('ArticleGalleyDAO');
 		$label = 'XMLPS-' . strtoupper($format) . '-' .  date("MdSY@H:i",time());
+
+		$fileName = isset($params['filename']) ? "{$params['filename']}.{$format}" : "document.{$format}";
 
 		// create new galley
 		$articleGalley = $articleGalleyDao->newDataObject();
@@ -563,7 +572,10 @@ class MarkupGatewayPlugin extends GatewayPlugin {
 		$submissionFile->setFileStage(SUBMISSION_FILE_PROOF);
 		$submissionFile->setDateUploaded(Core::getCurrentDate());
 		$submissionFile->setDateModified(Core::getCurrentDate());
-		$submissionFile->setOriginalFileName(basename($filePath));
+		$submissionFile->setOriginalFileName($fileName);
+		$submissionFile->setUserGroupId($params['UserGroupId']);
+		$submissionFile->setSubmissionLocale($submission->getLocale());
+		$submissionFile->setName($fileName, AppLocale::getLocale());
 
 		switch($format) {
 			case 'pdf':

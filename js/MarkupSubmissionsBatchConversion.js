@@ -43,7 +43,7 @@
 								var stage = content[i].stage;
 								var fileCheckbox = $('<li class="batch-conversion-submission-file"></li>')
 									.append('<label><input type="checkbox" class="submission-file"'+ 
-											'name="submission-file" value="+fileId+"'+
+											'name="submission-file" value="'+fileId+'"'+
 											'data-submission-id="'+submissionId+'"'+
 											'data-file-id="'+fileId+'"'+
 											'data-stage="'+stage+'"'+

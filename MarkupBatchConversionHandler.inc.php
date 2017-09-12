@@ -60,26 +60,23 @@ class MarkupBatchConversionHandler extends Handler {
 	 	$submission = $this->getAuthorizedContextObject(ASSOC_TYPE_SUBMISSION);
 		$genreDao = DAORegistry::getDAO('GenreDAO');
 	 	$submissionFileDao = DAORegistry::getDAO('SubmissionFileDAO');
-	 	$siteConversionStages = $this->plugin->getSetting($context->getId(), 'xmlConversionStages');
 	 	$filesToConvert = array();
 	 	$validFileExtensions = array('pdf','doc','docx');
-	 	foreach ($siteConversionStages as $stageId) {
-	 		$submissionFiles = $submissionFileDao->getLatestRevisions($submission->getId(), $stageId);
-	 		foreach ($submissionFiles as $submissionFile) {
-	 			$genre = $genreDao->getById($submissionFile->getGenreId());
-	 			if (intval($genre->getCategory()) != GENRE_CATEGORY_DOCUMENT) 
-	 				continue;
-	 			if (intval($genre->getDependent()) != 0) 
-	 				continue;
-	 			if (!in_array(strtolower($submissionFile->getExtension()), $validFileExtensions)) 
-	 				continue;
-	 			$filesToConvert[] = array(
-	 				'fileId' 	=> $submissionFile->getFileId(),
-	 				'stage'		=> $submission->getStageId(),
-	 				'filename'	=> $submissionFile->getName(AppLocale::getLocale()),
-	 			);
-	 		}
-	 	}
+ 		$submissionFiles = $submissionFileDao->getLatestRevisions($submission->getId());
+ 		foreach ($submissionFiles as $submissionFile) {
+ 			$genre = $genreDao->getById($submissionFile->getGenreId());
+ 			if (intval($genre->getCategory()) != GENRE_CATEGORY_DOCUMENT) 
+ 				continue;
+ 			if (intval($genre->getDependent()) != 0) 
+ 				continue;
+ 			if (!in_array(strtolower($submissionFile->getExtension()), $validFileExtensions)) 
+ 				continue;
+ 			$filesToConvert[] = array(
+ 				'fileId' 	=> $submissionFile->getFileId(),
+ 				'stage'		=> $submission->getStageId(),
+ 				'filename'	=> $submissionFile->getName(AppLocale::getLocale()),
+ 			);
+ 		}
 	 	return new JSONMessage(true, $filesToConvert);
 	}
 }
