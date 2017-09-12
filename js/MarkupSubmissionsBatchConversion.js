@@ -23,49 +23,49 @@
 	$.pkp.plugins.markup.js.MarkupSubmissionsBatchConversion = function() {
 		// submission selection click handler
 		$('div#markupBatchConversionGridContainer').on('click', 'input:checkbox[id*="select-"]', function() {
-		    var $el = $(this);
-		    var isChecked = $el.is(':checked');
-		    var $ul = $('ul#submissionListConfirmation');
-		    var submissionLabel = $el.closest('tr').find('td:eq(2)').text().replace(/\s+/g, " ");
-		    if (isChecked) {
-		    	var submissionId = $el.val();
-		    	var $submissionFilesElement = $('<ul />');
-		        $.get($('input#batchFilesToConvert').val(), {'submissionId': submissionId}, function(data) {
-		        	var content = data.content;
-		        	if (content) {
-		        		if (!content.length) {
-		        			$submissionFilesElement.append($('<li><label>No file found!</label></li>'));
-		        		}
-		        		else {
-			        		for (var i = 0; i < content.length; i++) {
-			        			var fileId = content[i].fileId;
-			        			var filename = content[i].filename;
-			        			var stage = content[i].stage;
-			        			var fileCheckbox = $('<li class="batch-conversion-submission-file"></li>')
-			        				.append('<label><input type="checkbox" class="submission-file"'+ 
-			        						'name="submission-file" value="+fileId+"'+
-			        						'data-submission-id="'+submissionId+'"'+
-			        						'data-file-id="'+fileId+'"'+
-			        						'data-stage="'+stage+'"'+
-			        						'checked /> '+filename+'</label>');
-			        			fileCheckbox.appendTo($submissionFilesElement);
-			        				
-			        		}
-			        		$submissionFilesElement.appendTo($('li[data-submission-id='+submissionId+']'));
-		        		}
-		        	}
-		        }, 'json')
-		        .then(function() {
-		        	$('<li class="batch-conversion-submission"/>')
-		        		.attr('data-submission-id', submissionId)
-		        		.text(submissionLabel)
-		        		.append($submissionFilesElement)
-		        		.appendTo($ul);
-		        });
-		    }
-		    else {
-		        $('ul#submissionListConfirmation li[data-submission-id='+$el.val()+']').remove();
-		    }
+			var $el = $(this);
+			var isChecked = $el.is(':checked');
+			var $ul = $('ul#submissionListConfirmation');
+			var submissionLabel = $el.closest('tr').find('td:eq(2)').text().replace(/\s+/g, " ");
+			if (isChecked) {
+				var submissionId = $el.val();
+				var $submissionFilesElement = $('<ul />');
+				$.get($('input#batchFilesToConvert').val(), {'submissionId': submissionId}, function(data) {
+					var content = data.content;
+					if (content) {
+						if (!content.length) {
+							$submissionFilesElement.append($('<li><label>No file found!</label></li>'));
+						}
+						else {
+							for (var i = 0; i < content.length; i++) {
+								var fileId = content[i].fileId;
+								var filename = content[i].filename;
+								var stage = content[i].stage;
+								var fileCheckbox = $('<li class="batch-conversion-submission-file"></li>')
+									.append('<label><input type="checkbox" class="submission-file"'+ 
+											'name="submission-file" value="+fileId+"'+
+											'data-submission-id="'+submissionId+'"'+
+											'data-file-id="'+fileId+'"'+
+											'data-stage="'+stage+'"'+
+											'checked /> '+filename+'</label>');
+								fileCheckbox.appendTo($submissionFilesElement);
+									
+							}
+							$submissionFilesElement.appendTo($('li[data-submission-id='+submissionId+']'));
+						}
+					}
+				}, 'json')
+				.then(function() {
+					$('<li class="batch-conversion-submission"/>')
+						.attr('data-submission-id', submissionId)
+						.text(submissionLabel)
+						.append($submissionFilesElement)
+						.appendTo($ul);
+				});
+			}
+			else {
+				$('ul#submissionListConfirmation li[data-submission-id='+$el.val()+']').remove();
+			}
 		});
 
 		// batch conversion button click handler

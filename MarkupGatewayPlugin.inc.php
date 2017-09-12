@@ -267,16 +267,16 @@ class MarkupGatewayPlugin extends GatewayPlugin {
 		/* Authors */
 		$count = 0;
 		foreach ($submission->getAuthors() as $author) {
-				$authors[$count]['firstName'] = $author->getFirstName();
-				$authors[$count]['lastName'] = $author->getLastName();
-				$authors[$count]['email'] = $author->getEmail();
-				$authors[$count]['orcid'] = $author->getOrcid();
-				$authors[$count]['affiliation'] = $author->getLocalizedAffiliation();
-				$authors[$count]['country'] = $author->getCountry();
-				$authors[$count]['bio'] = $author->getLocalizedBiography();
-				$userGroup = $userGroupDao->getById($author->getUserGroupId());
-				$authors[$count]['contribType'] = $userGroup->getLocalizedName();
-				$count++;
+			$authors[$count]['firstName'] = $author->getFirstName();
+			$authors[$count]['lastName'] = $author->getLastName();
+			$authors[$count]['email'] = $author->getEmail();
+			$authors[$count]['orcid'] = $author->getOrcid();
+			$authors[$count]['affiliation'] = $author->getLocalizedAffiliation();
+			$authors[$count]['country'] = $author->getCountry();
+			$authors[$count]['bio'] = $author->getLocalizedBiography();
+			$userGroup = $userGroupDao->getById($author->getUserGroupId());
+			$authors[$count]['contribType'] = $userGroup->getLocalizedName();
+			$count++;
 		}
 				
 		/* Issue information, if available*/
@@ -284,11 +284,11 @@ class MarkupGatewayPlugin extends GatewayPlugin {
 		if ($publishedArticle){	
 			$issue = $issueDao->getById($publishedArticle->getIssueId());				
 			$issueDetails = array (
-						'issue-year'   		=> $issue->getYear(),
-						'issue-volume'  	=> $issue->getVolume(),
-						'issue-number'  	=> $issue->getNumber(),
-						'issue-title'  		=> $issue->getLocalizedTitle(),
-					);
+				'issue-year'   		=> $issue->getYear(),
+				'issue-volume'  	=> $issue->getVolume(),
+				'issue-number'  	=> $issue->getNumber(),
+				'issue-title'  		=> $issue->getLocalizedTitle(),
+			);
 		}
 		
 		/* Page numbers */
@@ -325,27 +325,27 @@ class MarkupGatewayPlugin extends GatewayPlugin {
 		
 		
 		return array (
-				'locale'     		=> $locale,
-				'article-titles'    => $articleTitles,
-				'abstracts'         => $abstracts,
-				'journal-titles'    => $journalTitles,
-				'journal-id'     	=> htmlspecialchars($journal->getSetting('abbreviation', $locale) ? Core::cleanVar($journal->getSetting('abbreviation', $locale)) : Core::cleanVar($journal->getSetting('acronym', $locale))),
-				'institution'       => $journal->getSetting('publisherInstitution'),
-				'contributors'      => $authors,
-				'issue-details'     => $issueDetails,
-				'online-ISSN'       => $journal->getSetting('onlineIssn'),
-				'print-ISSN'        => $journal->getSetting('printIssn'),
-				'doi'        		=> $submission->getStoredPubId('doi'),
-				'article-id'        => $submission->getBestArticleId(),
-				'copyright-year'    => $submission->getCopyrightYear(),
-				'copyright-statement'  => htmlspecialchars(__('submission.copyrightStatement', array('copyrightYear' => $submission->getCopyrightYear(), 'copyrightHolder' => $submission->getLocalizedCopyrightHolder()))),
-				'license-url'    	=> $submission->getLicenseURL(),
-				'license'    		=> Application::getCCLicenseBadge($submission->getLicenseURL()),
-				'fpage'  			=> isset($fpage) ? $fpage: '',
-				'lpage'  			=> isset($lpage) ? $lpage: '',
-				'page-count'  		=> isset($pageCount) ? $pageCount: '',
-				'date-published'  	=> $submission->getDatePublished(),
-				'subj-group-heading'=> $sectionDao->getById($submission->getSectionId()),
+			'locale'	 	=> $locale,
+			'article-titles'	=> $articleTitles,
+			'abstracts'		=> $abstracts,
+			'journal-titles'	=> $journalTitles,
+			'journal-id'	 	=> htmlspecialchars($journal->getSetting('abbreviation', $locale) ? Core::cleanVar($journal->getSetting('abbreviation', $locale)) : Core::cleanVar($journal->getSetting('acronym', $locale))),
+			'institution'	   	=> $journal->getSetting('publisherInstitution'),
+			'contributors'	  	=> $authors,
+			'issue-details'	 	=> $issueDetails,
+			'online-ISSN'	   	=> $journal->getSetting('onlineIssn'),
+			'print-ISSN'		=> $journal->getSetting('printIssn'),
+			'doi'			=> $submission->getStoredPubId('doi'),
+			'article-id'		=> $submission->getBestArticleId(),
+			'copyright-year'	=> $submission->getCopyrightYear(),
+			'copyright-statement'	=> htmlspecialchars(__('submission.copyrightStatement', array('copyrightYear' => $submission->getCopyrightYear(), 'copyrightHolder' => $submission->getLocalizedCopyrightHolder()))),
+			'license-url'		=> $submission->getLicenseURL(),
+			'license'		=> Application::getCCLicenseBadge($submission->getLicenseURL()),
+			'fpage'  		=> isset($fpage) ? $fpage: '',
+			'lpage'  		=> isset($lpage) ? $lpage: '',
+			'page-count'  		=> isset($pageCount) ? $pageCount: '',
+			'date-published'  	=> $submission->getDatePublished(),
+			'subj-group-heading'	=> $sectionDao->getById($submission->getSectionId()),
 		);
 		
 		
