@@ -7,7 +7,6 @@
  *
  * markup plugin -- displays the ArticlesGrid.
  *}
- <link rel="stylesheet" href="{$pluginCssURL}/batch.css" />
 <div>
 	{url|assign:markupBatchConversionGridUrl router=$smarty.const.ROUTE_COMPONENT component="plugins.generic.markup.controllers.grid.MarkupBatchConversionGridHandler" op="fetchGrid" escape=false}
 	{load_url_in_div id="markupBatchConversionGridContainer" url=$markupBatchConversionGridUrl}
@@ -22,7 +21,6 @@
 		</fieldset>
 	</div>
 </div>
-<script src="{$pluginJavaScriptURL}/MarkupSubmissionsBatchConversion.js"></script>
 <script type="text/javascript">
 	$(function() {ldelim}
 		$.pkp.plugins.markup.js.MarkupSubmissionsBatchConversion();

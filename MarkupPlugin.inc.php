@@ -113,6 +113,19 @@ class MarkupPlugin extends GenericPlugin {
 				$markupJobInfoDao = new MarkupJobInfoDAO($this);
 				DAORegistry::registerDAO('MarkupJobInfoDAO', $markupJobInfoDao);
 
+				$request = $this->getRequest();
+				$templateMgr = TemplateManager::getManager($request);
+				$templateMgr->addStyleSheet(
+					'markupBatchConvertStyle', 
+					$this->getCssUrl($request).'/batch.css', 
+					array('contexts' => 'backend')
+				);
+				$templateMgr->addJavaScript(
+					'markupBatchConvertScript', 
+					$this->getJsUrl($request).'/MarkupSubmissionsBatchConversion.js',
+					array('contexts' => 'backend')
+				);
+
 				// Register callbacks.
 				HookRegistry::register('LoadHandler', array($this, 'callbackLoadMarkupHandler'));
 				HookRegistry::register('LoadHandler', array($this, 'callbackLoadBatchHandler'));

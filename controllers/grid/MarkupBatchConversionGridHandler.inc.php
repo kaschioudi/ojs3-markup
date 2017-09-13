@@ -131,8 +131,6 @@ class MarkupBatchConversionGridHandler extends SubmissionsListGridHandler {
 		$context = $request->getContext();
 		$dispatcher = $request->getDispatcher();
 		$templateMgr = TemplateManager::getManager();
-		$templateMgr->assign('pluginJavaScriptURL', self::$plugin->getJsUrl($request));
-		$templateMgr->assign('pluginCssURL', self::$plugin->getCssUrl($request));
 		$batchFilesToConvert = $dispatcher->url($request, ROUTE_PAGE, null, 'batch', 'filesToConvert', null);
 		$conversionTriggerUrl = $dispatcher->url($request, ROUTE_PAGE, null, 'markup', 'triggerConversion', null);
 		$templateMgr->assign('batchFilesToConvert', $batchFilesToConvert);
