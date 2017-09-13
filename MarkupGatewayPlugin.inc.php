@@ -433,6 +433,11 @@ class MarkupGatewayPlugin extends GatewayPlugin {
 		$journalId = $journal->getId();
 		$plugin = $this->getMarkupPlugin();
 
+		// find current user's group
+		$userGroupDao = DAORegistry::getDAO('UserGroupDAO');
+		$userGroups = $userGroupDao->getByUserId($this->user->getId(), $journal->getId());
+		$userGroup = $userGroups->next();
+
 		$fileName = "document" . '__' . date('Y-m-d_h:i:s');
 		switch ($target) {
 			case 'xml-conversion':
@@ -440,7 +445,7 @@ class MarkupGatewayPlugin extends GatewayPlugin {
 					'stage' 	=> $stage,
 					'assocType' 	=> (int)$submissionFile->getAssocType(),
 					'assocId' 	=> (int)$submissionFile->getAssocId(),
-					'UserGroupId' 	=> (int)$submissionFile->getUserGroupId(),
+					'UserGroupId' 	=> $userGroup->getId(),
 					'filename'	=> $fileName,
 				);
 				$this->addXmlDocumentToFileList($submission, "{$extractionPath}/document.xml", $params);
@@ -451,8 +456,8 @@ class MarkupGatewayPlugin extends GatewayPlugin {
 				$params = array(
 					'stage' 	=> SUBMISSION_FILE_PRODUCTION_READY,
 					'assocType' 	=> (int)$submissionFile->getAssocType(),
-					'assocId' 	=> 0,
-					'UserGroupId' 	=> 0,
+					'assocId' 	=> (int)$submissionFile->getAssocId(),
+					'UserGroupId' 	=> $userGroup->getId(),
 					'filename' 	=> $fileName
 				);
 
