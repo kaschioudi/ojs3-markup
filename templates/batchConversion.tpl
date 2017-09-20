@@ -5,12 +5,11 @@
  * Copyright (c) 2003-2017 John Willinsky
  * Distributed under the GNU GPL v2. For full terms see the file docs/COPYING.
  *
- * markup plugin -- displays the ArticlesGrid.
+ * displays submissions along with submission files.
  *}
 <div>
 	<div class="pkp_form">
 		<fieldset>
-			<legend>Selected submissions</legend>
 			<label class="description">{translate key="plugins.generic.markup.batch.selected-submissions"}</label>
 			<input type="hidden" id="batchFilesToConvert" name="batchFilesToConvert" value="{$batchFilesToConvert}" />
 			<input type="hidden" id="conversionTriggerUrl" name="conversionTriggerUrl" value="{$conversionTriggerUrl}" />
