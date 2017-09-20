@@ -11,22 +11,22 @@
 	<div class="pkp_form">
 		<fieldset>
 			<label class="description">{translate key="plugins.generic.markup.batch.selected-submissions"}</label>
-			<input type="hidden" id="batchFilesToConvert" name="batchFilesToConvert" value="{$batchFilesToConvert}" />
-			<input type="hidden" id="conversionTriggerUrl" name="conversionTriggerUrl" value="{$conversionTriggerUrl}" />
+			<input type="hidden" id="batchFilesToConvert" name="batchFilesToConvert" value="{$batchFilesToConvert|escape}" />
+			<input type="hidden" id="conversionTriggerUrl" name="conversionTriggerUrl" value="{$conversionTriggerUrl|escape}" />
 			<ul id="submissionListConfirmation">
 			{foreach from=$submissions item=submission}
 				<li class="batch-conversion-submission">
-					##{$submission.id} 
-					{$submission.title} <br>
+					#{$submission.id|escape} 
+					{$submission.title|escape} <br>
 					<select 
 						class="submission-file" 
-						data-submission-id="{$submission.id}" 
-						data-stage="{$submission.stage}">
+						data-submission-id="{$submission.id|escape}" 
+						data-stage="{$submission.stage|escape}">
 						<option value="-1">{translate key="plugins.generic.markup.batch-select-file"}</option>
 						{foreach from=$submission.files item=submissionFile}
-							<option value="{$submissionFile.fileId}" data-file-id="{$submissionFile.fileId}"
+							<option value="{$submissionFile.fileId|escape}" data-file-id="{$submissionFile.fileId|escape}"
 								{if $submission.defaultSubmissionFileId == $submissionFile.fileId} selected="selected" {/if}>
-								[{$submissionFile.fileStage}] {$submissionFile.filename}
+								[{$submissionFile.fileStage|escape}] {$submissionFile.filename|escape}
 							</option>
 						{/foreach}
 					</select>
