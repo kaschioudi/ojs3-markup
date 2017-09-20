@@ -8,15 +8,38 @@
  * markup plugin -- displays the ArticlesGrid.
  *}
 <div>
-	{url|assign:markupBatchConversionGridUrl router=$smarty.const.ROUTE_COMPONENT component="plugins.generic.markup.controllers.grid.MarkupBatchConversionGridHandler" op="fetchGrid" escape=false}
-	{load_url_in_div id="markupBatchConversionGridContainer" url=$markupBatchConversionGridUrl}
 	<div class="pkp_form">
 		<fieldset>
 			<legend>Selected submissions</legend>
 			<label class="description">{translate key="plugins.generic.markup.batch.selected-submissions"}</label>
 			<input type="hidden" id="batchFilesToConvert" name="batchFilesToConvert" value="{$batchFilesToConvert}" />
 			<input type="hidden" id="conversionTriggerUrl" name="conversionTriggerUrl" value="{$conversionTriggerUrl}" />
-			<ul id="submissionListConfirmation"></ul>
+			<ul id="submissionListConfirmation">
+			{foreach from=$submissions item=submission}
+				<li class="batch-conversion-submission">
+					##{$submission.id} 
+					{$submission.title} <br>
+					<select 
+						class="submission-file" 
+						data-submission-id="{$submission.id}" 
+						data-stage="{$submission.stage}">
+						<option value="-1">{translate key="plugins.generic.markup.batch-select-file"}</option>
+						{foreach from=$submission.files item=submissionFile}
+							<option value="{$submissionFile.fileId}" data-file-id="{$submissionFile.fileId}"
+								{if $submission.defaultSubmissionFileId == $submissionFile.fileId} selected="selected" {/if}>
+								[{$submissionFile.fileStage}] {$submissionFile.filename}
+							</option>
+						{/foreach}
+					</select>
+				</li>
+			{/foreach}
+			</ul>
+			<div id="conversion-status" style="display:none;">
+				<p>
+					<strong><span id="conversion-status-processed"></span></strong> processed out of 
+					<strong><span id="conversion-status-total"></span></strong> submissions.
+				</p>
+			</div>
 			<button id="startConversionBtn">{translate key="plugins.generic.markup.batch.trigger-label"}</button>
 		</fieldset>
 	</div>

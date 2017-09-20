@@ -135,7 +135,6 @@ class MarkupPlugin extends GenericPlugin {
 				HookRegistry::register('Templates::Management::Settings::website', array($this, 'callbackShowArticlesBatchConversionTabs'));
 				HookRegistry::register('Templates::User::profile', array($this, 'callbackUserProfile'));
 				HookRegistry::register('submissionfiledaodelegate::_deleteobject', array($this, 'callbackSubmissionFileDeteted'));
-				HookRegistry::register('LoadComponentHandler', array($this, 'setupGridHandler'));
 			}
 			return true;
 		}
@@ -218,18 +217,39 @@ class MarkupPlugin extends GenericPlugin {
 	}
 
 	/**
-	 * Permit requests to the batch conversion grid handler
-	 * @param $hookName string The name of the hook being invoked
-	 * @param $args array The parameters to the invoked hook
+	 * @see Plugin::getActions()
 	 */
-	function setupGridHandler($hookName, $params) {
-		$component =& $params[0];
-		if ($component == 'plugins.generic.markup.controllers.grid.MarkupBatchConversionGridHandler') {
-			import($component);
-			MarkupBatchConversionGridHandler::setPlugin($this);
-			return true;
-		}
-		return false;
+	function getActions($request, $verb) {
+		$dispatcher = $request->getDispatcher();
+		return array_merge(
+			$this->getEnabled()?array(
+				new LinkAction(
+					'settings',
+					new RedirectAction($dispatcher->url(
+						$request, ROUTE_PAGE,
+						null, 'management', 'settings', 'website',
+						array('uid' => uniqid()), // Force reload
+						'markup' // Anchor for tab
+					)),
+					__('plugins.generic.markup.settings'),
+					null
+				),
+			):array(),
+			$this->getEnabled()?array(
+				new LinkAction(
+					'batch',
+					new RedirectAction($dispatcher->url(
+						$request, ROUTE_PAGE,
+						null, 'management', 'settings', 'website',
+						array('uid' => uniqid()), // Force reload
+						'markupBatchConversion' // Anchor for tab
+						)),
+					__('plugins.generic.markup.batch'),
+					null
+				),
+			):array(),
+			parent::getActions($request, $verb)
+		);
 	}
 
 	/**
@@ -263,12 +283,6 @@ class MarkupPlugin extends GenericPlugin {
 					$form->initData();
 				}
 				return new JSONMessage(true, $form->fetch($request));
-
-			case 'batch':
-				$context = $request->getContext();
-				$templateMgr = TemplateManager::getManager($request);
-				$form = new Form($this->plugin->getTemplatePath() . 'batchConversion.tpl');
-				return new JSONMessage(true, $form->fetch($request));
 		}
 		return parent::manage($args, $request);
 	}
@@ -297,7 +311,7 @@ class MarkupPlugin extends GenericPlugin {
 		$output =& $args[2];
 		$request =& Registry::get('request');
 		$dispatcher = $request->getDispatcher();
-		$output .= '<li><a name="markupBatchConversion" href="' . $dispatcher->url($request, ROUTE_COMPONENT, null, 'plugins.generic.markup.controllers.grid.MarkupBatchConversionGridHandler', 'index') . '">' . __('plugins.generic.markup.batch') . '</a></li>';
+		$output .= '<li><a name="markupBatchConversion" href="' . $dispatcher->url($request, ROUTE_PAGE, null, 'markup', 'batch') . '">' . __('plugins.generic.markup.batch') . '</a></li>';
 		return false;
 	}
 
@@ -326,6 +340,7 @@ class MarkupPlugin extends GenericPlugin {
 				'profile',
 				'triggerConversion',
 				'fetchConversionJobStatus',
+				'batch',
 			);
 
 			if (!in_array($op, $publicOps)) return;
@@ -378,13 +393,13 @@ class MarkupPlugin extends GenericPlugin {
 			$data = $row->getData();
 			if (is_array($data) && (isset($data['submissionFile']))) {
 				$submissionFile = $data['submissionFile'];
-				$fileExtension = $submissionFile->getExtension();
+				$fileExtension = strtolower($submissionFile->getExtension());
 
 				// get stage ID
 				$stage = $submissionFile->getFileStage();
 				$stageId = (int) $request->getUserVar('stageId');
 
-				if (in_array(strtolower($fileExtension), array('doc','docx','odt','pdf', 'xml'))) {
+				if (in_array($fileExtension, array('doc','docx','odt','pdf', 'xml'))) {
 
 					import('lib.pkp.classes.linkAction.request.AjaxModal');
 

@@ -21,52 +21,6 @@
 	 * @constructor
 	 */
 	$.pkp.plugins.markup.js.MarkupSubmissionsBatchConversion = function() {
-		// submission selection click handler
-		$('div#markupBatchConversionGridContainer').on('click', 'input:checkbox[id*="select-"]', function() {
-			var $el = $(this);
-			var isChecked = $el.is(':checked');
-			var $ul = $('ul#submissionListConfirmation');
-			var submissionLabel = $el.closest('tr').find('td:eq(2)').text().replace(/\s+/g, " ");
-			if (isChecked) {
-				var submissionId = $el.val();
-				var $submissionFilesElement = $('<ul />');
-				$.get($('input#batchFilesToConvert').val(), {'submissionId': submissionId}, function(data) {
-					var content = data.content;
-					if (content) {
-						if (!content.length) {
-							$submissionFilesElement.append($('<li><label>No file found!</label></li>'));
-						}
-						else {
-							for (var i = 0; i < content.length; i++) {
-								var fileId = content[i].fileId;
-								var filename = content[i].filename;
-								var stage = content[i].stage;
-								var fileCheckbox = $('<li class="batch-conversion-submission-file"></li>')
-									.append('<label><input type="checkbox" class="submission-file"'+ 
-											'name="submission-file" value="'+fileId+'"'+
-											'data-submission-id="'+submissionId+'"'+
-											'data-file-id="'+fileId+'"'+
-											'data-stage="'+stage+'"'+
-											'checked /> '+filename+'</label>');
-								fileCheckbox.appendTo($submissionFilesElement);
-									
-							}
-							$submissionFilesElement.appendTo($('li[data-submission-id='+submissionId+']'));
-						}
-					}
-				}, 'json')
-				.then(function() {
-					$('<li class="batch-conversion-submission"/>')
-						.attr('data-submission-id', submissionId)
-						.text(submissionLabel)
-						.append($submissionFilesElement)
-						.appendTo($ul);
-				});
-			}
-			else {
-				$('ul#submissionListConfirmation li[data-submission-id='+$el.val()+']').remove();
-			}
-		});
 
 		// batch conversion button click handler
 		$('div.pkp_form button#startConversionBtn').click(function() {
@@ -94,10 +48,23 @@
 	 */
 	$.pkp.plugins.markup.js.MarkupSubmissionsBatchConversion.prototype.processFile = 
 		function() {
-			var $next = $('input[class=submission-file]:not(".processed"):checked').first();
+			this.conversionStatus();
+			var $next = $('select[class=submission-file]:not(".processed")').first();
 			if ($next.length) {
 				this.convert($next);
 			}
+	}
+
+	/**
+	 * Display numbers of submissions processed and to be processed
+	 */
+	$.pkp.plugins.markup.js.MarkupSubmissionsBatchConversion.prototype.conversionStatus = 
+		function() {
+			$('div#conversion-status').show();
+			var processedCount = $('select[class="submission-file processed"]').size();
+			var totalCount = $('ul#submissionListConfirmation select').size();
+			$('span#conversion-status-processed').text(processedCount);
+			$('span#conversion-status-total').text(totalCount);
 	}
 
 	/**
@@ -107,28 +74,35 @@
 	 */
 	$.pkp.plugins.markup.js.MarkupSubmissionsBatchConversion.prototype.convert = 
 		function($element) {
+			$element.addClass('processed');
 			this.$listElement = $element.closest('li');
 			this.$listElement.addClass('batch-processing');
 			var params = {
 				'submissionId': $element.data('submission-id'),
 				'stage': $element.data('stage'),
-				'fileId': $element.data('file-id'),
+				'fileId': parseInt($element.val()),
 			};
-			var postUrl = $('input#conversionTriggerUrl').val() +
-							'?submissionId='+$element.data('submission-id')+
-							'&stage='+$element.data('stage')+
-							'&fileId='+$element.data('file-id')+
-							'&target=galley-generate';
 
-			var that = this;
-			$.post(postUrl, {}, function(data) {
-				that.$listElement.append(data.content);
-				$('.pkp_spinner', that.$listElement).addClass('is_visible');
-				var jobId = that.$listElement.find('span#conversionJobId').text();
-				if ((jobId != "") && (that.timer == null) ) {
-					that.timer = setInterval(function() { that.fetchJobStatus.apply(that); }, 5000);
-				}
-			}, 'json');
+			if (params.fileId != -1) {
+				var postUrl = $('input#conversionTriggerUrl').val() +
+					'?submissionId='+params.submissionId+
+					'&stage='+params.stage+
+					'&fileId='+params.fileId+
+					'&target=galley-generate';
+
+				var that = this;
+				$.post(postUrl, {}, function(data) {
+					that.$listElement.append(data.content);
+					$('.pkp_spinner', that.$listElement).addClass('is_visible');
+					var jobId = that.$listElement.find('span#conversionJobId').text();
+					if ((jobId != "") && (that.timer == null) ) {
+						that.timer = setInterval(function() { that.fetchJobStatus.apply(that); }, 5000);
+					}
+				}, 'json');
+			}
+			else {
+				this.processFile();
+			}
 	}
 
 	/**

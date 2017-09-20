@@ -33,6 +33,8 @@ class MarkupHandler extends Handler {
 			array('convertToXml', 'generateGalleyFiles', 'profile', 'save', 
 					'editor', 'xml', 'triggerConversion', 'fetchConversionJobStatus')
 		);
+
+		$this->addRoleAssignment(array(ROLE_ID_MANAGER), array('batch'));
 	}
 	
 	/**
@@ -41,7 +43,7 @@ class MarkupHandler extends Handler {
 	function authorize($request, &$args, $roleAssignments) {
 		$op = $request->getRouter()->getRequestedOp($request);
 		
-		if($op == 'profile') {
+		if(in_array($op, array('profile','batch'))) {
 			import('lib.pkp.classes.security.authorization.ContextAccessPolicy');
 			$this->addPolicy(new ContextAccessPolicy($request, $roleAssignments));
 		}
@@ -324,5 +326,108 @@ class MarkupHandler extends Handler {
 			$form->initData();
 		}
 		return new JSONMessage(true, $form->fetch($request));
+	}
+
+	protected function buildSubmissionMetadata($contextId) {
+		$metadata = array();
+		$locale = AppLocale::getLocale();
+		$genreDao = DAORegistry::getDAO('GenreDAO');
+		$submissionDao = DAORegistry::getDAO('ArticleDAO');
+		$submissionFileDao = DAORegistry::getDAO('SubmissionFileDAO');
+		$submissions = $submissionDao->getByContextId($contextId);
+		import('lib.pkp.classes.file.SubmissionFileManager');
+		$validFileExtensions = array('pdf','doc','docx','xml');
+		$pdfGalleyFileId = null;
+		$pdfProductionReadyFileId = null;
+		$xmlProductionReadyFileId = null;
+		while ($submission = $submissions->next()) {
+			$hasXmlInProductionReady = false;
+			$sMetadata = array(
+				'id'	=> $submission->getId(),
+				'stage'	=> $submission->getStageId(),
+				'title' => $submission->getFullTitle($locale),
+				'files' => array(),
+			);
+			$submissionFileManager = new SubmissionFileManager($contextId, $submission->getId());
+			$submissionFiles = $submissionFileDao->getBySubmissionId($submission->getId());
+			foreach ($submissionFiles as $submissionFile) {
+				$genre = $genreDao->getById($submissionFile->getGenreId());
+				$fileStage = $submissionFile->getFileStage();
+				$fileExtension = strtolower($submissionFile->getExtension());
+				if (intval($genre->getCategory()) != GENRE_CATEGORY_DOCUMENT)
+					continue;
+				if (!in_array($fileExtension, $validFileExtensions))
+					continue;
+				// check whether xml file is present in production ready
+				if (($fileExtension == 'xml') && ($fileStage == SUBMISSION_FILE_PRODUCTION_READY)) {
+					$hasXmlInProductionReady = true;
+				}
+
+				// check if there's a publish pdf in galleys or production ready
+				if ($fileExtension == 'pdf') { 
+					if ($fileStage == SUBMISSION_FILE_PROOF) {
+						$pdfGalleyFileId = $submissionFile->getFileId();
+					}
+					if ($fileStage == SUBMISSION_FILE_PRODUCTION_READY) {
+						$pdfProductionReadyFileId = $submissionFile->getFileId();
+					}
+				}
+				if (in_array($fileExtension, array('doc','docx'))) {
+					if ($fileStage == SUBMISSION_FILE_PRODUCTION_READY) {
+						$xmlProductionReadyFileId = $submissionFile->getFileId();
+					}
+				}
+				$sMetadata['files'][] = array(
+					'fileId' 	=> $submissionFile->getFileId(),
+					'filename'	=> $submissionFile->getName($locale),
+					'fileStage'	=> $fileStage,
+				);
+			}
+
+			// decide on submission file to select by default
+			$defaultSubmissionFileId = 0;
+			if (!$hasXmlInProductionReady) {
+				if (!is_null($pdfGalleyFileId)) {
+					$defaultSubmissionFileId = $pdfGalleyFileId;
+				}
+				elseif (!is_null($pdfProductionReadyFileId)) {
+					$defaultSubmissionFileId = $pdfProductionReadyFileId;
+				}
+				elseif (!is_null($xmlProductionReadyFileId)) {
+					$defaultSubmissionFileId = $xmlProductionReadyFileId;
+				}
+				else {
+					$defaultSubmissionFileId = 0;
+				}
+			}
+			$sMetadata['defaultSubmissionFileId'] = $defaultSubmissionFileId;
+			$sMetadata['pdfGalleyFileId'] = $pdfGalleyFileId;
+			$sMetadata['pdfProductionReadyFileId'] = $pdfProductionReadyFileId;
+			$sMetadata['xmlProductionReadyFileId'] = $xmlProductionReadyFileId;
+			$metadata[] = $sMetadata;
+		}
+		return $metadata;
+	}
+
+	/**
+	 * Display batch conversion page
+	 * @param $args array
+	 * @param $request PKPRequest
+	 *
+	 * @return JSONMessage
+	 */
+	public function batch($args, $request) {
+		$context = $request->getContext();
+		$dispatcher = $request->getDispatcher();
+		$templateMgr = TemplateManager::getManager();
+		$submissionMetadata = $this->buildSubmissionMetadata($context->getId());
+		$batchFilesToConvert = $dispatcher->url($request, ROUTE_PAGE, null, 'batch', 'filesToConvert', null);
+		$conversionTriggerUrl = $dispatcher->url($request, ROUTE_PAGE, null, 'markup', 'triggerConversion', null);
+		$templateMgr->assign('batchFilesToConvert', $batchFilesToConvert);
+		$templateMgr->assign('conversionTriggerUrl', $conversionTriggerUrl);
+		$templateMgr->assign('submissions', $submissionMetadata);
+		$templateFile = $this->plugin->getTemplatePath() . 'batchConversion.tpl';
+		$output = $templateMgr->fetch($templateFile);
+		return new JSONMessage(true, $output);
 	}
 }
