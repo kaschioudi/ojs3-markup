@@ -221,6 +221,7 @@ class MarkupPlugin extends GenericPlugin {
 	 */
 	function getActions($request, $verb) {
 		$dispatcher = $request->getDispatcher();
+		import('lib.pkp.classes.linkAction.request.RedirectAction');
 		return array_merge(
 			$this->getEnabled()?array(
 				new LinkAction(
