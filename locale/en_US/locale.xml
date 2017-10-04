@@ -108,7 +108,15 @@
 	<message key="plugins.generic.markup.required.xmlConversionStages">OTS conversion must be enabled in at least one stage.</message>
 	<message key="plugins.generic.markup.required.editWithSubstanceStages">The Texture XML editor must be enabled in at least one stage.</message>
 	<message key="plugins.generic.markup.batch">OTS Backlog conversion</message>
-	<message key="plugins.generic.markup.batch.trigger-label">Start batch conversion</message>
+	<message key="plugins.generic.markup.batch.trigger-label">Start conversion</message>
+	<message key="plugins.generic.markup.batch.cancel-label">Cancel conversion</message>
 	<message key="plugins.generic.markup.batch.selected-submissions">On this page, you can automatically batch-convert already-published articles from PDF or Word formats to JATS XML using PKP's Open Typesetting Stack, without needing to navigate to each article individually. While this will generally not produce perfect results -- the Open Typesetting Stack is normally intended to be used together with the included Texture editor to improve the quality of XML -- it should be sufficient to populate your journals' OAI feed with structured data for harvesting purposes. The Open Typesetting Stack will return converted XML to your journals under the "Production Ready Files" stage for each article that is converted here. You can still navigate to each article individually to improve formatting with Texture after performing this batch conversion.</message>
 	<message key="plugins.generic.markup.batch-select-file">Select a file to convert</message>
+	<message key="plugins.generic.markup.start-success">Batch conversion started successfully</message>
+	<message key="plugins.generic.markup.cancel-success">Batch conversion cancelled successfully</message>
+	<message key="plugins.generic.markup.cancel-failure">Unable to cancel batch conversion</message>
+	<message key="plugins.generic.markup.file-exists">{$file} exists! Conversion already running?</message>
+	<message key="plugins.generic.markup.archive-download-failure">Unable to download conversion archive</message>
+	<message key="plugins.generic.markup.archive-extract-failure">Unable to extract conversion archive</message>
+	<message key="plugins.generic.markup.conversion-running">BATCH CONVERSION NOT RUNNING!</message>
 </locale>

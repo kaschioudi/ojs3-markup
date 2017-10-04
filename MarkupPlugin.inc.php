@@ -151,6 +151,11 @@ class MarkupPlugin extends GenericPlugin {
 			$this->import('MarkupGatewayPlugin');
 			$gatewayPlugin = new MarkupGatewayPlugin($this->getName());
 			$plugins[$gatewayPlugin->getSeq()][$gatewayPlugin->getPluginPath()] =& $gatewayPlugin;
+
+			// batch conversion
+			$this->import('MarkupBatchGatewayPlugin');
+			$batchGatewayPlugin = new MarkupBatchGatewayPlugin($this->getName());
+			$plugins[$batchGatewayPlugin->getSeq()][$batchGatewayPlugin->getPluginPath()] =& $batchGatewayPlugin;
 		}
 	}
 	
@@ -368,7 +373,7 @@ class MarkupPlugin extends GenericPlugin {
 		if ($page !== 'batch') return;
 
 		$op = $args[1];
-		$publicOps = array('filesToConvert');
+		$publicOps = array('filesToConvert', 'startConversion', 'fetchConversionStatus', 'cancelConversion');
 		if (!in_array($op, $publicOps)) return;
 
 		define('HANDLER_CLASS', 'MarkupBatchConversionHandler');
@@ -483,18 +488,8 @@ class MarkupPlugin extends GenericPlugin {
 		$dispatcher = $router->getDispatcher();
 		$journal = $request->getJournal();
 
-		$jobId = uniqid();
-
-		// create job info
-		$markupJobInfoDao = DAORegistry::getDAO('MarkupJobInfoDAO');
-		$this->import('classes.MarkupJobInfo');
-		$jobInfo = new MarkupJobInfo();
-		$jobInfo->setId($jobId);
-		$jobInfo->setFileId($fileId);
-		$jobInfo->setUserId($user->getId());
-		$jobInfo->setJournalId($journal->getId());
-		$jobInfo->setXmlJobId(NULL);
-		$markupJobInfoDao->insertMarkupJobInfo($jobInfo);
+		$this->import('classes.MarkupConversionHelper');
+		$jobId = MarkupConversionHelper::createConversionJobInfo($journal, $user, $fileId);
 
 		$url = $request->url(null, 'gateway', 'plugin', 
 					array('MarkupGatewayPlugin','fileId', $fileId, 'userId', $user->getId(), 

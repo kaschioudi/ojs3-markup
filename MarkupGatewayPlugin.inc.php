@@ -39,9 +39,12 @@ class MarkupGatewayPlugin extends GatewayPlugin {
 	/** @var $jobId string job identifier */
 	protected $jobId = null;
 
+	/** @var $conversionHelper MarkupConversionHelper Conversion helper object */
+	protected $conversionHelper = null;
+
 	function __construct($parentPluginName) {
 		parent::__construct();
-		
+
 		$this->parentPluginName = $parentPluginName;
 		$this->plugin = PluginRegistry::getPlugin('generic', $parentPluginName);
 	}
@@ -51,19 +54,13 @@ class MarkupGatewayPlugin extends GatewayPlugin {
 	 * 
 	 * @return void
 	 */
-	protected function _initXMLPSWrapper() {
-		
-		$request = $this->getRequest();
-		$journal = $request->getJournal();
-		$journalId = $journal->getId();
-		
-		$plugin = $this->getMarkupPlugin();
-
-		// Import host, user and password variables into the current symbol table from an array
-		extract($this->plugin->getOTSLoginParametersForJournal($journal->getId(), $this->user));
-
-		$this->import('classes.XMLPSWrapper');
-		$this->xmlpsWrapper = new XMLPSWrapper($host, $user, $password);
+	protected function _initXMLPSWrapper($request) {
+		$this->import('classes.MarkupConversionHelper');
+		$this->xmlpsWrapper = MarkupConversionHelper::getOTSWrapperInstance(
+			$this->plugin,
+			$request,
+			$this->user
+		);
 	}
 	
 	/**
@@ -240,115 +237,16 @@ class MarkupGatewayPlugin extends GatewayPlugin {
 		$this->stage = isset($args['stage']) ? (int) $args['stage'] : false;
 
 		// initialize OTS wrapper
-		$this->_initXMLPSWrapper();
+		$this->_initXMLPSWrapper($request);
+
+		// initialize conversion helper object
+		$this->import('classes.MarkupConversionHelper');
+		$this->conversionHelper = new MarkupConversionHelper($this->plugin, $this->xmlpsWrapper, $this->user);
 
 		// process
 		$stage = (int)$args['stage'];
 		$target = strval($args['target']);
 		$this->_process($submissionFile, $stage, $target);
-	}
-	
-	/**
-	 * Build an array of metadata about submitted file
-	 * @param $journal Journal Journal
-	 * @param $submission Submission Submission
-	 *
-	 * @return array
-	 */
-	protected function _buildMetadata($journal, $submission)
-	{
-		$locale = ($submission->getLanguage() != '') ? $submission->getLanguage() : $journal->getPrimaryLocale();
-		
-		$publishedArticleDao = DAORegistry::getDAO('PublishedArticleDAO');
-		$issueDao = DAORegistry::getDAO('IssueDAO');		
-		$sectionDao = DAORegistry::getDAO('SectionDAO');
-		$userGroupDao = DAORegistry::getDAO('UserGroupDAO');
-		
-		/* Authors */
-		$count = 0;
-		foreach ($submission->getAuthors() as $author) {
-			$authors[$count]['firstName'] = $author->getFirstName();
-			$authors[$count]['lastName'] = $author->getLastName();
-			$authors[$count]['email'] = $author->getEmail();
-			$authors[$count]['orcid'] = $author->getOrcid();
-			$authors[$count]['affiliation'] = $author->getLocalizedAffiliation();
-			$authors[$count]['country'] = $author->getCountry();
-			$authors[$count]['bio'] = $author->getLocalizedBiography();
-			$userGroup = $userGroupDao->getById($author->getUserGroupId());
-			$authors[$count]['contribType'] = $userGroup->getLocalizedName();
-			$count++;
-		}
-				
-		/* Issue information, if available*/
-		$publishedArticle = $publishedArticleDao->getPublishedArticleByArticleId($submission->getId());
-		if ($publishedArticle){	
-			$issue = $issueDao->getById($publishedArticle->getIssueId());				
-			$issueDetails = array (
-				'issue-year'   		=> $issue->getYear(),
-				'issue-volume'  	=> $issue->getVolume(),
-				'issue-number'  	=> $issue->getNumber(),
-				'issue-title'  		=> $issue->getLocalizedTitle(),
-			);
-		}
-		
-		/* Page numbers */
-		$matches = null;
-		if (PKPString::regexp_match_get('/^[Pp][Pp]?[.]?[ ]?(\d+)$/', $submission->getPages(), $matches)) {
-			$matchedPage = htmlspecialchars(Core::cleanVar($matches[1]));
-			$fpage = $matchedPage;
-			$lpage = $matchedPage;
-			$pageCount = 1;
-		} elseif (PKPString::regexp_match_get('/^[Pp][Pp]?[.]?[ ]?(\d+)[ ]?(-|–)[ ]?([Pp][Pp]?[.]?[ ]?)?(\d+)$/', $submission->getPages(), $matches)) {
-			$fpage = htmlspecialchars(Core::cleanVar($matches[1]));
-			$lpage = htmlspecialchars(Core::cleanVar($matches[4]));
-			$pageCount = $fpage - $lpage + 1;
-		}		
-		
-		/* Localized journal titles */
-		foreach ($journal->getName(null) as $loc => $title) {
-			$journalTitles[strtoupper(substr($loc, 0, 2))] = htmlspecialchars(Core::cleanVar($title));
-		}
-		
-		/* Localized article titles */
-		foreach ($submission->getTitle(null) as $loc => $title) {
-			$articleTitles[strtoupper(substr($loc, 0, 2))] = htmlspecialchars(Core::cleanVar($title));
-		}
-		
-		/* Localized abstracts */
-		if (is_array($submission->getAbstract(null))) foreach ($submission->getAbstract(null) as $loc => $abstract) {
-			$abstract = htmlspecialchars(Core::cleanVar(strip_tags($abstract)));
-			if (empty($abstract)) continue;
-			$abstracts[strtoupper(substr($loc, 0, 2))] = $abstract;			
-		}
-		
-		/* TODO: keywords and other classifications */
-		
-		
-		return array (
-			'locale'	 	=> $locale,
-			'article-titles'	=> $articleTitles,
-			'abstracts'		=> $abstracts,
-			'journal-titles'	=> $journalTitles,
-			'journal-id'	 	=> htmlspecialchars($journal->getSetting('abbreviation', $locale) ? Core::cleanVar($journal->getSetting('abbreviation', $locale)) : Core::cleanVar($journal->getSetting('acronym', $locale))),
-			'institution'	   	=> $journal->getSetting('publisherInstitution'),
-			'contributors'	  	=> $authors,
-			'issue-details'	 	=> $issueDetails,
-			'online-ISSN'	   	=> $journal->getSetting('onlineIssn'),
-			'print-ISSN'		=> $journal->getSetting('printIssn'),
-			'doi'			=> $submission->getStoredPubId('doi'),
-			'article-id'		=> $submission->getBestArticleId(),
-			'copyright-year'	=> $submission->getCopyrightYear(),
-			'copyright-statement'	=> htmlspecialchars(__('submission.copyrightStatement', array('copyrightYear' => $submission->getCopyrightYear(), 'copyrightHolder' => $submission->getLocalizedCopyrightHolder()))),
-			'license-url'		=> $submission->getLicenseURL(),
-			'license'		=> Application::getCCLicenseBadge($submission->getLicenseURL()),
-			'fpage'  		=> isset($fpage) ? $fpage: '',
-			'lpage'  		=> isset($lpage) ? $lpage: '',
-			'page-count'  		=> isset($pageCount) ? $pageCount: '',
-			'date-published'  	=> $submission->getDatePublished(),
-			'subj-group-heading'	=> $sectionDao->getById($submission->getSectionId()),
-		);
-		
-		
 	}
 	
 	/**
@@ -367,50 +265,14 @@ class MarkupGatewayPlugin extends GatewayPlugin {
 		$submissionDao = Application::getSubmissionDAO();
 		$submission = $submissionDao->getById($submissionFile->getSubmissionId());
 
-		// submit file to markup server
-		$filePath = $submissionFile->getFilePath();
-		$filename = basename($filePath);
-		$fileContent = file_get_contents($filePath);
-		$citationStyle = $this->plugin->getSetting($journalId, 'cslStyle');
-
 		$tmpZipFile = null;
 
 		try {
-			$metadata = $this->_buildMetadata($journal, $submission);
-
-			$jobId = $this->xmlpsWrapper->submitJob($filename, $fileContent, $citationStyle, $metadata);
-
-			// link XML job id with markup job
-			$markupJobInfoDao = DAORegistry::getDAO('MarkupJobInfoDAO');
-			$this->plugin->import('classes.MarkupJobInfo');
-			$markupJobInfo = $markupJobInfoDao->getMarkupJobInfo($this->jobId);
-			$markupJobInfo->setXmlJobId($jobId);
-			$markupJobInfoDao->updateMarkupJobInfo($markupJobInfo);
-			
-			// retrieve job archive from markup server
-			$i = 0;
-			$jobStatus = null;
-			while($i++ < 180) {
-				$jobStatus = $this->xmlpsWrapper->getJobStatus($jobId);
-				if (($jobStatus != XMLPSWrapper::JOB_STATUS_PENDING) && ($jobStatus != XMLPSWrapper::JOB_STATUS_PROCESSING)) break; 
-				sleep(5);
+			$jobId = $this->conversionHelper->triggerConversion($journal, $submissionFile, $stage, $target, $this->jobId);
+			$tmpZipFile = $this->conversionHelper->retrieveConversionJobArchive($submissionFile, $jobId);
+			if (($tmpZipFile == false) || !file_exists($tmpZipFile)) {
+				return;
 			}
-			
-			// Return if the job didn't complete
-			if ($jobStatus != XMLPSWrapper::JOB_STATUS_COMPLETED) return;
-			
-			// make sure submission file has not been deleted (for instance when user cancel out of wizard)
-			$submissionFileDao = DAORegistry::getDAO('SubmissionFileDAO');
-			$submissionFile = $submissionFileDao->getLatestRevision($submissionFile->getFileId());
-			if (empty($submissionFile)) {
-				echo __('plugins.generic.markup.archive.no_file');
-				exit;
-			}
-			
-			// Download the Zip archive.
-			$tmpZipFile = $this->xmlpsWrapper->downloadFile($jobId);
-			
-			if (!file_exists($tmpZipFile)) return;
 			
 		}
 		catch (Exception $e) {
@@ -424,14 +286,9 @@ class MarkupGatewayPlugin extends GatewayPlugin {
 
 		// Extract archive
 		$extractionPath = null;
-		if (($extractionPath = $this->_unzipArchive($tmpZipFile)) === false) {
+		if (($extractionPath = $this->conversionHelper->unzipArchive($tmpZipFile)) === false) {
 			return;
 		}
-
-		// save relevant documents
-		$journal = $this->getRequest()->getJournal();
-		$journalId = $journal->getId();
-		$plugin = $this->getMarkupPlugin();
 
 		// find current user's group
 		$userGroupDao = DAORegistry::getDAO('UserGroupDAO');
@@ -441,242 +298,31 @@ class MarkupGatewayPlugin extends GatewayPlugin {
 		$fileName = "document" . '__' . date('Y-m-d_h:i:s');
 		switch ($target) {
 			case 'xml-conversion':
-				$params = array(
-					'stage' 	=> $stage,
-					'assocType' 	=> (int)$submissionFile->getAssocType(),
-					'assocId' 	=> (int)$submissionFile->getAssocId(),
-					'UserGroupId' 	=> $userGroup->getId(),
-					'filename'	=> $fileName,
+				$this->conversionHelper->handleArchiveExtractionAfterXmlConversion(
+					$extractionPath,
+					$journal,
+					$submission,
+					$submissionFile, 
+					$userGroup, 
+					$stage,
+					$fileName
 				);
-				$this->addXmlDocumentToFileList($submission, "{$extractionPath}/document.xml", $params);
 				break;
 
 			case 'galley-generate':
-				// Always populate production ready files with xml document.
-				$params = array(
-					'stage' 	=> SUBMISSION_FILE_PRODUCTION_READY,
-					'assocType' 	=> (int)$submissionFile->getAssocType(),
-					'assocId' 	=> (int)$submissionFile->getAssocId(),
-					'UserGroupId' 	=> $userGroup->getId(),
-					'filename' 	=> $fileName
+				$this->conversionHelper->handleArchiveExtractionAfterGalleyGenerate(
+					$extractionPath,
+					$journal,
+					$submission,
+					$submissionFile,
+					$userGroup,
+					$fileName
 				);
-
-				$this->addXmlDocumentToFileList($submission, "{$extractionPath}/document.xml", $params);
-
-				$wantedFormats = $plugin->getSetting($journalId, 'wantedFormats');
-
-				$genreDao = DAORegistry::getDAO('GenreDAO');
-				$genre = $genreDao->getByKey('SUBMISSION', $journalId);
-
-				// retrieve galleys
-				$articleGalleyDao = DAORegistry::getDAO('ArticleGalleyDAO');
-				$galleys = $articleGalleyDao->getBySubmissionId($submission->getId());
-				$existing_galley_by_labels = array();
-				while ($galley = $galleys->next()) {
-					$existing_galley_by_labels[$galley->getLabel()] = $galley;
-				}
-
-				$gParams = array(
-					'filename' 	=> $fileName
-				);
-				if (in_array('pdf', $wantedFormats)) {
-					$this->_addFileToGalley($existing_galley_by_labels, $submission, $genre->getId(), 'pdf', "{$extractionPath}/document.pdf", $gParams);
-				}
-				if (in_array('xml', $wantedFormats)) {
-					$this->_addFileToGalley($existing_galley_by_labels, $submission, $genre->getId(), 'xml', "{$extractionPath}/document.xml", $gParams);
-				}
-				if (in_array('epub', $wantedFormats)) {
-					$this->_addFileToGalley($existing_galley_by_labels, $submission, $genre->getId(), 'epub', "{$extractionPath}/document.epub", $gParams);
-				}
 				break;
 		}
 
 		@unlink($tmpZipFile);
 		@rmdir($extractionPath);
-	}
-
-	/**
-	 * Add converted xml document to file list for stage
-	 * 
-	 * @param $submission object Submission object
-	 * @param $filePath string Path to file in archive
-	 * @param $params array Additional parameters (file stage, assoc type, assoc id)
-	 * 
-	 * @return void
-	 */
-	protected function addXmlDocumentToFileList($submission, $filePath, $params) {
-		$journal = $this->getRequest()->getJournal();
-		$journalId = $journal->getId();
-
-		$submissionId = $submission->getId();
-
-		$genreDao = DAORegistry::getDAO('GenreDAO');
-		$genre = $genreDao->getByKey('SUBMISSION', $journalId);
-		$genreId = $genre->getId();
-
-		$userGroupDao = DAORegistry::getDAO('UserGroupDAO');
-
-		$fileName = isset($params['filename']) ? "{$params['filename']}.xml" :'document.xml';
-
-		$submissionFileDao = DAORegistry::getDAO('SubmissionFileDAO');
-		$submissionFile = $submissionFileDao->newDataObjectByGenreId($genreId);
-		$submissionFile->setUploaderUserId($this->user->getId());
-		$submissionFile->setSubmissionId($submissionId);
-		$submissionFile->setGenreId($genreId);
-		$submissionFile->setFileSize(filesize($filePath));
-		$submissionFile->setFileStage($params['stage']);
-		$submissionFile->setDateUploaded(Core::getCurrentDate());
-		$submissionFile->setDateModified(Core::getCurrentDate());
-		$submissionFile->setOriginalFileName($fileName);
-		$submissionFile->setFileType('text/xml');
-		$submissionFile->setViewable(true);
-		$submissionFile->setUserGroupId($params['UserGroupId']);
-		$submissionFile->setSubmissionLocale($submission->getLocale());
-		$submissionFile->setName($fileName, AppLocale::getLocale());
-
-		$submissionFile->setAssocType($params['assocType']);
-		$submissionFile->setAssocId($params['assocId']);
-		$insertedFile = $submissionFileDao->insertObject($submissionFile, $filePath, false);
-	}
-	
-	/**
-	 * Add a document as galley file
-	 *
-	 * @param $existing_galley_by_labels array Array of existing galleys for submission indexed by label
-	 * @param $submission object Submission object
-	 * @param $genreId int Genre ID 
-	 * @param $format string Asset format 
-	 * @param $fileName string File to process
-	 *
-	 * @return object Submission file object 
-	 */
-	function _addFileToGalley($existing_galley_by_labels, $submission, $genreId, $format, $filePath, $params = array()) {
-
-		$submissionId = $submission->getId();
-
-		$galleyFiles = [];
-		$articleGalley = null;
-		$articleGalleyDao = DAORegistry::getDAO('ArticleGalleyDAO');
-		$label = 'XMLPS-' . strtoupper($format) . '-' .  date("MdSY@H:i",time());
-
-		$fileName = isset($params['filename']) ? "{$params['filename']}.{$format}" : "document.{$format}";
-
-		// create new galley
-		$articleGalley = $articleGalleyDao->newDataObject();
-		$articleGalley->setSubmissionId($submissionId);
-		$articleGalley->setLabel($label);
-		$articleGalley->setLocale($submission->getLocale());
-		$articleGalleyDao->insertObject($articleGalley);
-
-		$submissionFileDao = DAORegistry::getDAO('SubmissionFileDAO');
-		$submissionFile = $submissionFileDao->newDataObjectByGenreId($genreId);
-		$submissionFile->setUploaderUserId($this->user->getId());
-		$submissionFile->setSubmissionId($submissionId);
-		$submissionFile->setGenreId($genreId);
-		$submissionFile->setFileSize(filesize($filePath));
-		$submissionFile->setFileStage(SUBMISSION_FILE_PROOF);
-		$submissionFile->setDateUploaded(Core::getCurrentDate());
-		$submissionFile->setDateModified(Core::getCurrentDate());
-		$submissionFile->setOriginalFileName($fileName);
-		$submissionFile->setUserGroupId($params['UserGroupId']);
-		$submissionFile->setSubmissionLocale($submission->getLocale());
-		$submissionFile->setName($fileName, AppLocale::getLocale());
-
-		switch($format) {
-			case 'pdf':
-				$submissionFile->setFileType('application/pdf');
-				break;
-			case 'epub':
-				$submissionFile->setFileType('application/epub+zip');
-				break;
-			case 'xml':
-				$submissionFile->setFileType('text/xml');
-				break;
-		}
-
-		$submissionFile->setAssocType(ASSOC_TYPE_GALLEY);
-		$submissionFile->setAssocId($articleGalley->getId());
-		$insertedFile = $submissionFileDao->insertObject($submissionFile, $filePath, false);
-
-		// attach file id to galley
-		$articleGalley->setFileId($submissionFile->getFileId());
-		$articleGalleyDao->updateObject($articleGalley);
-
-		return $insertedFile;
-	}
-	
-	/**
-	 * Extract zip a archive
-	 *
-	 * @param $zipFile string File to extract
-	 * @param $validFiles mixed Array with file names to extract
-	 * @param $destination string Destination folder
-	 * @param $message string Reference to status message from ZipArchive
-	 *
-	 * @return bool Whether or not the extraction was successful
-	 */
-	protected function _zipArchiveExtract($zipFile, $destination, &$message, $validFiles = array()) {
-		$zip = new ZipArchive;
-		if (!$zip->open($zipFile, ZIPARCHIVE::CHECKCONS)) {
-			$message = $zip->getStatusString();
-			return false;
-		}
-
-		if (!empty($validFiles)) {
-			// Restrict which files to extract
-			$extractFiles = array();
-			foreach ($validFiles as $validFile) {
-				if ($zip->locateName($validFile) !== false) {
-					$extractFiles[] = $validFile;
-				}
-			}
-			$status = $zip->extractTo($destination, $extractFiles);
-		} else {
-			// Extract the entire archive
-			$status = $zip->extractTo($destination);
-		}
-
-		if ($status === false && $zip->getStatusString() != 'No error') {
-			$zip->close();
-			$message = $zip->getStatusString();
-			return false;
-		}
-
-		$zip->close();
-
-		return true;
-	}
-
-	/**
-	 * Extract archive file.
-	 *
-	 * @param $zipFile string Path to zip archive
-	 *
-	 * @return mixed path to extraction directory or false if extraction was not successful
-	 */
-	function _unzipArchive($zipFile) {
-		
-		$validFiles = array(
-			'document.pdf',
-			'document.xml',
-			'document.epub',
-		);
-
-		// Extract the zip archive to a markup subdirectory
-		$message = '';
-		$destination = sys_get_temp_dir() . '/' . uniqid();
-		if (!$this->_zipArchiveExtract($zipFile, $destination, $message, $validFiles)) {
-			echo __(
-				'plugins.generic.markup.archive.bad_zip',
-				array(
-					'file' => $zipFile,
-					'error' => $message
-				)
-			);
-			return false;
-		}
-		
-		return $destination;
 	}
 
 }

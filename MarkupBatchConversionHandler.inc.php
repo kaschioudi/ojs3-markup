@@ -30,7 +30,7 @@ class MarkupBatchConversionHandler extends Handler {
 
 		$this->addRoleAssignment(
 			array(ROLE_ID_MANAGER),
-			array('filesToConvert')
+			array('filesToConvert', 'startConversion', 'fetchConversionStatus', 'cancelConversion')
 		);
 	}
 
@@ -78,5 +78,140 @@ class MarkupBatchConversionHandler extends Handler {
  			);
  		}
 	 	return new JSONMessage(true, $filesToConvert);
+	}
+
+	/**
+	 * trigger batch conversion
+	 * @param $args array
+	 * @param $request PKPRequest
+	 *
+	 * @return JSONMessage
+	 */
+	public function startConversion($args, $request) {
+		$user = $request->getUser();
+		$dispatcher = $request->getDispatcher();
+
+		$pattern = '/submission_(\d+)/';
+		$submissions = array();
+		foreach ($_POST as $field => $value) {
+			if (preg_match($pattern, $field, $matches) && (intval($value) !== -1) ) {
+				$submissionId = $matches[1];
+				$submissions[$submissionId] = $value;
+			}
+		}
+
+		if (count($submissions)) {
+			// trigger conversion
+			$url = $request->url(null, 'gateway', 'plugin', array('MarkupBatchGatewayPlugin',
+										'submissions', serialize($submissions),
+										'userId', $user->getId()));
+			$ch = curl_init();
+			curl_setopt($ch, CURLOPT_URL, $url);
+			curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
+			curl_setopt($ch, CURLOPT_TIMEOUT_MS, 1000);
+			curl_exec($ch);
+			curl_close($ch);
+
+			// notification
+			$notificationManager = new NotificationManager();
+			$notificationManager->createTrivialNotification(
+				$user->getId(), 
+				NOTIFICATION_TYPE_SUCCESS, 
+				array(
+					'contents' => __('plugins.generic.markup.start-success'),
+				)
+			);
+		}
+
+		// redirect to batch conversion page
+		$url = $dispatcher->url($request, ROUTE_PAGE,null, 'management', 'settings', 'website',
+				array(), 'markupBatchConversion');
+		$request->redirectUrl($url);
+	}
+
+	/**
+	 * Returns status for running conversion
+	 * @param $args array
+	 * @param $request PKPRequest
+	 *
+	 * @return JSONMessage
+	 */
+	public function fetchConversionStatus($args, $request) {
+		$this->plugin->import('classes.MarkupBatchConversionHelper');
+		$batchConversionHelper = new MarkupBatchConversionHelper();
+		$data = $batchConversionHelper->readOutFile();
+		$responseData = null;
+		if (is_array($data)) {
+			$responseData = <<<OED
+
+			<h3>Batch conversion job infos</h3>
+			<p><em>Running {$data['processedCount']} out of {$data['submissionCount']}.</em></p>
+			<dl>
+				<dt>Submission Id</dt><dd>{$data['submissionId']}</dd>
+				<dt>OJS Job ID</dt><dd>{$data['jobInfoId']}</dd>
+				<dt>OTS Job ID</dt><dd>{$data['otsJobId']}</dd>
+				<dt>Job Status</dt><dd>{$data['conversionStatus']}</dd>
+			</dl>
+
+OED;
+		}
+		else {
+			$responseData = array(
+				'errorMessage' => __('plugins.generic.markup.conversion-running'),
+			);
+		}
+
+		return new JSONMessage(true, $responseData);
+	}
+
+	/**
+	 * Stops running batch conversion
+	 * @param $args array
+	 * @param $request PKPRequest
+	 *
+	 * @return JSONMessage
+	 */
+	public function cancelConversion($args, $request) {
+		$user = $request->getUser();
+		$dispatcher = $request->getDispatcher();
+		$conversionPageUrl = $dispatcher->url($request, ROUTE_PAGE,null, 'management', 'settings', 'website',
+				array(), 'markupBatchConversion');
+		$this->plugin->import('classes.MarkupBatchConversionHelper');
+		$batchConversionHelper = new MarkupBatchConversionHelper();
+		if (!$batchConversionHelper->isRunning()) {
+			$request->redirectUrl($conversionPageUrl);
+			exit;
+		}
+
+		// verify cancellation token
+		$data = $batchConversionHelper->readOutFile();
+		$token = $request->getUserVar('token');
+		if ($token != $data['cancellationToken']) {
+			$request->redirectUrl($conversionPageUrl);
+			exit;
+		}
+
+		$pid = intval($data['pid']);
+		$notificationManager = new NotificationManager();
+		if (posix_kill($pid, 9)) {	// 9 = SIGKILL
+			$notificationManager->createTrivialNotification(
+				$user->getId(),
+				NOTIFICATION_TYPE_SUCCESS,
+				array(
+					'contents' => __('plugins.generic.markup.cancel-success'),
+				)
+			);
+		}
+		else {
+			$notificationManager->createTrivialNotification(
+				$user->getId(),
+				NOTIFICATION_TYPE_ERROR,
+				array(
+					'contents' => __('plugins.generic.markup.cancel-failure'),
+				)
+			);
+		}
+		$batchConversionHelper->deleteOutFile();
+		$request->redirectUrl($conversionPageUrl);
 	}
 }

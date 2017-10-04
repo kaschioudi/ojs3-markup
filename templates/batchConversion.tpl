@@ -9,16 +9,37 @@
  *}
 <div>
 	<div class="pkp_form">
+	<form action="{$startConversionUrl|escape}" method="post">		
 		<fieldset>
 			<label class="description">{translate key="plugins.generic.markup.batch.selected-submissions"}</label>
-			<input type="hidden" id="batchFilesToConvert" name="batchFilesToConvert" value="{$batchFilesToConvert|escape}" />
-			<input type="hidden" id="conversionTriggerUrl" name="conversionTriggerUrl" value="{$conversionTriggerUrl|escape}" />
+
+			{if $batchConversionIsRunning}
+			<div id="conversion-status" class="batch-processing" data-status-url="{$batchConversionStatusUrl|escape}">
+				<span id="conversionJobSpinner" class="pkp_spinner is_visible"></span>
+				<div class="output">
+					<p>{translate key="common.loading"}</p>
+				</div>
+				<div style="float:right;position:relative;">
+					<button 
+						class="batch-cancel-conversion"
+						id="stopConversionBtn" 
+						type="submit"
+						data-cancel-url="{$cancelConversionUrl|escape}">
+						{translate key="plugins.generic.markup.batch.cancel-label"}
+					</button>
+				</div>
+				<p>&nbsp;</p>
+			</div>
+			{/if}
+
 			<ul id="submissionListConfirmation">
 			{foreach from=$submissions item=submission}
 				<li class="batch-conversion-submission">
 					#{$submission.id|escape} 
 					{$submission.title|escape} <br>
 					<select 
+						id="submission_{$submission.id|escape}"
+						name="submission_{$submission.id|escape}"
 						class="submission-file" 
 						data-submission-id="{$submission.id|escape}" 
 						data-stage="{$submission.stage|escape}">
@@ -33,14 +54,11 @@
 				</li>
 			{/foreach}
 			</ul>
-			<div id="conversion-status" style="display:none;">
-				<p>
-					<strong><span id="conversion-status-processed"></span></strong> processed out of 
-					<strong><span id="conversion-status-total"></span></strong> submissions.
-				</p>
-			</div>
-			<button id="startConversionBtn">{translate key="plugins.generic.markup.batch.trigger-label"}</button>
+			{if !$batchConversionIsRunning}
+				<button id="startConversionBtn" type="submit">{translate key="plugins.generic.markup.batch.trigger-label"}</button>
+			{/if}
 		</fieldset>
+	</form>
 	</div>
 </div>
 <script type="text/javascript">

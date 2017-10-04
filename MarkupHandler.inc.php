@@ -340,6 +340,17 @@ class MarkupHandler extends Handler {
 		$pdfGalleyFileId = null;
 		$pdfProductionReadyFileId = null;
 		$xmlProductionReadyFileId = null;
+
+		import('lib.pkp.classes.submission.SubmissionFile'); // Bring in const
+		// TODO do we need more const here?
+		$fileStageNames = array(
+			SUBMISSION_FILE_SUBMISSION 		=> __('submission.submit.submissionFiles'),
+			SUBMISSION_FILE_REVIEW_FILE 		=> __('reviewer.submission.reviewFiles'),
+			SUBMISSION_FILE_COPYEDIT 		=> __('submission.copyedited'),
+			SUBMISSION_FILE_PROOF 			=> __('submission.pageProofs'),
+			SUBMISSION_FILE_PRODUCTION_READY	=> __('editor.submission.production.productionReadyFiles'),
+		);
+
 		while ($submission = $submissions->next()) {
 			$hasXmlInProductionReady = false;
 			$sMetadata = array(
@@ -380,7 +391,7 @@ class MarkupHandler extends Handler {
 				$sMetadata['files'][] = array(
 					'fileId' 	=> $submissionFile->getFileId(),
 					'filename'	=> $submissionFile->getName($locale),
-					'fileStage'	=> $fileStage,
+					'fileStage'	=> $fileStageNames[$fileStage],
 				);
 			}
 
@@ -417,15 +428,35 @@ class MarkupHandler extends Handler {
 	 * @return JSONMessage
 	 */
 	public function batch($args, $request) {
+		AppLocale::requireComponents(
+			LOCALE_COMPONENT_APP_SUBMISSION,
+			LOCALE_COMPONENT_PKP_SUBMISSION,
+			LOCALE_COMPONENT_APP_EDITOR,
+			LOCALE_COMPONENT_PKP_EDITOR,
+			LOCALE_COMPONENT_PKP_COMMON,
+			LOCALE_COMPONENT_APP_COMMON
+		);
+
+		$this->plugin->import('classes.MarkupBatchConversionHelper');
+		$batchConversionHelper = new MarkupBatchConversionHelper();
+
 		$context = $request->getContext();
 		$dispatcher = $request->getDispatcher();
 		$templateMgr = TemplateManager::getManager();
 		$submissionMetadata = $this->buildSubmissionMetadata($context->getId());
-		$batchFilesToConvert = $dispatcher->url($request, ROUTE_PAGE, null, 'batch', 'filesToConvert', null);
-		$conversionTriggerUrl = $dispatcher->url($request, ROUTE_PAGE, null, 'markup', 'triggerConversion', null);
-		$templateMgr->assign('batchFilesToConvert', $batchFilesToConvert);
-		$templateMgr->assign('conversionTriggerUrl', $conversionTriggerUrl);
+		$batchConversionStatusUrl = $dispatcher->url($request, ROUTE_PAGE, null, 'batch', 'fetchConversionStatus', null);
+		$startConversionUrl = $dispatcher->url($request, ROUTE_PAGE, null, 'batch', 'startConversion', null);
+		$templateMgr->assign('batchConversionStatusUrl', $batchConversionStatusUrl);
+		$templateMgr->assign('startConversionUrl', $startConversionUrl);
+
+		if ($batchConversionHelper->isRunning()) {
+			$data = $batchConversionHelper->readOutFile();
+			$cancelConversionUrl = $dispatcher->url($request, ROUTE_PAGE, null, 'batch', 'cancelConversion',
+					null, array('token' => $data['cancellationToken']));
+			$templateMgr->assign('cancelConversionUrl', $cancelConversionUrl);
+		}
 		$templateMgr->assign('submissions', $submissionMetadata);
+		$templateMgr->assign('batchConversionIsRunning', $batchConversionHelper->isRunning());
 		$templateFile = $this->plugin->getTemplatePath() . 'batchConversion.tpl';
 		$output = $templateMgr->fetch($templateFile);
 		return new JSONMessage(true, $output);

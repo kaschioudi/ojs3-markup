@@ -21,13 +21,28 @@
 	 * @constructor
 	 */
 	$.pkp.plugins.markup.js.MarkupSubmissionsBatchConversion = function() {
+		if ($('#conversion-status').length) {
+			$.pkp.plugins.markup.js.MarkupSubmissionsBatchConversion.prototype.monitor();
+		}
 
-		// batch conversion button click handler
-		$('div.pkp_form button#startConversionBtn').click(function() {
-			$(this).attr('disabled','disabled').hide();
-			$.pkp.plugins.markup.js.MarkupSubmissionsBatchConversion.prototype.processFile();
+		$('button#stopConversionBtn').click(function(e){
+			e.preventDefault();
+			if(confirm('Cancel batch conversion job?')) {
+				window.location = $(this).data('cancel-url');
+			}
 		});
 	};
+
+	/**
+	 * trigger conversion monitoring
+	 */
+	$.pkp.plugins.markup.js.MarkupSubmissionsBatchConversion.prototype.monitor = 
+		function() {
+			var that = this; 
+			this.timer = setInterval(function() { 
+				that.fetchJobStatus.apply(that); 
+			}, 5000);
+	}
 
 	/**
 	 * A Number, representing the ID value of the timer that is set.
@@ -37,103 +52,27 @@
 	$.pkp.plugins.markup.js.MarkupSubmissionsBatchConversion.timer = null;
 
 	/**
-	 * A jQuery element.
-	 * @private
-	 * @type {jQueryObject}
-	 */
-	$.pkp.plugins.markup.js.MarkupSubmissionsBatchConversion.$listElement = null;
-
-	/**
-	 * Determine which file to convert
-	 */
-	$.pkp.plugins.markup.js.MarkupSubmissionsBatchConversion.prototype.processFile = 
-		function() {
-			this.conversionStatus();
-			var $next = $('select[class=submission-file]:not(".processed")').first();
-			if ($next.length) {
-				this.convert($next);
-			}
-	}
-
-	/**
-	 * Display numbers of submissions processed and to be processed
-	 */
-	$.pkp.plugins.markup.js.MarkupSubmissionsBatchConversion.prototype.conversionStatus = 
-		function() {
-			$('div#conversion-status').show();
-			var processedCount = $('select[class="submission-file processed"]').size();
-			var totalCount = $('ul#submissionListConfirmation select').size();
-			$('span#conversion-status-processed').text(processedCount);
-			$('span#conversion-status-total').text(totalCount);
-	}
-
-	/**
-	 * Trigger file conversion
-	 * 
-	 * @param {jQueryObject} $element input checkbox representing submission file
-	 */
-	$.pkp.plugins.markup.js.MarkupSubmissionsBatchConversion.prototype.convert = 
-		function($element) {
-			$element.addClass('processed');
-			this.$listElement = $element.closest('li');
-			this.$listElement.addClass('batch-processing');
-			var params = {
-				'submissionId': $element.data('submission-id'),
-				'stage': $element.data('stage'),
-				'fileId': parseInt($element.val()),
-			};
-
-			if (params.fileId != -1) {
-				var postUrl = $('input#conversionTriggerUrl').val() +
-					'?submissionId='+params.submissionId+
-					'&stage='+params.stage+
-					'&fileId='+params.fileId+
-					'&target=galley-generate';
-
-				var that = this;
-				$.post(postUrl, {}, function(data) {
-					that.$listElement.append(data.content);
-					$('.pkp_spinner', that.$listElement).addClass('is_visible');
-					var jobId = that.$listElement.find('span#conversionJobId').text();
-					if ((jobId != "") && (that.timer == null) ) {
-						that.timer = setInterval(function() { that.fetchJobStatus.apply(that); }, 5000);
-					}
-				}, 'json');
-			}
-			else {
-				this.processFile();
-			}
-	}
-
-	/**
 	 * Callback to fetch xml job status
 	 */
 	$.pkp.plugins.markup.js.MarkupSubmissionsBatchConversion.prototype.fetchJobStatus = 
 		function() {
 			var self = this;
 			$.ajax({
-				url: $('span#conversionJobStatus', this.$listElement).data('url'),
+				url: $('#conversion-status').data('status-url'),
 				type: 'POST',
 				dataType: 'json',
 				success: function(data) {
-					if (data['content'].hasOwnProperty('status') && data['content'].hasOwnProperty('isCompleted')) {
-						if (data['content']['isCompleted']) {
-							self.stopAndClear();
-							$('span#conversionJobStatus').text(data['content']['status']);
-							self.$listElement.removeClass('batch-processing').addClass('batch-success');
-							$('input[class=submission-file]', self.$listElement).addClass('processed');
-							self.processFile();
-						}
-						else {
-							$('span#conversionJobStatus', self.$listElement).text(data['content']['status']);
-						}
+					if (data['content'].hasOwnProperty('errorMessage')) {
+						$('#conversion-status').text(data['content']['errorMessage']);
+						self.stopAndClear();
+					}
+					else {
+						$('#conversion-status > div.output').html(data['content']);
 					}
 				},
-				error: function() {
-					self.$listElement.removeClass('batch-processing').addClass('batch-failure');
-					$('span#conversionJobStatus', self.$listElement).text('An unexpected error occured.');
+				error: function(xhr, status, error) {
+					$('#conversion-status').text('An unexpected error occured => ' + error)
 					self.stopAndClear();
-					self.processFile();
 				}
 			});
 	}
@@ -143,7 +82,7 @@
 	 */
 	$.pkp.plugins.markup.js.MarkupSubmissionsBatchConversion.prototype.stopAndClear = 
 		function() {
-			$('.pkp_spinner', this.$listElement).removeClass('is_visible');
+			$('.pkp_spinner', '#conversion-status').removeClass('is_visible');
 			clearInterval(this.timer);
 			this.timer = null;
 	}
