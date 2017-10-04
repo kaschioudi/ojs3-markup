@@ -122,7 +122,7 @@ class MarkupPlugin extends GenericPlugin {
 				);
 				$templateMgr->addJavaScript(
 					'markupBatchConvertScript', 
-					$this->getJsUrl($request).'/MarkupSubmissionsBatchConversion.js',
+					$this->getJsUrl($request).'/MarkupSubmissionsBatchConversionFormHandler.js',
 					array('contexts' => 'backend')
 				);
 

@@ -9,7 +9,7 @@
  *}
 <div>
 	<div class="pkp_form">
-	<form action="{$startConversionUrl|escape}" method="post">		
+	<form id="batchConversionForm" action="{$startConversionUrl|escape}" method="post">
 		<fieldset>
 			<label class="description">{translate key="plugins.generic.markup.batch.selected-submissions"}</label>
 
@@ -63,7 +63,10 @@
 </div>
 <script type="text/javascript">
 	$(function() {ldelim}
-		$.pkp.plugins.markup.js.MarkupSubmissionsBatchConversion();
+		// Attach the form handler.
+		$('#batchConversionForm').pkpHandler(
+			'$.pkp.plugins.markup.js.MarkupSubmissionsBatchConversionFormHandler'
+		);
 	{rdelim});
 </script>
 
