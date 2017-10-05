@@ -342,13 +342,22 @@ class MarkupHandler extends Handler {
 		$xmlProductionReadyFileId = null;
 
 		import('lib.pkp.classes.submission.SubmissionFile'); // Bring in const
-		// TODO do we need more const here?
+		// TODO Validate this with Alec
+		// do we need more const here?
+		// Do these values make sense?
+		// Unable to find titles for SUBMISSION_FILE_FAIR_COPY and SUBMISSION_FILE_PUBLIC
 		$fileStageNames = array(
 			SUBMISSION_FILE_SUBMISSION 		=> __('submission.submit.submissionFiles'),
 			SUBMISSION_FILE_REVIEW_FILE 		=> __('reviewer.submission.reviewFiles'),
 			SUBMISSION_FILE_COPYEDIT 		=> __('submission.copyedited'),
 			SUBMISSION_FILE_PROOF 			=> __('submission.pageProofs'),
 			SUBMISSION_FILE_PRODUCTION_READY	=> __('editor.submission.production.productionReadyFiles'),
+			SUBMISSION_FILE_ATTACHMENT		=> __('grid.reviewAttachments.title'),
+			SUBMISSION_FILE_FAIR_COPY		=> 'SUBMISSION_FILE_FAIR_COPY',//__(''),
+			SUBMISSION_FILE_QUERY			=> __('submission.queries.attachedFiles'),
+			SUBMISSION_FILE_REVIEW_ATTACHMENT	=> __('grid.reviewAttachments.title'),
+			SUBMISSION_FILE_REVIEW_REVISION		=> __('editor.submission.revisions'),
+			SUBMISSION_FILE_PUBLIC			=> 'SUBMISSION_FILE_PUBLIC',//__(''),
 		);
 
 		while ($submission = $submissions->next()) {
