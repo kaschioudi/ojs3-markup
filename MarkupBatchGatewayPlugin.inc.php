@@ -162,12 +162,11 @@ class MarkupBatchGatewayPlugin extends GatewayPlugin {
 		// initialize markup conversion helper
 		$this->initMarkupConversionHelper($request, $journal);
 		// get list of submissions
-		if (!isset($args['submissions'])) {
+		if (empty($_POST)) {
 			return;
 		}
 
-		$submissions = $args['submissions'];
-		$submissions = unserialize($submissions);
+		$submissions = $_POST;
 
 		$pid = getmypid();
 		$submissionCount = count($submissions);
