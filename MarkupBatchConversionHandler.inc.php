@@ -99,14 +99,13 @@ class MarkupBatchConversionHandler extends Handler {
 				$submissions[$submissionId] = $value;
 			}
 		}
-
 		if (count($submissions)) {
 			// trigger conversion
 			$url = $request->url(null, 'gateway', 'plugin', array('MarkupBatchGatewayPlugin',
-										'submissions', serialize($submissions),
 										'userId', $user->getId()));
 			$ch = curl_init();
 			curl_setopt($ch, CURLOPT_URL, $url);
+			curl_setopt($ch, CURLOPT_POSTFIELDS, $submissions);
 			curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
 			curl_setopt($ch, CURLOPT_TIMEOUT_MS, 1000);
 			curl_exec($ch);
