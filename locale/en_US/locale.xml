@@ -66,7 +66,7 @@
 	<li><a href="https://github.com/pkp/xmlps/issues" target="_blank"">OTS service issues</a></li>
 </ul>
 
-<p><strong>Caveats:</strong> This beta service is currently provided at no cost. The costs for using this service may change at any time. The demo OTS instance referred to in this beta test may be reset or disabled at any time. If you are interested in having unlimited access to OTS, or are interested in receiving paid support for OTS, please contact us at <a href="mailto:pkp.contact@gmail.com">pkp.contact@gmail.com</a>.</p>]]></message>
+<p><strong>Caveats:</strong> The Open Typesetting Stack (OTS) service and associated PKP plugins are still under active development and have been released in beta mode to enable testing and feedback from interested users. It is made available on an 'as is, where is' basis without guarantees on its suitability for any particular use. With input from users of this beta mode, this open source software system will be subject to further changes, with PKP reserving the right to determine the form that its OTS service will take in the future. If you are interested in having unlimited access to OTS, or are interested in receiving paid support for OTS, please contact us at <a href="mailto:pkp.contact@gmail.com">pkp.contact@gmail.com</a>.</p>]]></message>
 	<message key="plugins.generic.markup.settings.markupHostPass">API Token:</message>
 	<message key="plugins.generic.markup.settings.markupHostURL">Open Typesetting Stack URL:</message>
 	<message key="plugins.generic.markup.settings.markupHostURLHelp">OJS will use this Open Typesetting Stack instance. Normally you should not change this setting.</message>
