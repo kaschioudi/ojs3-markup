@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE locale SYSTEM "../../../../../lib/pkp/dtd/locale.dtd">
+<!--
+  * locale/es_ES/locale.xml
+  *
+  * Copyright (c) 2013-2017 Simon Fraser University Library
+  * Copyright (c) 2003-2017 John Willinsky
+  * Distributed under the GNU GPL v2. For full terms see the file docs/COPYING.
+  *
+  * Credits: https://pkp.sfu.ca/wiki/index.php?title=OJS:_Spanish_(es_ES)
+  *
+  * Localization strings
+  -->
+
+<locale name="es_ES" full_name="Español (España)">
+  <message key="plugins.generic.markup.displayName">Módulo de Marcado de documentos</message>
+  <message key="plugins.generic.markup.archive.description">Incluye conversiones de su artículo a NLM-XML, HTML y PDF. También contiene las imágenes que lo acompañan y datos de citas estructurados en formato BibTeX (para importar en bases de datos de referencia como Zotero o Mendeley).</message>
+</locale>
