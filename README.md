@@ -66,7 +66,14 @@ This will submit another job to OTS, which will return production-ready galley f
 
 ​From here, you can go directly to publication.
 
- 
+
+Backlog Conversion
+-----
+
+Additionally, if your journal has already been publishing Word or PDF articles and you want to convert them to JATS XML in bulk (with the understanding that this will probably not produce an ideal result on its own), you can do so by navigating to the "OTS Backlog convesrsion" tab of the settings menu, selecting the files you want to convert, and clicking "Start conversion".
+
+![](https://github.com/kaschioudi/ojs3-markup/blob/master/readme-images/backlog.png?raw=true)
+
 
 Contact/Support
 ---------------
