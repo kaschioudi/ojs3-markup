@@ -1,0 +1,29 @@
+.batch-conversion-submission {
+	margin-top:20px;
+}
+.batch-processing {
+	background-color: silver;
+	border: 1px dashed black;
+	padding: 2px;
+}
+
+.batch-success {
+	background-color: #b6f7c5;
+	border: 1px solid silver;
+	padding: 2px;
+}
+
+.batch-failure {
+	background-color: #dc3545;
+	border: 1px solid silver;
+	padding: 2px;
+}
+
+.batch-cancel-conversion {
+	background-color: #d00a6c;
+	background-image: linear-gradient(#f41985, #d00a6c);
+	box-shadow: 0 1px 2px rgba(0,0,0,0.1), inset 0 1px 1px rgba(255,255,255,0.4);
+	color: #fff;
+	text-shadow: 0 2px 0 rgba(0,0,0,0.2);
+	border-color: #d00a6c;
+}

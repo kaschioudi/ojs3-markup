@@ -3,8 +3,8 @@
 /**
  * @file plugins/generic/markup/MarkupHandler.inc.php
  *
- * Copyright (c) 2014-2016 Simon Fraser University Library
- * Copyright (c) 2003-2016 John Willinsky
+ * Copyright (c) 2014-2017 Simon Fraser University
+ * Copyright (c) 2003-2017 John Willinsky
  * Distributed under the GNU GPL v2. For full terms see the file docs/COPYING.
  *
  * @class MarkupHandler
@@ -33,6 +33,8 @@ class MarkupHandler extends Handler {
 			array('convertToXml', 'generateGalleyFiles', 'profile', 'save', 
 					'editor', 'xml', 'triggerConversion', 'fetchConversionJobStatus')
 		);
+
+		$this->addRoleAssignment(array(ROLE_ID_MANAGER), array('batch'));
 	}
 	
 	/**
@@ -41,7 +43,7 @@ class MarkupHandler extends Handler {
 	function authorize($request, &$args, $roleAssignments) {
 		$op = $request->getRouter()->getRequestedOp($request);
 		
-		if($op == 'profile') {
+		if(in_array($op, array('profile','batch'))) {
 			import('lib.pkp.classes.security.authorization.ContextAccessPolicy');
 			$this->addPolicy(new ContextAccessPolicy($request, $roleAssignments));
 		}
@@ -194,7 +196,7 @@ class MarkupHandler extends Handler {
 				return new JSONMessage(false);
 			}
 			
-			$xmlheader = '<?xml version="1.0"?>'. PHP_EOL .'<!DOCTYPE article PUBLIC "-//NLM//DTD Journal Publishing DTD v3.0 20080202//EN" "http://dtd.nlm.nih.gov/publishing/3.0/journalpublishing3.dtd">' . PHP_EOL;
+			$xmlheader = '<?xml version="1.0"?>'. PHP_EOL;
 			file_put_contents($filePath, $xmlheader . $data['content']);
 			return new JSONMessage(true);
 		}
@@ -324,5 +326,148 @@ class MarkupHandler extends Handler {
 			$form->initData();
 		}
 		return new JSONMessage(true, $form->fetch($request));
+	}
+
+	protected function buildSubmissionMetadata($contextId) {
+		$metadata = array();
+		$locale = AppLocale::getLocale();
+		$genreDao = DAORegistry::getDAO('GenreDAO');
+		$submissionDao = DAORegistry::getDAO('ArticleDAO');
+		$submissionFileDao = DAORegistry::getDAO('SubmissionFileDAO');
+		$submissions = $submissionDao->getByContextId($contextId);
+		import('lib.pkp.classes.file.SubmissionFileManager');
+		$validFileExtensions = array('pdf','doc','docx','xml');
+		$pdfGalleyFileId = null;
+		$pdfProductionReadyFileId = null;
+		$xmlProductionReadyFileId = null;
+
+		import('lib.pkp.classes.submission.SubmissionFile'); // Bring in const
+		// TODO Validate this with Alec
+		// do we need more const here?
+		// Do these values make sense?
+		// Unable to find titles for SUBMISSION_FILE_FAIR_COPY and SUBMISSION_FILE_PUBLIC
+		$fileStageNames = array(
+			SUBMISSION_FILE_SUBMISSION 		=> __('submission.submit.submissionFiles'),
+			SUBMISSION_FILE_REVIEW_FILE 		=> __('reviewer.submission.reviewFiles'),
+			SUBMISSION_FILE_COPYEDIT 		=> __('submission.copyedited'),
+			SUBMISSION_FILE_PROOF 			=> __('submission.pageProofs'),
+			SUBMISSION_FILE_PRODUCTION_READY	=> __('editor.submission.production.productionReadyFiles'),
+			SUBMISSION_FILE_ATTACHMENT		=> __('grid.reviewAttachments.title'),
+			SUBMISSION_FILE_FAIR_COPY		=> 'SUBMISSION_FILE_FAIR_COPY',//__(''),
+			SUBMISSION_FILE_QUERY			=> __('submission.queries.attachedFiles'),
+			SUBMISSION_FILE_REVIEW_ATTACHMENT	=> __('grid.reviewAttachments.title'),
+			SUBMISSION_FILE_REVIEW_REVISION		=> __('editor.submission.revisions'),
+			SUBMISSION_FILE_PUBLIC			=> 'SUBMISSION_FILE_PUBLIC',//__(''),
+		);
+
+		while ($submission = $submissions->next()) {
+			$hasXmlInProductionReady = false;
+			$sMetadata = array(
+				'id'	=> $submission->getId(),
+				'stage'	=> $submission->getStageId(),
+				'title' => $submission->getFullTitle($locale),
+				'files' => array(),
+			);
+			$submissionFileManager = new SubmissionFileManager($contextId, $submission->getId());
+			$submissionFiles = $submissionFileDao->getBySubmissionId($submission->getId());
+			foreach ($submissionFiles as $submissionFile) {
+				$genre = $genreDao->getById($submissionFile->getGenreId());
+				$fileStage = $submissionFile->getFileStage();
+				$fileExtension = strtolower($submissionFile->getExtension());
+				if (intval($genre->getCategory()) != GENRE_CATEGORY_DOCUMENT)
+					continue;
+				if (!in_array($fileExtension, $validFileExtensions))
+					continue;
+				// check whether xml file is present in production ready
+				if (($fileExtension == 'xml') && ($fileStage == SUBMISSION_FILE_PRODUCTION_READY)) {
+					$hasXmlInProductionReady = true;
+				}
+
+				// check if there's a publish pdf in galleys or production ready
+				if ($fileExtension == 'pdf') { 
+					if ($fileStage == SUBMISSION_FILE_PROOF) {
+						$pdfGalleyFileId = $submissionFile->getFileId();
+					}
+					if ($fileStage == SUBMISSION_FILE_PRODUCTION_READY) {
+						$pdfProductionReadyFileId = $submissionFile->getFileId();
+					}
+				}
+				if (in_array($fileExtension, array('doc','docx'))) {
+					if ($fileStage == SUBMISSION_FILE_PRODUCTION_READY) {
+						$xmlProductionReadyFileId = $submissionFile->getFileId();
+					}
+				}
+				$sMetadata['files'][] = array(
+					'fileId' 	=> $submissionFile->getFileId(),
+					'filename'	=> $submissionFile->getName($locale),
+					'fileStage'	=> $fileStageNames[$fileStage],
+				);
+			}
+
+			// decide on submission file to select by default
+			$defaultSubmissionFileId = 0;
+			if (!$hasXmlInProductionReady) {
+				if (!is_null($pdfGalleyFileId)) {
+					$defaultSubmissionFileId = $pdfGalleyFileId;
+				}
+				elseif (!is_null($pdfProductionReadyFileId)) {
+					$defaultSubmissionFileId = $pdfProductionReadyFileId;
+				}
+				elseif (!is_null($xmlProductionReadyFileId)) {
+					$defaultSubmissionFileId = $xmlProductionReadyFileId;
+				}
+				else {
+					$defaultSubmissionFileId = 0;
+				}
+			}
+			$sMetadata['defaultSubmissionFileId'] = $defaultSubmissionFileId;
+			$sMetadata['pdfGalleyFileId'] = $pdfGalleyFileId;
+			$sMetadata['pdfProductionReadyFileId'] = $pdfProductionReadyFileId;
+			$sMetadata['xmlProductionReadyFileId'] = $xmlProductionReadyFileId;
+			$metadata[] = $sMetadata;
+		}
+		return $metadata;
+	}
+
+	/**
+	 * Display batch conversion page
+	 * @param $args array
+	 * @param $request PKPRequest
+	 *
+	 * @return JSONMessage
+	 */
+	public function batch($args, $request) {
+		AppLocale::requireComponents(
+			LOCALE_COMPONENT_APP_SUBMISSION,
+			LOCALE_COMPONENT_PKP_SUBMISSION,
+			LOCALE_COMPONENT_APP_EDITOR,
+			LOCALE_COMPONENT_PKP_EDITOR,
+			LOCALE_COMPONENT_PKP_COMMON,
+			LOCALE_COMPONENT_APP_COMMON
+		);
+
+		$this->plugin->import('classes.MarkupBatchConversionHelper');
+		$batchConversionHelper = new MarkupBatchConversionHelper();
+
+		$context = $request->getContext();
+		$dispatcher = $request->getDispatcher();
+		$templateMgr = TemplateManager::getManager();
+		$submissionMetadata = $this->buildSubmissionMetadata($context->getId());
+		$batchConversionStatusUrl = $dispatcher->url($request, ROUTE_PAGE, null, 'batch', 'fetchConversionStatus', null);
+		$startConversionUrl = $dispatcher->url($request, ROUTE_PAGE, null, 'batch', 'startConversion', null);
+		$templateMgr->assign('batchConversionStatusUrl', $batchConversionStatusUrl);
+		$templateMgr->assign('startConversionUrl', $startConversionUrl);
+
+		if ($batchConversionHelper->isRunning()) {
+			$data = $batchConversionHelper->readOutFile();
+			$cancelConversionUrl = $dispatcher->url($request, ROUTE_PAGE, null, 'batch', 'cancelConversion',
+					null, array('token' => $data['cancellationToken']));
+			$templateMgr->assign('cancelConversionUrl', $cancelConversionUrl);
+		}
+		$templateMgr->assign('submissions', $submissionMetadata);
+		$templateMgr->assign('batchConversionIsRunning', $batchConversionHelper->isRunning());
+		$templateFile = $this->plugin->getTemplatePath() . 'batchConversion.tpl';
+		$output = $templateMgr->fetch($templateFile);
+		return new JSONMessage(true, $output);
 	}
 }

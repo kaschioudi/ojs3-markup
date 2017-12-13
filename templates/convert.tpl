@@ -1,12 +1,12 @@
 {**
-* plugins/generic/markup/templates/convert.tpl
-*
-* Copyright (c) 2003-2013 John Willinsky
-* Distributed under the GNU GPL v2. For full terms see the file docs/COPYING.
-*
-* Document Markup plugin file convert modal template
-* 
-*}
+ * plugins/generic/markup/templates/convert.tpl
+ *
+ * Copyright (c) 2014-2017 Simon Fraser University
+ * Copyright (c) 2003-2017 John Willinsky
+ * Distributed under the GNU GPL v2. For full terms see the file docs/COPYING.
+ *
+ * Document Markup plugin file convert modal template
+ *}
 <script src="{$pluginJavaScriptURL}/MarkupFileConversionFormHandler.js"></script>
 
 <script type="text/javascript">

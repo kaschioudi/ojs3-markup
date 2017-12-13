@@ -85,10 +85,10 @@
 	<message key="plugins.generic.markup.job.success">Your document has been successfuly submitted to the Open Typesetting Stack. Transformation progress is available at: {$url}</message>
 	<message key="plugins.generic.markup.job.failure">Unable to submit your document to the Open Typesetting Stack. Please make sure the plugin is correctly installed and configured.</message>
 	<message key="plugins.generic.markup.settings.authType">Type of authentication:</message>
-	<message key="plugins.generic.markup.settings.siteAuthArea">Login credentials for site-wide authentication:</message>
+	<message key="plugins.generic.markup.settings.siteAuthArea">Login credentials for journal-wide authentication:</message>
 	<message key="plugins.generic.markup.settings.userAuthArea">OTS login credentials</message>
-	<message key="plugins.generic.markup.settings.authTypeFieldHelp">Specify whether you want to use site-wide or user-specific authentication to OTS. Site-wide authentication is simpler, allowing you to share a single administrator-level OTS User ID across your entire journal. However, if you anticipate individual authors wanting to access OTS directly (rather than through OJS) and want to avoid any potential issues around blind review, you can select user-specific authentication, which requires them to each specify their own OTS User ID in their OJS user preferences. Most people will want to use site-wide authentication.</message>
-	<message key="plugins.generic.markup.settings.authTypeSite">Site-wide authentication</message>
+	<message key="plugins.generic.markup.settings.authTypeFieldHelp">Specify whether you want to use site-wide or user-specific authentication to OTS. Journal-wide authentication is simpler, allowing you to share a single administrator-level OTS User ID across your entire journal. However, if you anticipate individual authors wanting to access OTS directly (rather than through OJS) and want to avoid any potential issues around blind review, you can select user-specific authentication, which requires them to each specify their own OTS User ID in their OJS user preferences. Most people will want to use journal-wide authentication.</message>
+	<message key="plugins.generic.markup.settings.authTypeSite">Journal-wide authentication</message>
 	<message key="plugins.generic.markup.settings.authTypeUser">User-specific authentication</message>
 	<message key="plugins.generic.markup.links.convertToXml">Convert to XML</message>
 	<message key="plugins.generic.markup.links.generateGalley">Generate Galley Files</message>
@@ -107,4 +107,16 @@
 	<message key="plugins.generic.markup.settings.editWithSubstanceStagesHelp">Select workflow stages where the Texture XML editor is available.</message>
 	<message key="plugins.generic.markup.required.xmlConversionStages">OTS conversion must be enabled in at least one stage.</message>
 	<message key="plugins.generic.markup.required.editWithSubstanceStages">The Texture XML editor must be enabled in at least one stage.</message>
+	<message key="plugins.generic.markup.batch">OTS Backlog conversion</message>
+	<message key="plugins.generic.markup.batch.trigger-label">Start conversion</message>
+	<message key="plugins.generic.markup.batch.cancel-label">Cancel conversion</message>
+	<message key="plugins.generic.markup.batch.selected-submissions">On this page, you can automatically batch-convert already-published articles from PDF or Word formats to JATS XML using PKP's Open Typesetting Stack, without needing to navigate to each article individually. While this will generally not produce perfect results -- the Open Typesetting Stack is normally intended to be used together with the included Texture editor to improve the quality of XML -- it should be sufficient to populate your journals' OAI feed with structured data for harvesting purposes. The Open Typesetting Stack will return converted XML to your journals under the "Production Ready Files" stage for each article that is converted here. You can still navigate to each article individually to improve formatting with Texture after performing this batch conversion.</message>
+	<message key="plugins.generic.markup.batch-select-file">Select a file to convert</message>
+	<message key="plugins.generic.markup.start-success">Batch conversion started successfully</message>
+	<message key="plugins.generic.markup.cancel-success">Batch conversion cancelled successfully</message>
+	<message key="plugins.generic.markup.cancel-failure">Unable to cancel batch conversion</message>
+	<message key="plugins.generic.markup.file-exists">{$file} exists! Conversion already running?</message>
+	<message key="plugins.generic.markup.archive-download-failure">Unable to download conversion archive</message>
+	<message key="plugins.generic.markup.archive-extract-failure">Unable to extract conversion archive</message>
+	<message key="plugins.generic.markup.conversion-running">BATCH CONVERSION NOT RUNNING!</message>
 </locale>

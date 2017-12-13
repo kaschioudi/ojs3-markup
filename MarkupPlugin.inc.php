@@ -3,8 +3,8 @@
 /**
  * @file plugins/generic/markup/MarkupPlugin.inc.php
  *
- * Copyright (c) 2003-2016 Simon Fraser University Library
- * Copyright (c) 2003-2016 John Willinsky
+ * Copyright (c) 2003-2017 Simon Fraser University
+ * Copyright (c) 2003-2017 John Willinsky
  * Distributed under the GNU GPL v2. For full terms see the file docs/COPYING.
  *
  * @class MarkupPlugin
@@ -113,11 +113,26 @@ class MarkupPlugin extends GenericPlugin {
 				$markupJobInfoDao = new MarkupJobInfoDAO($this);
 				DAORegistry::registerDAO('MarkupJobInfoDAO', $markupJobInfoDao);
 
+				$request = $this->getRequest();
+				$templateMgr = TemplateManager::getManager($request);
+				$templateMgr->addStyleSheet(
+					'markupBatchConvertStyle', 
+					$this->getCssUrl($request).'/batch.css', 
+					array('contexts' => 'backend')
+				);
+				$templateMgr->addJavaScript(
+					'markupBatchConvertScript', 
+					$this->getJsUrl($request).'/MarkupSubmissionsBatchConversionFormHandler.js',
+					array('contexts' => 'backend')
+				);
+
 				// Register callbacks.
-				HookRegistry::register('LoadHandler', array($this, 'callbackLoadHandler'));
+				HookRegistry::register('LoadHandler', array($this, 'callbackLoadMarkupHandler'));
+				HookRegistry::register('LoadHandler', array($this, 'callbackLoadBatchHandler'));
 				HookRegistry::register('TemplateManager::fetch', array($this, 'templateFetchCallback'));
 				HookRegistry::register('PluginRegistry::loadCategory', array($this, 'callbackLoadCategory'));
 				HookRegistry::register('Templates::Management::Settings::website', array($this, 'callbackShowWebsiteSettingsTabs'));
+				HookRegistry::register('Templates::Management::Settings::website', array($this, 'callbackShowArticlesBatchConversionTabs'));
 				HookRegistry::register('Templates::User::profile', array($this, 'callbackUserProfile'));
 				HookRegistry::register('submissionfiledaodelegate::_deleteobject', array($this, 'callbackSubmissionFileDeteted'));
 			}
@@ -136,6 +151,11 @@ class MarkupPlugin extends GenericPlugin {
 			$this->import('MarkupGatewayPlugin');
 			$gatewayPlugin = new MarkupGatewayPlugin($this->getName());
 			$plugins[$gatewayPlugin->getSeq()][$gatewayPlugin->getPluginPath()] =& $gatewayPlugin;
+
+			// batch conversion
+			$this->import('MarkupBatchGatewayPlugin');
+			$batchGatewayPlugin = new MarkupBatchGatewayPlugin($this->getName());
+			$plugins[$batchGatewayPlugin->getSeq()][$batchGatewayPlugin->getPluginPath()] =& $batchGatewayPlugin;
 		}
 	}
 	
@@ -162,8 +182,8 @@ class MarkupPlugin extends GenericPlugin {
 	 *
 	 * @return string Public plugin CSS URL
 	 */
-	function getCssUrl() {
-		return parent::getPluginPath() . '/css/';
+	function getCssUrl($request) {
+		return $request->getBaseUrl() . '/' . $this->getPluginPath() . '/css';
 	}
 	
 	/**
@@ -199,6 +219,43 @@ class MarkupPlugin extends GenericPlugin {
 	 */
 	function getInstallSchemaFile() {
 		return $this->getPluginPath() . '/schema.xml';
+	}
+
+	/**
+	 * @see Plugin::getActions()
+	 */
+	function getActions($request, $verb) {
+		$dispatcher = $request->getDispatcher();
+		import('lib.pkp.classes.linkAction.request.RedirectAction');
+		return array_merge(
+			$this->getEnabled()?array(
+				new LinkAction(
+					'settings',
+					new RedirectAction($dispatcher->url(
+						$request, ROUTE_PAGE,
+						null, 'management', 'settings', 'website',
+						array('uid' => uniqid()), // Force reload
+						'markup' // Anchor for tab
+					)),
+					__('plugins.generic.markup.settings'),
+					null
+				),
+			):array(),
+			$this->getEnabled()?array(
+				new LinkAction(
+					'batch',
+					new RedirectAction($dispatcher->url(
+						$request, ROUTE_PAGE,
+						null, 'management', 'settings', 'website',
+						array('uid' => uniqid()), // Force reload
+						'markupBatchConversion' // Anchor for tab
+						)),
+					__('plugins.generic.markup.batch'),
+					null
+				),
+			):array(),
+			parent::getActions($request, $verb)
+		);
 	}
 
 	/**
@@ -251,9 +308,23 @@ class MarkupPlugin extends GenericPlugin {
 	}
 
 	/**
+	 * Extend the website settings tabs to include articles batch conversion
+	 * @param $hookName string The name of the invoked hook
+	 * @param $args array Hook parameters
+	 * @return boolean Hook handling status
+	 */
+	public function callbackShowArticlesBatchConversionTabs($hookName, $args) {
+		$output =& $args[2];
+		$request =& Registry::get('request');
+		$dispatcher = $request->getDispatcher();
+		$output .= '<li><a name="markupBatchConversion" href="' . $dispatcher->url($request, ROUTE_PAGE, null, 'markup', 'batch') . '">' . __('plugins.generic.markup.batch') . '</a></li>';
+		return false;
+	}
+
+	/**
 	 * @see PKPPageRouter::route()
 	 */
-	public function callbackLoadHandler($hookName, $args) {
+	public function callbackLoadMarkupHandler($hookName, $args) {
 		// Check the page.
 		$page = $args[0];
 		if ($page !== 'markup') return;
@@ -275,6 +346,7 @@ class MarkupPlugin extends GenericPlugin {
 				'profile',
 				'triggerConversion',
 				'fetchConversionJobStatus',
+				'batch',
 			);
 
 			if (!in_array($op, $publicOps)) return;
@@ -290,6 +362,22 @@ class MarkupPlugin extends GenericPlugin {
 			// set handler file path
 			$args[2] = $this->getPluginPath() . '/' . 'MarkupHandler.inc.php';
 		}
+	}
+
+	/**
+	 * @see PKPPageRouter::route()
+	 */
+	public function callbackLoadBatchHandler($hookName, $args) {
+		// Check the page.
+		$page = $args[0];
+		if ($page !== 'batch') return;
+
+		$op = $args[1];
+		$publicOps = array('filesToConvert', 'startConversion', 'fetchConversionStatus', 'cancelConversion');
+		if (!in_array($op, $publicOps)) return;
+
+		define('HANDLER_CLASS', 'MarkupBatchConversionHandler');
+		$args[2] = $this->getPluginPath() . '/' . 'MarkupBatchConversionHandler.inc.php';
 	}
 
 	/**
@@ -311,13 +399,13 @@ class MarkupPlugin extends GenericPlugin {
 			$data = $row->getData();
 			if (is_array($data) && (isset($data['submissionFile']))) {
 				$submissionFile = $data['submissionFile'];
-				$fileExtension = $submissionFile->getExtension();
+				$fileExtension = strtolower($submissionFile->getExtension());
 
 				// get stage ID
 				$stage = $submissionFile->getFileStage();
 				$stageId = (int) $request->getUserVar('stageId');
 
-				if (in_array(strtolower($fileExtension), array('doc','docx','odt','pdf', 'xml'))) {
+				if (in_array($fileExtension, array('doc','docx','odt','pdf', 'xml'))) {
 
 					import('lib.pkp.classes.linkAction.request.AjaxModal');
 
@@ -400,18 +488,8 @@ class MarkupPlugin extends GenericPlugin {
 		$dispatcher = $router->getDispatcher();
 		$journal = $request->getJournal();
 
-		$jobId = uniqid();
-
-		// create job info
-		$markupJobInfoDao = DAORegistry::getDAO('MarkupJobInfoDAO');
-		$this->import('classes.MarkupJobInfo');
-		$jobInfo = new MarkupJobInfo();
-		$jobInfo->setId($jobId);
-		$jobInfo->setFileId($fileId);
-		$jobInfo->setUserId($user->getId());
-		$jobInfo->setJournalId($journal->getId());
-		$jobInfo->setXmlJobId(NULL);
-		$markupJobInfoDao->insertMarkupJobInfo($jobInfo);
+		$this->import('classes.MarkupConversionHelper');
+		$jobId = MarkupConversionHelper::createConversionJobInfo($journal, $user, $fileId);
 
 		$url = $request->url(null, 'gateway', 'plugin', 
 					array('MarkupGatewayPlugin','fileId', $fileId, 'userId', $user->getId(), 
