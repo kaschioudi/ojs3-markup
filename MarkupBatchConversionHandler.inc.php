@@ -104,6 +104,7 @@ class MarkupBatchConversionHandler extends Handler {
 			$url = $request->url(null, 'gateway', 'plugin', array('MarkupBatchGatewayPlugin',
 										'userId', $user->getId()));
 			$ch = curl_init();
+			curl_setopt($ch, CURLOPT_HTTPHEADER, array('Expect:')); // Avoid HTTP 417 errors
 			curl_setopt($ch, CURLOPT_URL, $url);
 			curl_setopt($ch, CURLOPT_POSTFIELDS, $submissions);
 			curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
