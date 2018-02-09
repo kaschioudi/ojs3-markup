@@ -68,7 +68,7 @@ class MarkupConversionHelper {
 
 		/* Issue information, if available*/
 		$issueDetails = null;
-		$publishedArticle = $publishedArticleDao->getPublishedArticleByArticleId($submission->getId());
+		$publishedArticle = $publishedArticleDao->getByArticleId($submission->getId());
 		if ($publishedArticle){
 			$issue = $issueDao->getById($publishedArticle->getIssueId());
 			$issueDetails = array (
@@ -316,7 +316,6 @@ class MarkupConversionHelper {
 		$submissionFile->setOriginalFileName($fileName);
 		$submissionFile->setFileType('text/xml');
 		$submissionFile->setViewable(true);
-		$submissionFile->setUserGroupId($params['UserGroupId']);
 		$submissionFile->setSubmissionLocale($submission->getLocale());
 		$submissionFile->setName($fileName, AppLocale::getLocale());
 
@@ -364,7 +363,6 @@ class MarkupConversionHelper {
 		$submissionFile->setDateUploaded(Core::getCurrentDate());
 		$submissionFile->setDateModified(Core::getCurrentDate());
 		$submissionFile->setOriginalFileName($fileName);
-		$submissionFile->setUserGroupId($params['UserGroupId']);
 		$submissionFile->setSubmissionLocale($submission->getLocale());
 		$submissionFile->setName($fileName, AppLocale::getLocale());
 
