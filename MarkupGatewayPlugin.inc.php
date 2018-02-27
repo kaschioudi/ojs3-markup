@@ -58,7 +58,7 @@ class MarkupGatewayPlugin extends GatewayPlugin {
 		$this->import('classes.MarkupConversionHelper');
 		$this->xmlpsWrapper = MarkupConversionHelper::getOTSWrapperInstance(
 			$this->plugin,
-			$request,
+			$request->getJournal(),
 			$this->user
 		);
 	}

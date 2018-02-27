@@ -88,4 +88,116 @@ class MarkupBatchConversionHelper {
 		// returning false because we still want PHP internal error handler to run
 		return false;
 	}
+
+
+	/**
+	 * Build an array of submissions metadata to process
+	 * @param int $contextId
+	 * @return array
+	 */
+	public function buildSubmissionMetadataByContext($contextId) {
+		$metadata = array();
+		$locale = AppLocale::getLocale();
+		$genreDao = DAORegistry::getDAO('GenreDAO');
+		$submissionDao = DAORegistry::getDAO('ArticleDAO');
+		$submissionFileDao = DAORegistry::getDAO('SubmissionFileDAO');
+		$submissions = $submissionDao->getByContextId($contextId);
+		import('lib.pkp.classes.file.SubmissionFileManager');
+		$validFileExtensions = array('pdf','doc','docx','xml');
+		$pdfGalleyFileId = null;
+		$pdfProductionReadyFileId = null;
+		$xmlProductionReadyFileId = null;
+
+		import('lib.pkp.classes.submission.SubmissionFile'); // Bring in const
+		// TODO Validate this with Alec
+		// do we need more const here?
+		// Do these values make sense?
+		// Unable to find titles for SUBMISSION_FILE_FAIR_COPY and SUBMISSION_FILE_PUBLIC
+		$fileStageNames = array(
+			SUBMISSION_FILE_SUBMISSION 		=> __('submission.submit.submissionFiles'),
+			SUBMISSION_FILE_REVIEW_FILE 		=> __('reviewer.submission.reviewFiles'),
+			SUBMISSION_FILE_COPYEDIT 		=> __('submission.copyedited'),
+			SUBMISSION_FILE_PROOF 			=> __('submission.pageProofs'),
+			SUBMISSION_FILE_PRODUCTION_READY	=> __('editor.submission.production.productionReadyFiles'),
+			SUBMISSION_FILE_ATTACHMENT		=> __('grid.reviewAttachments.title'),
+			SUBMISSION_FILE_FAIR_COPY		=> 'SUBMISSION_FILE_FAIR_COPY',//__(''),
+			SUBMISSION_FILE_QUERY			=> __('submission.queries.attachedFiles'),
+			SUBMISSION_FILE_REVIEW_ATTACHMENT	=> __('grid.reviewAttachments.title'),
+			SUBMISSION_FILE_REVIEW_REVISION		=> __('editor.submission.revisions'),
+			SUBMISSION_FILE_PUBLIC			=> 'SUBMISSION_FILE_PUBLIC',//__(''),
+		);
+
+		while ($submission = $submissions->next()) {
+			$pdfGalleyFileId = null;
+			//Exclude incomplete submissions
+			if ($submission->getSubmissionProgress() != 0) {
+				continue;
+			}
+			$hasXmlInProductionReady = false;
+			$sMetadata = array(
+				'id'	=> $submission->getId(),
+				'stage'	=> $submission->getStageId(),
+				'title' => $submission->getFullTitle($locale),
+				'files' => array(),
+			);
+			$submissionFileManager = new SubmissionFileManager($contextId, $submission->getId());
+			$submissionFiles = $submissionFileDao->getBySubmissionId($submission->getId());
+			foreach ($submissionFiles as $submissionFile) {
+				$genre = $genreDao->getById($submissionFile->getGenreId());
+				$fileStage = $submissionFile->getFileStage();
+				$fileExtension = strtolower($submissionFile->getExtension());
+				if (intval($genre->getCategory()) != GENRE_CATEGORY_DOCUMENT)
+					continue;
+					if (!in_array($fileExtension, $validFileExtensions))
+						continue;
+						// check whether xml file is present in production ready
+						if (($fileExtension == 'xml') && ($fileStage == SUBMISSION_FILE_PRODUCTION_READY)) {
+							$hasXmlInProductionReady = true;
+						}
+
+						// check if there's a publish pdf in galleys or production ready
+						if ($fileExtension == 'pdf') {
+							if ($fileStage == SUBMISSION_FILE_PROOF) {
+								$pdfGalleyFileId = $submissionFile->getFileId();
+							}
+							if ($fileStage == SUBMISSION_FILE_PRODUCTION_READY) {
+								$pdfProductionReadyFileId = $submissionFile->getFileId();
+							}
+						}
+						if (in_array($fileExtension, array('doc','docx'))) {
+							if ($fileStage == SUBMISSION_FILE_PRODUCTION_READY) {
+								$xmlProductionReadyFileId = $submissionFile->getFileId();
+							}
+						}
+						$sMetadata['files'][] = array(
+							'fileId' 	=> $submissionFile->getFileId(),
+							'filename'	=> $submissionFile->getName($locale),
+							'fileStage'	=> $fileStageNames[$fileStage],
+						);
+			}
+
+			// decide on submission file to select by default
+			$defaultSubmissionFileId = 0;
+			if (!$hasXmlInProductionReady) {
+				if (!is_null($pdfGalleyFileId)) {
+					$defaultSubmissionFileId = $pdfGalleyFileId;
+				}
+				elseif (!is_null($pdfProductionReadyFileId)) {
+					$defaultSubmissionFileId = $pdfProductionReadyFileId;
+				}
+				elseif (!is_null($xmlProductionReadyFileId)) {
+					$defaultSubmissionFileId = $xmlProductionReadyFileId;
+				}
+				else {
+					$defaultSubmissionFileId = 0;
+				}
+			}
+			$sMetadata['defaultSubmissionFileId'] = $defaultSubmissionFileId;
+			$sMetadata['pdfGalleyFileId'] = $pdfGalleyFileId;
+			$sMetadata['pdfProductionReadyFileId'] = $pdfProductionReadyFileId;
+			$sMetadata['xmlProductionReadyFileId'] = $xmlProductionReadyFileId;
+			$metadata[] = $sMetadata;
+		}
+		return $metadata;
+	}
 }

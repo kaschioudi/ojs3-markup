@@ -53,7 +53,7 @@ class MarkupBatchGatewayPlugin extends GatewayPlugin {
 		$this->import('classes.MarkupConversionHelper');
 		$this->otsWrapper = MarkupConversionHelper::getOTSWrapperInstance(
 			$this->plugin,
-			$request,
+			$journal,
 			$this->user
 		);
 		$this->markupConversionHelper = new MarkupConversionHelper(
@@ -235,7 +235,7 @@ class MarkupBatchGatewayPlugin extends GatewayPlugin {
 				$statusCallbackFn = function($jobStatus) use ($data, $batchConversionHelper, $request, $user, $plugin) {
 					$wrapper = MarkupConversionHelper::getOTSWrapperInstance(
 						$plugin,
-						$request,
+						$request->getJournal(),
 						$user
 					);
 					$data['conversionStatus'] = $wrapper->statusCodeToLabel($jobStatus);

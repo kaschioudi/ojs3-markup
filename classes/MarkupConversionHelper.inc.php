@@ -489,18 +489,18 @@ class MarkupConversionHelper {
 	/**
 	 * Return an instance of OTS wrapper
 	 * @param $plugin MarkupPlugin
-	 * @param $request PKPRequest
+	 * @param $journal Journal
 	 * @param $userObject User
+	 * @param $useCached boolean Whether the cached object can be reused. 
 	 *
 	 * @return XMLPSWrapper
 	 */
-	public static function getOTSWrapperInstance($plugin, $request, $userObject) {
+	public static function getOTSWrapperInstance($plugin, $journal, $userObject, $reuseCached = true) {
 		// Note: passing $userObject instead of calling $request->getUser() because this 
 		// method is often called from gateway plugin and it seems that user session is not available
-		if (!is_null(self::$otsWrapper)) {
+		if (!is_null(self::$otsWrapper) && $reuseCached) {
 			return self::$otsWrapper;
 		}
-		$journal = $request->getJournal();
 		$journalId = $journal->getId();
 		// Import host, user and password variables into the current symbol table from an array
 		extract($plugin->getOTSLoginParametersForJournal($journal->getId(), $userObject));
