@@ -262,7 +262,6 @@ class MarkupBatchGatewayPlugin extends GatewayPlugin {
 					$journal,
 					$submission,
 					$submissionFile,
-					$userGroup,
 					$fileName
 				);
 			}

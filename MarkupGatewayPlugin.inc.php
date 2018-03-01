@@ -303,7 +303,6 @@ class MarkupGatewayPlugin extends GatewayPlugin {
 					$journal,
 					$submission,
 					$submissionFile, 
-					$userGroup, 
 					$stage,
 					$fileName
 				);
@@ -315,7 +314,6 @@ class MarkupGatewayPlugin extends GatewayPlugin {
 					$journal,
 					$submission,
 					$submissionFile,
-					$userGroup,
 					$fileName
 				);
 				break;

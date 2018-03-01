@@ -395,12 +395,11 @@ class MarkupConversionHelper {
 	 * @param $journal Journal
 	 * @param $submission Submission
 	 * @param $submissionFile SubmissionFile
-	 * @param $userGroup UserGroup
 	 * @param $stage int
 	 * @param $fileName string
 	 * @return boolean
 	 */
-	public function handleArchiveExtractionAfterXmlConversion($extractionPath, $journal, $submission, $submissionFile, $userGroup, $stage, $fileName) {
+	public function handleArchiveExtractionAfterXmlConversion($extractionPath, $journal, $submission, $submissionFile, $stage, $fileName) {
 		$params = array(
 			'stage' 	=> $stage,
 			'assocType' 	=> (int)$submissionFile->getAssocType(),
@@ -418,11 +417,10 @@ class MarkupConversionHelper {
 	 * @param $journal Journal
 	 * @param $submission Submission
 	 * @param $submissionFile SubmissionFile
-	 * @param $userGroup UserGroup
 	 * @param string $fileName
 	 * @return boolean
 	 */
-	public function handleArchiveExtractionAfterGalleyGenerate($extractionPath, $journal, $submission, $submissionFile, $userGroup, $fileName) {
+	public function handleArchiveExtractionAfterGalleyGenerate($extractionPath, $journal, $submission, $submissionFile, $fileName) {
 		$journalId = $journal->getId();
 		// Always populate production ready files with xml document.
 		$params = array(

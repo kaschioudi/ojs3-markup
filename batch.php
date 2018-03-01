@@ -1,33 +1,43 @@
-#!/usr/bin/env php
 <?php
 
+/**
+ * @file batch.php
+ *
+ * Copyright (c) 2003-2018 Simon Fraser University
+ * Copyright (c) 2003-2018 John Willinsky
+ * Distributed under the GNU GPL v2. For full terms see the file docs/COPYING.
+ *
+ * @class BatchConversionTool
+ * @ingroup plugins_generic_markup
+ *
+ * @brief Handles request for articles batch conversion.
+ *
+ * @brief CLI tool to perform batch conversion tasks
+ */
+
 require_once dirname(dirname(dirname(dirname(__FILE__)))) . '/tools/bootstrap.inc.php';
-require_once dirname(__FILE__) . '/classes/MarkupConversionHelper.inc.php';
-require_once dirname(__FILE__) . '/MarkupPlugin.inc.php';
-require_once dirname(__FILE__) . '/classes/MarkupBatchConversionHelper.inc.php';
-require_once dirname(__FILE__) . '/classes/MarkupJobInfoDAO.inc.php';
 
 class BatchConversionTool extends CommandLineTool {
-	/** @var $markupBatchConversionHelper MarkupBatchConversionHelper Batch conversion helper class*/
+	/** @var MarkupBatchConversionHelper Batch conversion helper class*/
 	protected $markupBatchConversionHelper = null;
 
-	/** @var $markupConversionHelper MarkupConversionHelper Markup conversion helper object */
+	/** @var MarkupConversionHelper Markup conversion helper object */
 	protected $markupConversionHelper = null;
 
-	/** @var $markupPlugin MarkupPlugin Markup plugin object */
+	/** @var MarkupPlugin Markup plugin object */
 	protected $markupPlugin = null;
 
-	/** @var $user PKPUser User object */
+	/** @var PKPUser User object */
 	protected $user = null;
 
-	/** @var $userGroup UserGroup User group object */
-	protected $userGroup = null;
-
-	/** @var $context Context Current context object */
+	/** @var Context Current context object */
 	protected $context = null;
 
-	/** @var $otsWrapper XMLPSWrapper OTS wrapper object */
+	/** @var XMLPSWrapper OTS wrapper object */
 	protected $otsWrapper = null;
+
+	/** @var array All the arguments passed to the script */
+	protected $parameters = null;
 
 	/**
 	 * Constructor
@@ -42,10 +52,12 @@ class BatchConversionTool extends CommandLineTool {
 		}
 
 		$this->parameters = $this->argv;
+		import('plugins.generic.markup.MarkupPlugin');
 		$this->markupPlugin = new MarkupPlugin();
 		$this->markupPlugin->register('generic', dirname(__FILE__));
 		
 		// register MarkupJobInfoDAO
+		$this->markupPlugin->import('classes.MarkupJobInfoDAO');
 		$markupJobInfoDao = new MarkupJobInfoDAO($this->markupPlugin);
 		DAORegistry::registerDAO('MarkupJobInfoDAO', $markupJobInfoDao);
 	}
@@ -60,14 +72,10 @@ class BatchConversionTool extends CommandLineTool {
 		$userDao = DAORegistry::getDAO('UserDAO');
 		$this->user = $userDao->getByUsername($adminUser);
 		if (!$this->user) {
-			throw new Exception("The specified journal path, \"{$adminUser}\", does not exist.");
+			throw new Exception("The specified user, \"{$adminUser}\", does not exist.");
 		}
 		
-		// find current user's group
-		$userGroupDao = DAORegistry::getDAO('UserGroupDAO');
-		$userGroups = $userGroupDao->getByUserId($this->user->getId(), $this->context->getId());
-		$this->userGroup = $userGroups->next();
-
+		import('plugins.generic.markup.classes.MarkupConversionHelper');
 		$this->otsWrapper = MarkupConversionHelper::getOTSWrapperInstance(
 			$this->markupPlugin,
 			$this->context,
@@ -79,6 +87,7 @@ class BatchConversionTool extends CommandLineTool {
 			$this->otsWrapper,
 			$this->user
 		);
+		$this->markupPlugin->import('classes.MarkupBatchConversionHelper');
 		$this->markupBatchConversionHelper = new MarkupBatchConversionHelper();
 	}
 
@@ -123,9 +132,9 @@ class BatchConversionTool extends CommandLineTool {
 	 */
 	protected function processPrint() {
 		$contextDao = DAORegistry::getDAO('JournalDAO');
-		$contexts = $contextDao->getAll(true)->toArray();
+		$contexts = $contextDao->getAll(true);
 		print "Below is the list of all journals enabled in this OJS install:" . PHP_EOL;
-		foreach($contexts as $context) {
+		while ($context = $contexts->next()) {
 			print "=> " . $context->getPath() . " (" . $context->getLocalizedName() . ")" . PHP_EOL;
 		}
 	}
@@ -135,8 +144,8 @@ class BatchConversionTool extends CommandLineTool {
 	 */
 	protected function processAll() {
 		$contextDao = DAORegistry::getDAO('JournalDAO');
-		$contexts = $contextDao->getAll(true)->toArray();
-		foreach($contexts as $context) {
+		$contexts = $contextDao->getAll(true);
+		while ($context = $contexts->next()) {
 			$this->processOne($context);
 		}
 	}
@@ -237,7 +246,6 @@ class BatchConversionTool extends CommandLineTool {
 						$context,
 						$submissionObj,
 						$submissionFile,
-						$this->userGroup,
 						$fileName
 					);
 				}

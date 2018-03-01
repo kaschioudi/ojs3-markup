@@ -148,32 +148,32 @@ class MarkupBatchConversionHelper {
 				$fileExtension = strtolower($submissionFile->getExtension());
 				if (intval($genre->getCategory()) != GENRE_CATEGORY_DOCUMENT)
 					continue;
-					if (!in_array($fileExtension, $validFileExtensions))
-						continue;
-						// check whether xml file is present in production ready
-						if (($fileExtension == 'xml') && ($fileStage == SUBMISSION_FILE_PRODUCTION_READY)) {
-							$hasXmlInProductionReady = true;
-						}
+				if (!in_array($fileExtension, $validFileExtensions))
+					continue;
+				// check whether xml file is present in production ready
+				if (($fileExtension == 'xml') && ($fileStage == SUBMISSION_FILE_PRODUCTION_READY)) {
+					$hasXmlInProductionReady = true;
+				}
 
-						// check if there's a publish pdf in galleys or production ready
-						if ($fileExtension == 'pdf') {
-							if ($fileStage == SUBMISSION_FILE_PROOF) {
-								$pdfGalleyFileId = $submissionFile->getFileId();
-							}
-							if ($fileStage == SUBMISSION_FILE_PRODUCTION_READY) {
-								$pdfProductionReadyFileId = $submissionFile->getFileId();
-							}
-						}
-						if (in_array($fileExtension, array('doc','docx'))) {
-							if ($fileStage == SUBMISSION_FILE_PRODUCTION_READY) {
-								$xmlProductionReadyFileId = $submissionFile->getFileId();
-							}
-						}
-						$sMetadata['files'][] = array(
-							'fileId' 	=> $submissionFile->getFileId(),
-							'filename'	=> $submissionFile->getName($locale),
-							'fileStage'	=> $fileStageNames[$fileStage],
-						);
+				// check if there's a publish pdf in galleys or production ready
+				if ($fileExtension == 'pdf') {
+					if ($fileStage == SUBMISSION_FILE_PROOF) {
+						$pdfGalleyFileId = $submissionFile->getFileId();
+					}
+					if ($fileStage == SUBMISSION_FILE_PRODUCTION_READY) {
+						$pdfProductionReadyFileId = $submissionFile->getFileId();
+					}
+				}
+				if (in_array($fileExtension, array('doc','docx'))) {
+					if ($fileStage == SUBMISSION_FILE_PRODUCTION_READY) {
+						$xmlProductionReadyFileId = $submissionFile->getFileId();
+					}
+				}
+				$sMetadata['files'][] = array(
+					'fileId' 	=> $submissionFile->getFileId(),
+					'filename'	=> $submissionFile->getName($locale),
+					'fileStage'	=> $fileStageNames[$fileStage],
+				);
 			}
 
 			// decide on submission file to select by default
