@@ -133,7 +133,7 @@ class BatchConversionTool extends CommandLineTool {
 	protected function processPrint() {
 		$contextDao = DAORegistry::getDAO('JournalDAO');
 		$contexts = $contextDao->getAll(true);
-		print "Below is the list of all journals enabled in this OJS install:" . PHP_EOL;
+		print __('plugins.generic.markup.journalList') . PHP_EOL;
 		while ($context = $contexts->next()) {
 			print "=> " . $context->getPath() . " (" . $context->getLocalizedName() . ")" . PHP_EOL;
 		}
@@ -174,7 +174,7 @@ class BatchConversionTool extends CommandLineTool {
 	 */
 	protected function processOne($context) {
 		if (!$context) {
-			print "The specified journal path does not exist." . PHP_EOL;
+			print __('plugins.generic.markup.invalidJournalPath') . PHP_EOL;
 			exit(1);
 		}
 
@@ -196,7 +196,7 @@ class BatchConversionTool extends CommandLineTool {
 		$submissionFoundCount = count($metadata);
 		$submissionProcessedCount = 0;
 		foreach ($metadata as $submission) {
-			print "=> Processing submission: {$submission['title']}" . PHP_EOL;
+			print "=> " . __('plugins.generic.markup.processingSubmissionText', array('submissionTitle' => $submission['title'])) . PHP_EOL;
 			if ($defaultSubmissionFileId = intval($submission['defaultSubmissionFileId'])) {
 				try {
 					$submissionFile = $submissionFileDao->getLatestRevision($defaultSubmissionFileId);
@@ -220,13 +220,13 @@ class BatchConversionTool extends CommandLineTool {
 						'galley-generate',
 						$jobInfoId
 					);
-					print "\t OTS Job #ID : {$jobId}" . PHP_EOL;
-					print "\t OJS JobInfo #ID : {$jobInfoId}" . PHP_EOL;
+					print "\t " . __('plugins.generic.markup.otsJobId', array('jobId' => $jobId)) . PHP_EOL;
+					print "\t " . __('plugins.generic.markup.ojsJobInfoId', array('jobInfoId' => $jobInfoId)) . PHP_EOL;
 					$otsWrapper = $this->otsWrapper;
 					$data = array();
 					$statusCallbackFn = function($jobStatus) use ($otsWrapper, $data) {
 						$conversionStatus = $otsWrapper->statusCodeToLabel($jobStatus);
-						print "\tOTS JOB STATUS => {$conversionStatus}" . PHP_EOL;
+						print "\t" . __('plugins.generic.markup.otsConversionStatus', array('conversionStatus' => $conversionStatus)) . PHP_EOL;
 					};
 					$tmpZipFile = $this->markupConversionHelper->retrieveConversionJobArchive(
 						$submissionFile,
@@ -254,7 +254,7 @@ class BatchConversionTool extends CommandLineTool {
 				}
 			}
 		}
-		print PHP_EOL . "{$submissionFoundCount} submission(s) found & {$submissionProcessedCount} processed!" . PHP_EOL;
+		print PHP_EOL . __('plugins.generic.markup.batchSummary', array('submissionFoundCount' => $submissionFoundCount, 'submissionProcessedCount' => $submissionProcessedCount)) . PHP_EOL;
 		print PHP_EOL;
 	}
 }

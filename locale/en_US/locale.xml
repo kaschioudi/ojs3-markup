@@ -119,4 +119,11 @@
 	<message key="plugins.generic.markup.archive-download-failure">Unable to download conversion archive</message>
 	<message key="plugins.generic.markup.archive-extract-failure">Unable to extract conversion archive</message>
 	<message key="plugins.generic.markup.conversion-running">BATCH CONVERSION NOT RUNNING!</message>
+	<message key="plugins.generic.markup.journalList">Below is the list of all journals enabled in this OJS install:</message>
+	<message key="plugins.generic.markup.invalidJournalPath">The specified journal path does not exist.</message>
+	<message key="plugins.generic.markup.processingSubmissionText">Processing submission: {$submissionTitle}</message>
+	<message key="plugins.generic.markup.otsJobId">OTS Job #ID : {$jobId}</message>
+	<message key="plugins.generic.markup.ojsJobInfoId">OJS JobInfo #ID : {$jobInfoId}</message>
+	<message key="plugins.generic.markup.otsConversionStatus">OTS JOB STATUS => {$conversionStatus}</message>
+	<message key="plugins.generic.markup.batchSummary">{$submissionFoundCount} submission(s) found &amp; {$submissionProcessedCount} processed!</message>
 </locale>
