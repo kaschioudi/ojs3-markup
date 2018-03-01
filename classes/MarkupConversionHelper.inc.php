@@ -44,6 +44,7 @@ class MarkupConversionHelper {
 	 * @return array
 	 */
 	protected function buildSubmissionMetadata($journal, $submission) {
+		AppLocale::requireComponents(LOCALE_COMPONENT_PKP_SUBMISSION);
 		$locale = ($submission->getLanguage() != '') ? $submission->getLanguage() : $journal->getPrimaryLocale();
 
 		$publishedArticleDao = DAORegistry::getDAO('PublishedArticleDAO');
