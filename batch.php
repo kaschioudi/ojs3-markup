@@ -169,7 +169,7 @@ class BatchConversionTool extends CommandLineTool {
 
 	/**
 	 * Batch convert a specific journal enabled
-	 * @param $context Context
+	 * @param $context Context|null
 	 * @throws Exception
 	 */
 	protected function processOne($context) {
