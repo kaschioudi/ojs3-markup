@@ -58,7 +58,7 @@
 			loadCitationStyles_ = 
 			function(cslStyleSelection) {
 
-				var url = $('input[name=markupHostURL]').val();
+				var url = $('input[id=cslStyleURL]').val();
 
 				// stop here if host url not available
 				if (url == '')

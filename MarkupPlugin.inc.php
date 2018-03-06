@@ -514,6 +514,13 @@ class MarkupPlugin extends GenericPlugin {
 	 * @return array 
 	 */
 	public function getOTSLoginParametersForJournal($journalId, $user = null) {
+		// first we try to read from config file
+		$this->import('classes.MarkupConversionHelper');
+		$configCreds = MarkupConversionHelper::readCredentialsFromConfig();
+		if (MarkupConversionHelper::canUseCredentialsFromConfig($configCreds)) {
+			return $configCreds;
+		}
+
 		$authType = $this->getSetting($journalId, 'authType');
 		switch ($authType) {
 			case 'user':

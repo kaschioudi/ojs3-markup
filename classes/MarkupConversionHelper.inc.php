@@ -510,4 +510,34 @@ class MarkupConversionHelper {
 		self::$otsWrapper = new XMLPSWrapper($host, $user, $password);
 		return self::$otsWrapper;
 	}
+
+	/**
+	 * Read OTS credentials values from config file
+	 * @return array
+	 */
+	public static function readCredentialsFromConfig() {
+		return array(
+			'host'		=> Config::getVar('markup', 'ots_host'),
+			'user' 		=> Config::getVar('markup', 'ots_login_email'),
+			'password' 	=> Config::getVar('markup', 'ots_api_token'),
+		);
+	}
+
+	/**
+	 * Tells wether the user has specified OTS login credentials in the config file
+	 * @param $creds array
+	 * @return boolean
+	 */
+	public static function canUseCredentialsFromConfig($creds) {
+		if (!isset($creds['host']) || empty($creds['host'])) {
+			return false;
+		}
+		if (!isset($creds['user']) || empty($creds['user'])) {
+			return false;
+		}
+		if (!isset($creds['password']) || empty($creds['password'])) {
+			return false;
+		}
+		return true;
+	}
 }

@@ -71,9 +71,21 @@ class MarkupSettingsForm extends Form {
 
 		$this->setData('authType', $plugin->getSetting($journalId, 'authType'));
 		$this->setData('cslStyle', $plugin->getSetting($journalId, 'cslStyle'));
-		$this->setData('markupHostUser', $plugin->getSetting($journalId, 'markupHostUser'));
-		$this->setData('markupHostPass', $plugin->getSetting($journalId, 'markupHostPass'));
-		$this->setData('markupHostURL', $plugin->getSetting($journalId, 'markupHostURL'));
+
+		// Check if user has entered credentials in config file.
+		$this->plugin->import('classes.MarkupConversionHelper');
+		$configCreds = MarkupConversionHelper::readCredentialsFromConfig();
+		if (MarkupConversionHelper::canUseCredentialsFromConfig($configCreds)) {
+			$this->setData('markupConfigCredsAvailable', true);
+			// javascript needs this to construct csl style full url
+			$this->setData('markupHostURL', $configCreds['host']);
+		}
+		else {
+			$this->setData('markupConfigCredsAvailable', false);
+			$this->setData('markupHostUser', $plugin->getSetting($journalId, 'markupHostUser'));
+			$this->setData('markupHostPass', $plugin->getSetting($journalId, 'markupHostPass'));
+			$this->setData('markupHostURL', $plugin->getSetting($journalId, 'markupHostURL'));
+		}
 		
 		// wanted formats
 		$wantedFormats = $plugin->getSetting($journalId, 'wantedFormats');
