@@ -201,7 +201,7 @@ class BatchConversionTool extends CommandLineTool {
 				try {
 					$submissionFile = $submissionFileDao->getLatestRevision($defaultSubmissionFileId);
 					if (empty($submissionFile)) {
-						print "\t => " . __('plugins.generic.markup.archive.no_article') . PHP_EOL;
+						print "\t => " . __('plugins.generic.markup.archive.noArticle') . PHP_EOL;
 						continue;
 					}
 					$submissionProcessedCount++;

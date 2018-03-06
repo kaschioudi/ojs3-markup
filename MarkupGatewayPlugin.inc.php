@@ -205,14 +205,14 @@ class MarkupGatewayPlugin extends GatewayPlugin {
 		// Make sure we're within a Journal context
 		$journal = $this->getRequest()->getJournal();
 		if (!$journal) {
-			echo __('plugins.generic.markup.archive.no_journal');
+			echo __('plugins.generic.markup.archive.noJournal');
 			exit;
 		}
 
 		// load submission
 		$fileId = isset($args['fileId']) ? (int) $args['fileId'] : false;
 		if (!$fileId) {
-			echo __('plugins.generic.markup.archive.no_articleID');
+			echo __('plugins.generic.markup.archive.noArticleID');
 			exit;
 		}
 
@@ -220,14 +220,14 @@ class MarkupGatewayPlugin extends GatewayPlugin {
 		$userDao = DAORegistry::getDAO('UserDAO');
 		$userId = isset($args['userId']) ? (int) $args['userId'] : false;
 		if (!$userId) {
-			fatalError(__('plugins.generic.markup.archive.no_articleID'));
+			fatalError(__('plugins.generic.markup.archive.noArticleID'));
 			exit;
 		}
 
 		$submissionFileDao = DAORegistry::getDAO('SubmissionFileDAO');
 		$submissionFile = $submissionFileDao->getLatestRevision($fileId);
 		if (empty($submissionFile)) {
-			echo __('plugins.generic.markup.archive.no_article');
+			echo __('plugins.generic.markup.archive.noArticle');
 			exit;
 		}
 

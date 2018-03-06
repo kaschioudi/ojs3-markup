@@ -183,7 +183,7 @@ class MarkupHandler extends Handler {
 		
 		$submissionFileDao = DAORegistry::getDAO('SubmissionFileDAO');
 		if (empty($submissionFile)) {
-			echo __('plugins.generic.markup.archive.no_article'); // TODO custom message
+			echo __('plugins.generic.markup.archive.noArticle'); // TODO custom message
 			exit;
 		}
 		

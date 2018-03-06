@@ -229,7 +229,7 @@ class MarkupConversionHelper {
 		$destination = sys_get_temp_dir() . '/' . uniqid();
 		if (!$this->zipArchiveExtract($zipFile, $destination, $message, $validFiles)) {
 			echo __(
-				'plugins.generic.markup.archive.bad_zip',
+				'plugins.generic.markup.archive.badZip',
 				array(
 					'file' => $zipFile,
 					'error' => $message
