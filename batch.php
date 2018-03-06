@@ -67,14 +67,6 @@ class BatchConversionTool extends CommandLineTool {
 	 * (ps: Make sure $context proprerty is set before calling this method)
 	 */
 	protected function initProperties() {
-		// load user
-		$adminUser = 'admin';	// TODO read admin user from command-line
-		$userDao = DAORegistry::getDAO('UserDAO');
-		$this->user = $userDao->getByUsername($adminUser);
-		if (!$this->user) {
-			throw new Exception("The specified user, \"{$adminUser}\", does not exist.");
-		}
-		
 		import('plugins.generic.markup.classes.MarkupConversionHelper');
 		$this->otsWrapper = MarkupConversionHelper::getOTSWrapperInstance(
 			$this->markupPlugin,
@@ -96,10 +88,10 @@ class BatchConversionTool extends CommandLineTool {
 	 */
 	public function usage() {
 		print "Usage: " . PHP_EOL;
-		print "\t {$this->scriptName} <journal name>\t\t\t\t\tBatch convert a specific journal enabled" . PHP_EOL;
-		print "\t {$this->scriptName} [--all]\t\t\t\t\t\tBatch convert all enabled journals" . PHP_EOL;
-		print "\t {$this->scriptName} [--print]\t\t\t\t\t\tPrints the list of all enabled journals" . PHP_EOL;
-		print "\t {$this->scriptName} [--list] <comma-separated list of journals>\tBatch convert a comma separated list of journals" . PHP_EOL;
+		print "\t {$this->scriptName} [user_name] <journal name>\t\t\t\t\tBatch convert a specific journal enabled" . PHP_EOL;
+		print "\t {$this->scriptName} [user_name] [--all]\t\t\t\t\t\tBatch convert all enabled journals" . PHP_EOL;
+		print "\t {$this->scriptName} [--print]\t\t\t\t\t\t\tPrints the list of all enabled journals" . PHP_EOL;
+		print "\t {$this->scriptName} [user_name] [--list] <comma-separated list of journals>\tBatch convert a comma separated list of journals" . PHP_EOL;
 	}
 
 	/**
@@ -110,20 +102,35 @@ class BatchConversionTool extends CommandLineTool {
 		$listOption = in_array('--list',$this->parameters);
 		$printOption = in_array('--print',$this->parameters);
 
-		if ($allOption) {
-			$this->processAll();
-		}
-		elseif ($listOption) {
-			$this->processList();
-		}
-		elseif ($printOption) {
+		if ($printOption) {
 			$this->processPrint();
 		}
 		else {
-			$contextPath = $this->parameters[0];
-			$contextDao = DAORegistry::getDAO('JournalDAO');
-			$context = $contextDao->getByPath($contextPath);
-			$this->processOne($context);
+			// load user only on first init
+			if (!$this->user) {
+				$adminUser = array_shift($this->parameters);
+				$userDao = DAORegistry::getDAO('UserDAO');
+				$this->user = $userDao->getByUsername($adminUser);
+			}
+			if (!$this->user) {
+				print "=> " . __('plugins.generic.markup.unknownUser', array('adminUser' => $adminUser)). PHP_EOL;
+				print PHP_EOL;
+				$this->usage();
+				exit(4);
+			}
+
+			if ($allOption) {
+				$this->processAll();
+			}
+			elseif ($listOption) {
+				$this->processList();
+			}
+			else {
+				$contextPath = $this->parameters[0];
+				$contextDao = DAORegistry::getDAO('JournalDAO');
+				$context = $contextDao->getByPath($contextPath);
+				$this->processOne($context);
+			}
 		}
 	}
 
@@ -155,10 +162,11 @@ class BatchConversionTool extends CommandLineTool {
 	 */
 	protected function processList() {
 		if (!isset($this->parameters[1])) {
+			print __('plugins.generic.markup.missingJournalList') . PHP_EOL . PHP_EOL;
 			$this->usage();
 			exit(3);
 		}
-		
+
 		$journals = explode(",", $this->parameters[1]);
 		$contextDao = DAORegistry::getDAO('JournalDAO');
 		foreach ($journals as $contextPath) {
@@ -178,17 +186,20 @@ class BatchConversionTool extends CommandLineTool {
 			exit(1);
 		}
 
-		print '---------------------------------------------------' . PHP_EOL;
-		print '*****> JOURNAL: ' . $context->getPath() . ' <*****' . PHP_EOL;
-		print '---------------------------------------------------' . PHP_EOL;
 		$this->context = $context;
 		try {
 			$this->initProperties();
 		}
 		catch(Exception $e) {
-			print "\t => " . $e->getMessage(). PHP_EOL;
+			print "=> " . $e->getMessage(). PHP_EOL;
+			print PHP_EOL;
+			$this->usage();
 			exit(2);
 		}
+
+		print '---------------------------------------------------' . PHP_EOL;
+		print '*****> JOURNAL: ' . $context->getPath() . ' <*****' . PHP_EOL;
+		print '---------------------------------------------------' . PHP_EOL;
 
 		$submissionDao = Application::getSubmissionDAO();
 		$submissionFileDao = DAORegistry::getDAO('SubmissionFileDAO');
