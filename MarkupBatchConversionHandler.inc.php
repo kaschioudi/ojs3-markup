@@ -118,7 +118,7 @@ class MarkupBatchConversionHandler extends Handler {
 				$user->getId(), 
 				NOTIFICATION_TYPE_SUCCESS, 
 				array(
-					'contents' => __('plugins.generic.markup.start-success'),
+					'contents' => __('plugins.generic.markup.trigger-conversion'),
 				)
 			);
 		}
