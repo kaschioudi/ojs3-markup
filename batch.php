@@ -19,25 +19,25 @@ require_once dirname(dirname(dirname(dirname(__FILE__)))) . '/tools/bootstrap.in
 
 class BatchConversionTool extends CommandLineTool {
 	/** @var MarkupBatchConversionHelper Batch conversion helper class*/
-	protected $markupBatchConversionHelper = null;
+	protected $_markupBatchConversionHelper = null;
 
 	/** @var MarkupConversionHelper Markup conversion helper object */
-	protected $markupConversionHelper = null;
+	protected $_markupConversionHelper = null;
 
 	/** @var MarkupPlugin Markup plugin object */
-	protected $markupPlugin = null;
+	protected $_markupPlugin = null;
 
 	/** @var PKPUser User object */
-	protected $user = null;
+	protected $_user = null;
 
 	/** @var Context Current context object */
-	protected $context = null;
+	protected $_context = null;
 
 	/** @var XMLPSWrapper OTS wrapper object */
-	protected $otsWrapper = null;
+	protected $_otsWrapper = null;
 
 	/** @var array All the arguments passed to the script */
-	protected $parameters = null;
+	protected $_parameters = null;
 
 	/**
 	 * Constructor
@@ -51,14 +51,14 @@ class BatchConversionTool extends CommandLineTool {
 			exit(1);
 		}
 
-		$this->parameters = $this->argv;
+		$this->_parameters = $this->argv;
 		import('plugins.generic.markup.MarkupPlugin');
-		$this->markupPlugin = new MarkupPlugin();
-		$this->markupPlugin->register('generic', dirname(__FILE__));
+		$this->_markupPlugin = new MarkupPlugin();
+		$this->_markupPlugin->register('generic', dirname(__FILE__));
 		
 		// register MarkupJobInfoDAO
-		$this->markupPlugin->import('classes.MarkupJobInfoDAO');
-		$markupJobInfoDao = new MarkupJobInfoDAO($this->markupPlugin);
+		$this->_markupPlugin->import('classes.MarkupJobInfoDAO');
+		$markupJobInfoDao = new MarkupJobInfoDAO($this->_markupPlugin);
 		DAORegistry::registerDAO('MarkupJobInfoDAO', $markupJobInfoDao);
 	}
 
@@ -68,19 +68,19 @@ class BatchConversionTool extends CommandLineTool {
 	 */
 	protected function initProperties() {
 		import('plugins.generic.markup.classes.MarkupConversionHelper');
-		$this->otsWrapper = MarkupConversionHelper::getOTSWrapperInstance(
-			$this->markupPlugin,
-			$this->context,
-			$this->user,
+		$this->_otsWrapper = MarkupConversionHelper::getOTSWrapperInstance(
+			$this->_markupPlugin,
+			$this->_context,
+			$this->_user,
 			false
 		);
-		$this->markupConversionHelper = new MarkupConversionHelper(
-			$this->markupPlugin,
-			$this->otsWrapper,
-			$this->user
+		$this->_markupConversionHelper = new MarkupConversionHelper(
+			$this->_markupPlugin,
+			$this->_otsWrapper,
+			$this->_user
 		);
-		$this->markupPlugin->import('classes.MarkupBatchConversionHelper');
-		$this->markupBatchConversionHelper = new MarkupBatchConversionHelper();
+		$this->_markupPlugin->import('classes.MarkupBatchConversionHelper');
+		$this->_markupBatchConversionHelper = new MarkupBatchConversionHelper();
 	}
 
 	/**
@@ -98,21 +98,21 @@ class BatchConversionTool extends CommandLineTool {
 	 * Execute batch conversion task
 	 */
 	public function execute() {
-		$allOption = in_array('--all', $this->parameters);
-		$listOption = in_array('--list',$this->parameters);
-		$printOption = in_array('--print',$this->parameters);
+		$allOption = in_array('--all', $this->_parameters);
+		$listOption = in_array('--list',$this->_parameters);
+		$printOption = in_array('--print',$this->_parameters);
 
 		if ($printOption) {
 			$this->processPrint();
 		}
 		else {
 			// load user only on first init
-			if (!$this->user) {
-				$adminUser = array_shift($this->parameters);
+			if (!$this->_user) {
+				$adminUser = array_shift($this->_parameters);
 				$userDao = DAORegistry::getDAO('UserDAO');
-				$this->user = $userDao->getByUsername($adminUser);
+				$this->_user = $userDao->getByUsername($adminUser);
 			}
-			if (!$this->user) {
+			if (!$this->_user) {
 				print "=> " . __('plugins.generic.markup.unknownUser', array('adminUser' => $adminUser)). PHP_EOL;
 				print PHP_EOL;
 				$this->usage();
@@ -126,7 +126,7 @@ class BatchConversionTool extends CommandLineTool {
 				$this->processList();
 			}
 			else {
-				$contextPath = $this->parameters[0];
+				$contextPath = $this->_parameters[0];
 				$contextDao = DAORegistry::getDAO('JournalDAO');
 				$context = $contextDao->getByPath($contextPath);
 				$this->processOne($context);
@@ -161,13 +161,13 @@ class BatchConversionTool extends CommandLineTool {
 	 * Batch convert a comma separated list of enabled journals
 	 */
 	protected function processList() {
-		if (!isset($this->parameters[1])) {
+		if (!isset($this->_parameters[1])) {
 			print __('plugins.generic.markup.missingJournalList') . PHP_EOL . PHP_EOL;
 			$this->usage();
 			exit(3);
 		}
 
-		$journals = explode(",", $this->parameters[1]);
+		$journals = explode(",", $this->_parameters[1]);
 		$contextDao = DAORegistry::getDAO('JournalDAO');
 		foreach ($journals as $contextPath) {
 			$context = $contextDao->getByPath($contextPath);
@@ -186,7 +186,7 @@ class BatchConversionTool extends CommandLineTool {
 			exit(1);
 		}
 
-		$this->context = $context;
+		$this->_context = $context;
 		try {
 			$this->initProperties();
 		}
@@ -203,7 +203,7 @@ class BatchConversionTool extends CommandLineTool {
 
 		$submissionDao = Application::getSubmissionDAO();
 		$submissionFileDao = DAORegistry::getDAO('SubmissionFileDAO');
-		$metadata = $this->markupBatchConversionHelper->buildSubmissionMetadataByContext($context->getId());
+		$metadata = $this->_markupBatchConversionHelper->buildSubmissionMetadataByContext($context->getId());
 		$submissionFoundCount = count($metadata);
 		$submissionProcessedCount = 0;
 		foreach ($metadata as $submission) {
@@ -221,10 +221,10 @@ class BatchConversionTool extends CommandLineTool {
 
 					$jobInfoId = MarkupConversionHelper::createConversionJobInfo(
 						$context,
-						$this->user,
+						$this->_user,
 						$defaultSubmissionFileId
 					);
-					$jobId = $this->markupConversionHelper->triggerConversion(
+					$jobId = $this->_markupConversionHelper->triggerConversion(
 						$context,
 						$submissionFile,
 						$submission['stage'],
@@ -233,13 +233,13 @@ class BatchConversionTool extends CommandLineTool {
 					);
 					print "\t " . __('plugins.generic.markup.otsJobId', array('jobId' => $jobId)) . PHP_EOL;
 					print "\t " . __('plugins.generic.markup.ojsJobInfoId', array('jobInfoId' => $jobInfoId)) . PHP_EOL;
-					$otsWrapper = $this->otsWrapper;
+					$otsWrapper = $this->_otsWrapper;
 					$data = array();
 					$statusCallbackFn = function($jobStatus) use ($otsWrapper, $data) {
 						$conversionStatus = $otsWrapper->statusCodeToLabel($jobStatus);
 						print "\t" . __('plugins.generic.markup.otsConversionStatus', array('conversionStatus' => $conversionStatus)) . PHP_EOL;
 					};
-					$tmpZipFile = $this->markupConversionHelper->retrieveConversionJobArchive(
+					$tmpZipFile = $this->_markupConversionHelper->retrieveConversionJobArchive(
 						$submissionFile,
 						$jobId,
 						$statusCallbackFn
@@ -248,11 +248,11 @@ class BatchConversionTool extends CommandLineTool {
 						throw new Exception("\t => " . __('plugins.generic.markup.archive-download-failure') . PHP_EOL);
 					}
 					$extractionPath = null;
-					if (($extractionPath = $this->markupConversionHelper->unzipArchive($tmpZipFile)) === false) {
+					if (($extractionPath = $this->_markupConversionHelper->unzipArchive($tmpZipFile)) === false) {
 						throw new Exception("\t => " . __('plugins.generic.markup.archive-extract-failure') . PHP_EOL);
 					}
 					$fileName = "document" . '__' . date('Y-m-d_h:i:s');
-					$this->markupConversionHelper->handleArchiveExtractionAfterGalleyGenerate(
+					$this->_markupConversionHelper->handleArchiveExtractionAfterGalleyGenerate(
 						$extractionPath,
 						$context,
 						$submissionObj,
