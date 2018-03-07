@@ -92,7 +92,7 @@ class MarkupBatchConversionHelper {
 
 	/**
 	 * Build an array of submissions metadata to process
-	 * @param int $contextId
+	 * @param $contextId int
 	 * @return array
 	 */
 	public function buildSubmissionMetadataByContext($contextId) {

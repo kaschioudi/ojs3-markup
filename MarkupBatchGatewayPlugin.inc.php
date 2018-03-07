@@ -153,7 +153,7 @@ class MarkupBatchGatewayPlugin extends GatewayPlugin {
 		$userDao = DAORegistry::getDAO('UserDAO');
 		$userId = isset($args['userId']) ? (int) $args['userId'] : false;
 		if (!$userId) {
-			fatalError(__('plugins.generic.markup.archive.noArticleID'));
+			fatalError(__('plugins.generic.markup.archive.noUserID'));
 			exit;
 		}
 		$this->_user = $userDao->getById($userId);

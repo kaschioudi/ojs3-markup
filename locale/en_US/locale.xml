@@ -98,4 +98,5 @@
 	<message key="plugins.generic.markup.settings.credsFromConfigNotice">Please note that the plugin is using login credentials from OJS config file (config.inc.php)</message>
 	<message key="plugins.generic.markup.unknownUser">The specified user, "{$adminUser}", does not exist.</message>
 	<message key="plugins.generic.markup.missingJournalList">ERROR: This option requires a comma-separated list of journals</message>
+	<message key="plugins.generic.markup.archive.noUserID">User ID is invalid or missing.</message>
 </locale>
