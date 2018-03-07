@@ -301,8 +301,6 @@ class MarkupConversionHelper {
 		$genre = $genreDao->getByKey('SUBMISSION', $journalId);
 		$genreId = $genre->getId();
 
-		$userGroupDao = DAORegistry::getDAO('UserGroupDAO');
-
 		$fileName = isset($params['filename']) ? "{$params['filename']}.xml" :'document.xml';
 
 		$submissionFileDao = DAORegistry::getDAO('SubmissionFileDAO');
@@ -405,7 +403,6 @@ class MarkupConversionHelper {
 			'stage' 	=> $stage,
 			'assocType' 	=> (int)$submissionFile->getAssocType(),
 			'assocId' 	=> (int)$submissionFile->getAssocId(),
-			'UserGroupId' 	=> $userGroup->getId(),
 			'filename'	=> $fileName,
 		);
 		$this->addXmlDocumentToSubmissionFileList($journal, $submission, "{$extractionPath}/document.xml", $params);
@@ -428,7 +425,6 @@ class MarkupConversionHelper {
 			'stage' 	=> SUBMISSION_FILE_PRODUCTION_READY,
 			'assocType' 	=> (int)$submissionFile->getAssocType(),
 			'assocId' 	=> (int)$submissionFile->getAssocId(),
-			'UserGroupId' 	=> $userGroup->getId(),
 			'filename' 	=> $fileName
 		);
 		$this->addXmlDocumentToSubmissionFileList($journal, $submission, "{$extractionPath}/document.xml", $params);
@@ -446,7 +442,6 @@ class MarkupConversionHelper {
 
 		$gParams = array(
 			'filename' => $fileName,
-			'UserGroupId' 	=> $userGroup->getId(),
 		);
 		if (in_array('pdf', $wantedFormats)) {
 			$this->addFileToSubmissionGalley($existing_galley_by_labels, $submission, $genre->getId(), 'pdf', "{$extractionPath}/document.pdf", $gParams);
