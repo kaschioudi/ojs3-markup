@@ -9,9 +9,9 @@
  *}
 
 {fbvFormSection for="markupHostUser " title="plugins.generic.markup.settings.markupHostUser"}
-	{fbvElement type="text" id="markupHostUser" value=$markupHostUser|escape}
+	{fbvElement type="text" id="markupHostUser" value=$markupHostUser}
 {/fbvFormSection}
 
 {fbvFormSection title="plugins.generic.markup.settings.markupHostPass"}
-	{fbvElement type="text" id="markupHostPass" value=$markupHostPass|escape}
+	{fbvElement type="text" id="markupHostPass" value=$markupHostPass}
 {/fbvFormSection}

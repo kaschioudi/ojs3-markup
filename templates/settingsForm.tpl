@@ -48,7 +48,7 @@
 		{/fbvFormArea}
 
 		{fbvFormSection title="plugins.generic.markup.settings.markupHostURL" description="plugins.generic.markup.settings.markupHostURLHelp"}
-			{fbvElement type="text" id="markupHostURL" value=$markupHostURL|escape class="markupHostURL"}
+			{fbvElement type="text" id="markupHostURL" value=$markupHostURL class="markupHostURL"}
 		{/fbvFormSection}
 	{ /if}
 
@@ -67,7 +67,7 @@
 	{/fbvFormSection}
 
 	{fbvFormSection title="plugins.generic.markup.settings.cslStyle" description="plugins.generic.markup.settings.cslStyleFieldHelp"}
-		{fbvElement type="hidden" id="cslStyleURL" name="cslStyleURL" value=$markupHostURL|escape}
+		{fbvElement type="hidden" id="cslStyleURL" name="cslStyleURL" value=$markupHostURL}
 		{fbvElement type="select" id="cslStyle"}
 	{/fbvFormSection}
 	
