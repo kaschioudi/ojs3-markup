@@ -21,13 +21,13 @@ define('MARKUP_DOCUMENT_SERVER_URL_DEFAULT', 'http://pkp-xml-demo.lib.sfu.ca/');
 class MarkupSettingsForm extends Form {
 	
 	/** @var $journalId int */
-	protected $journalId;
+	protected $_journalId;
 
 	/** @var $plugin object */
-	protected $plugin;
+	protected $_plugin;
 
 	/** @var $settings array */
-	protected $settings;
+	protected $_settings;
 	
 	/**
 	 * Constructor
@@ -35,13 +35,13 @@ class MarkupSettingsForm extends Form {
 	 * @param $journalId int JournalId
 	 */
 	function __construct($plugin, $journalId) {
-		$this->journalId = $journalId;
-		$this->plugin = $plugin;
+		$this->_journalId = $journalId;
+		$this->_plugin = $plugin;
 		
 		parent::__construct($plugin->getTemplatePath() . 'settingsForm.tpl');
 
 		// Validation checks for this form
-		$this->settings = array(
+		$this->_settings = array(
 			'cslStyle' => 'string',
 			'markupHostPass' => 'string',
 			'markupHostURL' => 'string',
@@ -58,8 +58,8 @@ class MarkupSettingsForm extends Form {
 	 * @return void
 	 */
 	function initData() {
-		$journalId = $this->journalId;
-		$plugin = $this->plugin;
+		$journalId = $this->_journalId;
+		$plugin = $this->_plugin;
 
 		// User must at least load settings page for plugin to work with defaults.
 		if ($plugin->getSetting($journalId, 'cslStyle') == '') {
@@ -73,7 +73,7 @@ class MarkupSettingsForm extends Form {
 		$this->setData('cslStyle', $plugin->getSetting($journalId, 'cslStyle'));
 
 		// Check if user has entered credentials in config file.
-		$this->plugin->import('classes.MarkupConversionHelper');
+		$this->_plugin->import('classes.MarkupConversionHelper');
 		$configCreds = MarkupConversionHelper::readCredentialsFromConfig();
 		if (MarkupConversionHelper::canUseCredentialsFromConfig($configCreds)) {
 			$this->setData('markupConfigCredsAvailable', true);
@@ -90,19 +90,19 @@ class MarkupSettingsForm extends Form {
 		// wanted formats
 		$wantedFormats = $plugin->getSetting($journalId, 'wantedFormats');
 		if (is_null($wantedFormats)) {
-			$wantedFormats = $this->plugin->getFormatList();
+			$wantedFormats = $this->_plugin->getFormatList();
 		}
 		
 		// conversion stages
 		$xmlConversionStages = $plugin->getSetting($journalId, 'xmlConversionStages');
 		if (is_null($xmlConversionStages)) {
-			$xmlConversionStages = $this->plugin->getXmlConversionStages();
+			$xmlConversionStages = $this->_plugin->getXmlConversionStages();
 		}
 
 		// edit with substance
 		$editWithSubstanceStages = $plugin->getSetting($journalId, 'editWithSubstanceStages');
 		if (is_null($editWithSubstanceStages)) {
-			$editWithSubstanceStages = $this->plugin->getEditWithSubstanceStages();
+			$editWithSubstanceStages = $this->_plugin->getEditWithSubstanceStages();
 		}
 
 		$this->setData('wantedFormats', $wantedFormats);
@@ -159,10 +159,10 @@ class MarkupSettingsForm extends Form {
 	 */
 	function fetch($request) {
 		$templateMgr = TemplateManager::getManager($request);
-		$templateMgr->assign('pluginJavaScriptURL', $this->plugin->getJsUrl($request));
+		$templateMgr->assign('pluginJavaScriptURL', $this->_plugin->getJsUrl($request));
 
-		$templateMgr->assign('pluginName', $this->plugin->getName());
-		$templateMgr->assign('templatePath', $this->plugin->getTemplatePath());
+		$templateMgr->assign('pluginName', $this->_plugin->getName());
+		$templateMgr->assign('templatePath', $this->_plugin->getTemplatePath());
 
 		// Signals indicating plugin compatibility
 		$templateMgr->assign('curlSupport', function_exists('curl_init') ? __('plugins.generic.markup.settings.installed') : __('plugins.generic.markup.settings.notInstalled'));
@@ -174,8 +174,8 @@ class MarkupSettingsForm extends Form {
 
 	function execute() {
 
-		$plugin = $this->plugin;
-		$journalId = $this->journalId;
+		$plugin = $this->_plugin;
+		$journalId = $this->_journalId;
 
 		$markupHostURL = $this->getData('markupHostURL');
 		if ($markupHostURL) {

@@ -32,13 +32,13 @@ import('lib.pkp.classes.plugins.GenericPlugin');
 class MarkupPlugin extends GenericPlugin {
 	
 	/** @var $formatList array Default list of wanted formats */
-	protected $formatList = array('epub','xml','pdf');
+	protected $_formatList = array('epub','xml','pdf');
 
 	/** @var $conversionStages array Default list of stages for convert to xml feature */
-	protected $xmlConversionStages = array(WORKFLOW_STAGE_ID_SUBMISSION,WORKFLOW_STAGE_ID_INTERNAL_REVIEW,WORKFLOW_STAGE_ID_EXTERNAL_REVIEW,WORKFLOW_STAGE_ID_EDITING,WORKFLOW_STAGE_ID_PRODUCTION);
+	protected $_xmlConversionStages = array(WORKFLOW_STAGE_ID_SUBMISSION,WORKFLOW_STAGE_ID_INTERNAL_REVIEW,WORKFLOW_STAGE_ID_EXTERNAL_REVIEW,WORKFLOW_STAGE_ID_EDITING,WORKFLOW_STAGE_ID_PRODUCTION);
 
 	/** @var $editWithSubstanceStages array Default list of stages for edit with substance feature */
-	protected $editWithSubstanceStages = array(WORKFLOW_STAGE_ID_SUBMISSION,WORKFLOW_STAGE_ID_INTERNAL_REVIEW,WORKFLOW_STAGE_ID_EXTERNAL_REVIEW,WORKFLOW_STAGE_ID_EDITING,WORKFLOW_STAGE_ID_PRODUCTION);
+	protected $_editWithSubstanceStages = array(WORKFLOW_STAGE_ID_SUBMISSION,WORKFLOW_STAGE_ID_INTERNAL_REVIEW,WORKFLOW_STAGE_ID_EXTERNAL_REVIEW,WORKFLOW_STAGE_ID_EDITING,WORKFLOW_STAGE_ID_PRODUCTION);
 
 	/**
 	 * Returns list of available formats
@@ -46,7 +46,7 @@ class MarkupPlugin extends GenericPlugin {
 	 * @return array format list
 	 */
 	public function getFormatList() {
-		return $this->formatList;
+		return $this->_formatList;
 	}
 
 	/**
@@ -55,7 +55,7 @@ class MarkupPlugin extends GenericPlugin {
 	 * @return array Default list of stages for convert to xml feature
 	 */
 	public function getXmlConversionStages() {
-		return $this->xmlConversionStages;
+		return $this->_xmlConversionStages;
 	}
 
 	/**
@@ -64,7 +64,7 @@ class MarkupPlugin extends GenericPlugin {
 	 * @return array Default list of stages for edit with substance feature
 	 */
 	public function getEditWithSubstanceStages() {
-		return $this->editWithSubstanceStages;
+		return $this->_editWithSubstanceStages;
 	}
 	
 	/**

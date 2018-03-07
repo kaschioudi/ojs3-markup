@@ -17,7 +17,7 @@ import('classes.handler.Handler');
 
 class MarkupBatchConversionHandler extends Handler {
 	/** @var MarkupPlugin The Document markup plugin */
-	protected $plugin = null;
+	protected $_plugin = null;
 
 	/**
 	 * Constructor
@@ -26,7 +26,7 @@ class MarkupBatchConversionHandler extends Handler {
 		parent::__construct();
 
 		// set reference to markup plugin
-		$this->plugin = PluginRegistry::getPlugin('generic', 'markupplugin');
+		$this->_plugin = PluginRegistry::getPlugin('generic', 'markupplugin');
 
 		$this->addRoleAssignment(
 			array(ROLE_ID_MANAGER),
@@ -137,7 +137,7 @@ class MarkupBatchConversionHandler extends Handler {
 	 * @return JSONMessage
 	 */
 	public function fetchConversionStatus($args, $request) {
-		$this->plugin->import('classes.MarkupBatchConversionHelper');
+		$this->_plugin->import('classes.MarkupBatchConversionHelper');
 		$batchConversionHelper = new MarkupBatchConversionHelper();
 		$data = $batchConversionHelper->readOutFile();
 		$responseData = null;
@@ -176,7 +176,7 @@ OED;
 		$dispatcher = $request->getDispatcher();
 		$conversionPageUrl = $dispatcher->url($request, ROUTE_PAGE,null, 'management', 'settings', 'website',
 				array(), 'markupBatchConversion');
-		$this->plugin->import('classes.MarkupBatchConversionHelper');
+		$this->_plugin->import('classes.MarkupBatchConversionHelper');
 		$batchConversionHelper = new MarkupBatchConversionHelper();
 		if (!$batchConversionHelper->isRunning()) {
 			$request->redirectUrl($conversionPageUrl);

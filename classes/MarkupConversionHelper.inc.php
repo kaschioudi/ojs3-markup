@@ -16,13 +16,13 @@
 
 class MarkupConversionHelper {
 	/** @var $xmlpsWrapper XMLPSWrapper Reference to wrapper class for OTS Service */
-	protected $xmlpsWrapper = null;
+	protected $_xmlpsWrapper = null;
 	/** @var $plugin MarkupPlugin Reference to markup plugin */
-	protected $plugin = null;
+	protected $_plugin = null;
 	/** @var $params array extra parameters */
-	protected $params = null;
+	protected $_params = null;
 	/** @var $xmlpsWrapper OTSWrapper OTS wrapper */
-	protected static $otsWrapper = null;
+	protected static $_otsWrapper = null;
 
 	/**
 	 * Constructor
@@ -31,9 +31,9 @@ class MarkupConversionHelper {
 	 * @param $user PKPUser 
 	 */
 	public function __construct($plugin, $xmlpsWrapper, $user) {
-		$this->plugin = $plugin;
+		$this->_plugin = $plugin;
 		$this->user = $user;
-		$this->xmlpsWrapper = $xmlpsWrapper;
+		$this->_xmlpsWrapper = $xmlpsWrapper;
 	}
 
 	/**
@@ -155,14 +155,14 @@ class MarkupConversionHelper {
 		$filePath = $submissionFile->getFilePath();
 		$filename = basename($filePath);
 		$fileContent = file_get_contents($filePath);
-		$citationStyle = $this->plugin->getSetting($journal->getId(), 'cslStyle');
+		$citationStyle = $this->_plugin->getSetting($journal->getId(), 'cslStyle');
 
 		$metadata = $this->buildSubmissionMetadata($journal, $submission);
-		$jobId = $this->xmlpsWrapper->submitJob($filename, $fileContent, $citationStyle, $metadata);
+		$jobId = $this->_xmlpsWrapper->submitJob($filename, $fileContent, $citationStyle, $metadata);
 
 		// link XML job id with markup job
 		$markupJobInfoDao = DAORegistry::getDAO('MarkupJobInfoDAO');
-		$this->plugin->import('classes.MarkupJobInfo');
+		$this->_plugin->import('classes.MarkupJobInfo');
 		$markupJobInfo = $markupJobInfoDao->getMarkupJobInfo($jobInfoId);
 		$markupJobInfo->setXmlJobId($jobId);
 		$markupJobInfoDao->updateMarkupJobInfo($markupJobInfo);
@@ -184,7 +184,7 @@ class MarkupConversionHelper {
 		$i = 0;
 		$jobStatus = null;
 		while($i++ < $maxReq) {
-			$jobStatus = $this->xmlpsWrapper->getJobStatus($jobId);
+			$jobStatus = $this->_xmlpsWrapper->getJobStatus($jobId);
 			if (!is_null($statusCallbackFn) && is_callable($statusCallbackFn)) {
 				$statusCallbackFn($jobStatus);
 			}
@@ -204,7 +204,7 @@ class MarkupConversionHelper {
 		}
 
 		// Download the Zip archive.
-		$tmpZipFile = $this->xmlpsWrapper->downloadFile($jobId);
+		$tmpZipFile = $this->_xmlpsWrapper->downloadFile($jobId);
 
 		return $tmpZipFile;
 	}
@@ -432,7 +432,7 @@ class MarkupConversionHelper {
 			'filename' 	=> $fileName
 		);
 		$this->addXmlDocumentToSubmissionFileList($journal, $submission, "{$extractionPath}/document.xml", $params);
-		$wantedFormats = $this->plugin->getSetting($journalId, 'wantedFormats');
+		$wantedFormats = $this->_plugin->getSetting($journalId, 'wantedFormats');
 		$genreDao = DAORegistry::getDAO('GenreDAO');
 		$genre = $genreDao->getByKey('SUBMISSION', $journalId);
 
@@ -497,8 +497,8 @@ class MarkupConversionHelper {
 	public static function getOTSWrapperInstance($plugin, $journal, $userObject, $reuseCached = true) {
 		// Note: passing $userObject instead of calling $request->getUser() because this 
 		// method is often called from gateway plugin and it seems that user session is not available
-		if (!is_null(self::$otsWrapper) && $reuseCached) {
-			return self::$otsWrapper;
+		if (!is_null(self::$_otsWrapper) && $reuseCached) {
+			return self::$_otsWrapper;
 		}
 		$journalId = $journal->getId();
 		// Import host, user and password variables into the current symbol table from an array
@@ -507,8 +507,8 @@ class MarkupConversionHelper {
 		// and I don't want to use `import('plugins.generic.markup.classes.XMLPSWrapper');`  because I cannot 
 		// guarantee the plugin folder will always be `markup`. e.g The repo name is ojs3-markup
 		require_once(dirname(__FILE__) . '/XMLPSWrapper.inc.php');
-		self::$otsWrapper = new XMLPSWrapper($host, $user, $password);
-		return self::$otsWrapper;
+		self::$_otsWrapper = new XMLPSWrapper($host, $user, $password);
+		return self::$_otsWrapper;
 	}
 
 	/**

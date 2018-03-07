@@ -18,14 +18,14 @@ import('lib.pkp.classes.db.DAO');
 
 class MarkupJobInfoDAO extends DAO {
 	/** @var $plugin MarkupPlugin Reference to markup plugin */
-	protected $plugin = null;
+	protected $_plugin = null;
 	
 	//
 	// constructor
 	//
 	public function __construct($parentPlugin) {
 		parent::__construct();
-		$this->plugin = $parentPlugin;
+		$this->_plugin = $parentPlugin;
 	}
 	
 	/**
@@ -34,7 +34,7 @@ class MarkupJobInfoDAO extends DAO {
 	 * @return MarkupJobInfo
 	 */
 	protected function returnMarkupJobInfoFromRow($row) {
-		$this->plugin->import('classes.MarkupJobInfo');
+		$this->_plugin->import('classes.MarkupJobInfo');
 	
 		$markupJobInfo = new MarkupJobInfo();
 		$markupJobInfo->setId($row['id']);

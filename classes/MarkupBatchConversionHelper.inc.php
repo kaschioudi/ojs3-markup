@@ -16,20 +16,20 @@
 
 class MarkupBatchConversionHelper {
 	/** @var $outFile string Path to file used for inter process communication */
-	protected $outFile = null;
+	protected $_outFile = null;
 
 	/**
 	 * Constructor
 	 */
 	public function __construct() {
-		$this->outFile = sys_get_temp_dir() . '/markupBatch.out';
+		$this->_outFile = sys_get_temp_dir() . '/markupBatch.out';
 	}
 	/**
 	 * Determines whether a conversion is already running 
 	 * @return boolean
 	 */
 	public function isRunning() {
-		return file_exists($this->outFile);
+		return file_exists($this->_outFile);
 	}
 	
 	/**
@@ -38,11 +38,11 @@ class MarkupBatchConversionHelper {
 	 * @throws Exception
 	 */
 	public function createOutFile($data) {
-		if (file_exists($this->outFile)) {
-			throw new Exception(__('plugins.generic.markup.file-exists', array('file' => $this->outFile)));
+		if (file_exists($this->_outFile)) {
+			throw new Exception(__('plugins.generic.markup.file-exists', array('file' => $this->_outFile)));
 		}
 		else {
-			file_put_contents($this->outFile, serialize($data));
+			file_put_contents($this->_outFile, serialize($data));
 		}
 	}
 
@@ -51,7 +51,7 @@ class MarkupBatchConversionHelper {
 	 * @param array $data
 	 */
 	public function updateOutFile($data) {
-		file_put_contents($this->outFile, serialize($data), LOCK_EX);
+		file_put_contents($this->_outFile, serialize($data), LOCK_EX);
 	}
 
 	/**
@@ -60,7 +60,7 @@ class MarkupBatchConversionHelper {
 	 */
 	public function readOutFile() {
 		if ($this->isRunning()) {
-			$content = file_get_contents($this->outFile);
+			$content = file_get_contents($this->_outFile);
 			return unserialize($content);
 		}
 		return null;
@@ -70,8 +70,8 @@ class MarkupBatchConversionHelper {
 	 * Helper function to delete the temporary file
 	 */
 	public function deleteOutFile() {
-		if (file_exists($this->outFile)) {
-			unlink($this->outFile);
+		if (file_exists($this->_outFile)) {
+			unlink($this->_outFile);
 		}
 	}
 

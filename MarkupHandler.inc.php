@@ -17,7 +17,7 @@ import('classes.handler.Handler');
 
 class MarkupHandler extends Handler {
 	/** @var MarkupPlugin The Document markup plugin */
-	protected $plugin;
+	protected $_plugin;
 	
 	/**
 	 * Constructor
@@ -26,7 +26,7 @@ class MarkupHandler extends Handler {
 		parent::__construct();	
 		
 		// set reference to markup plugin
-		$this->plugin = PluginRegistry::getPlugin('generic', 'markupplugin'); 
+		$this->_plugin = PluginRegistry::getPlugin('generic', 'markupplugin'); 
 		
 		$this->addRoleAssignment(
 			array(ROLE_ID_MANAGER, ROLE_ID_SUB_EDITOR, ROLE_ID_ASSISTANT, ROLE_ID_REVIEWER, ROLE_ID_AUTHOR),
@@ -99,7 +99,7 @@ class MarkupHandler extends Handler {
 	protected function _conversion($args, $request, $params) {
 		$context = $request->getContext();
 		$dispatcher = $request->getDispatcher();
-		$authType = $this->plugin->getSetting($context->getId(), 'authType');
+		$authType = $this->_plugin->getSetting($context->getId(), 'authType');
 		
 		$submissionFile = $this->getAuthorizedContextObject(ASSOC_TYPE_SUBMISSION_FILE);
 		if (!$submissionFile) {
@@ -113,13 +113,13 @@ class MarkupHandler extends Handler {
 		$loginCredentialsConfigured = true;
 		
 		// Import host, user and password variables into the current symbol table from an array
-		extract($this->plugin->getOTSLoginParametersForJournal($context->getId(), $request->getUser()));
+		extract($this->_plugin->getOTSLoginParametersForJournal($context->getId(), $request->getUser()));
 		if (is_null($user) || is_null($password)) {
 			$loginCredentialsConfigured = false;
 		}
 		
 		$conversionTriggerUrl = $dispatcher->url($request, ROUTE_PAGE, null, 'markup', 'triggerConversion', null, array('submissionId' => $submissionFile->getSubmissionId(), 'fileId' => $fileId, 'stage' => $stageId, 'target' => $params['target']));
-		$editorTemplateFile = $this->plugin->getTemplatePath() . 'convert.tpl';
+		$editorTemplateFile = $this->_plugin->getTemplatePath() . 'convert.tpl';
 		AppLocale::requireComponents(LOCALE_COMPONENT_APP_COMMON,  LOCALE_COMPONENT_PKP_MANAGER);
 		$templateMgr = TemplateManager::getManager($request);
 		$templateMgr->assign('fileId', $fileId);
@@ -127,7 +127,7 @@ class MarkupHandler extends Handler {
 		$templateMgr->assign('pluginIsConfigured', $pluginIsConfigured);
 		$templateMgr->assign('loginCredentialsConfigured', $loginCredentialsConfigured);
 		$templateMgr->assign('conversionTriggerUrl', $conversionTriggerUrl);
-		$templateMgr->assign('pluginJavaScriptURL', $this->plugin->getJsUrl($request));
+		$templateMgr->assign('pluginJavaScriptURL', $this->_plugin->getJsUrl($request));
 		$output = $templateMgr->fetch($editorTemplateFile);
 		return new JSONMessage(true, $output);
 	}
@@ -149,7 +149,7 @@ class MarkupHandler extends Handler {
 		}
 		
 		$fileId = $submissionFile->getFileId();
-		$editorTemplateFile = $this->plugin->getTemplatePath() . 'editor.tpl';
+		$editorTemplateFile = $this->_plugin->getTemplatePath() . 'editor.tpl';
 		$router = $request->getRouter();
 		$documentUrl = $router->url($request, null, 'markup', 'xml', null, 
 				array(
@@ -160,7 +160,7 @@ class MarkupHandler extends Handler {
 		AppLocale::requireComponents(LOCALE_COMPONENT_APP_COMMON,  LOCALE_COMPONENT_PKP_MANAGER);
 		$templateMgr = TemplateManager::getManager($request);
 		$templateMgr->assign('documentUrl', $documentUrl);
-		$templateMgr->assign('textureFolderPath', $this->plugin->getTextureFolderUrl($request));
+		$templateMgr->assign('textureFolderPath', $this->_plugin->getTextureFolderUrl($request));
 		return $templateMgr->fetch($editorTemplateFile);
 	}
 	
@@ -224,10 +224,10 @@ class MarkupHandler extends Handler {
 		$stage = $request->getUserVar('stage');
 			
 		$target = $request->getUserVar('target');
-		$jobId = $this->plugin->fetchGateway($fileId, $stage, $target);
+		$jobId = $this->_plugin->fetchGateway($fileId, $stage, $target);
 		
 		$journal = $request->getJournal();
-		$url = $this->plugin->getSetting($journal->getid(), 'markupHostURL');
+		$url = $this->_plugin->getSetting($journal->getid(), 'markupHostURL');
 		$message = __('plugins.generic.markup.job.success', array('url' => $url));
 		
 		$router = $request->getRouter();
@@ -235,7 +235,7 @@ class MarkupHandler extends Handler {
 		$conversionJobStatusCheckUrl = $dispatcher->url($request, ROUTE_PAGE, null, 'markup', 
 			'fetchConversionJobStatus', null, array('submissionId' => $submissionFile->getSubmissionId(), 'fileId' => $submissionFile->getFileId(), 'job' => $jobId));
 		
-		$templateFile = $this->plugin->getTemplatePath() . 'convert-result.tpl';
+		$templateFile = $this->_plugin->getTemplatePath() . 'convert-result.tpl';
 		AppLocale::requireComponents(LOCALE_COMPONENT_APP_COMMON,  LOCALE_COMPONENT_PKP_MANAGER);
 		$templateMgr = TemplateManager::getManager($request);
 		$templateMgr->assign('jobId', $jobId);
@@ -263,9 +263,9 @@ class MarkupHandler extends Handler {
 		$xmlJobId = $jobInfo->getXmlJobId();
 		
 		// Import host, user and password variables into the current symbol table from an array
-		extract($this->plugin->getOTSLoginParametersForJournal($journal->getId(), $request->getUser()));
+		extract($this->_plugin->getOTSLoginParametersForJournal($journal->getId(), $request->getUser()));
 		
-		$this->plugin->import('classes.XMLPSWrapper');
+		$this->_plugin->import('classes.XMLPSWrapper');
 		$xmlpsWrapper = new XMLPSWrapper($host, $user, $password);
 		$code = (int) $xmlpsWrapper->getJobStatus($xmlJobId);
 		$status = $xmlpsWrapper->statusCodeToLabel($code);
@@ -308,8 +308,8 @@ class MarkupHandler extends Handler {
 		$templateMgr = TemplateManager::getManager($request);
 		$templateMgr->register_function('plugin_url', array($this, 'smartyPluginUrl'));
 		
-		$this->plugin->import('MarkupProfileSettingsForm');
-		$form = new MarkupProfileSettingsForm($this->plugin, $context->getId());
+		$this->_plugin->import('MarkupProfileSettingsForm');
+		$form = new MarkupProfileSettingsForm($this->_plugin, $context->getId());
 		if ($request->getUserVar('save')) {
 			$form->readInputData();
 			if ($form->validate()) {
@@ -345,7 +345,7 @@ class MarkupHandler extends Handler {
 			LOCALE_COMPONENT_APP_COMMON
 		);
 
-		$this->plugin->import('classes.MarkupBatchConversionHelper');
+		$this->_plugin->import('classes.MarkupBatchConversionHelper');
 		$batchConversionHelper = new MarkupBatchConversionHelper();
 
 		$context = $request->getContext();
@@ -365,7 +365,7 @@ class MarkupHandler extends Handler {
 		}
 		$templateMgr->assign('submissions', $submissionMetadata);
 		$templateMgr->assign('batchConversionIsRunning', $batchConversionHelper->isRunning());
-		$templateFile = $this->plugin->getTemplatePath() . 'batchConversion.tpl';
+		$templateFile = $this->_plugin->getTemplatePath() . 'batchConversion.tpl';
 		$output = $templateMgr->fetch($templateFile);
 		return new JSONMessage(true, $output);
 	}
