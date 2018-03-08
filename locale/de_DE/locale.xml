@@ -1,13 +1,16 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE locale SYSTEM "../../../../../lib/pkp/dtd/locale.dtd">
+
 <!--
   * @file plugins/generic/markup/locale/de_DE/locale.xml
   *
-  * Copyright (c) 2003-2013 John Willinsky
+  * Copyright (c) 2003-2018 Simon Fraser University
+  * Copyright (c) 2003-2018 John Willinsky
   * Distributed under the GNU GPL v2. For full terms see the file docs/COPYING.
   *
   * Document Markup plugin localization strings for the de_DE (Deutsch (Deutschland)) locale.
   -->
+  
 <locale name="de_DE" full_name="Deutsch (Deutschland)">
 	<message key="plugins.generic.markup.archive.badZip">Fehlerhafte Zip-Datei ({$file}): {$error}</message>
 	<message key="plugins.generic.markup.archive.enable">Dokumenten-Markup-Plug-In muss aktiviert werden!</message>

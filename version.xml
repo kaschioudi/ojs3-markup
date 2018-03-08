@@ -1,13 +1,16 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE version SYSTEM "../../../lib/pkp/dtd/pluginVersion.dtd">
+
 <!--
   * version.xml
   *
-  * Copyright (c) 2003-2013 John Willinsky
+  * Copyright (c) 2003-2018 Simon Fraser University
+  * Copyright (c) 2003-2018 John Willinsky
   * Distributed under the GNU GPL v2. For full terms see the file docs/COPYING.
   *
   * Plugin version information.
 -->
+
 <version>
 		<application>markup</application>
 		<type>plugins.generic</type>
