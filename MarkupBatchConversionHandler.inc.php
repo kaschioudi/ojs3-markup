@@ -100,9 +100,14 @@ class MarkupBatchConversionHandler extends Handler {
 			}
 		}
 		if (count($submissions)) {
+			// Create an access key
+			$this->_plugin->import('classes.MarkupConversionHelper');
+			$accessKey = MarkupConversionHelper::makeAccessToken($user);
+
 			// trigger conversion
 			$url = $request->url(null, 'gateway', 'plugin', array('MarkupBatchGatewayPlugin',
-										'userId', $user->getId()));
+					'userId', $user->getId(), 'accessKey', $accessKey));
+
 			$ch = curl_init();
 			curl_setopt($ch, CURLOPT_HTTPHEADER, array('Expect:')); // Avoid HTTP 417 errors
 			curl_setopt($ch, CURLOPT_URL, $url);

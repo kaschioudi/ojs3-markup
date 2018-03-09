@@ -16,6 +16,7 @@
 	<message key="plugins.generic.markup.archive.enable">Open Typesetting Stack Plugin needs to be enabled.</message>
 	<message key="plugins.generic.markup.archive.noArticle">The article does not exist.</message>
 	<message key="plugins.generic.markup.archive.noArticleID">Article ID is invalid or missing.</message>
+	<message key="plugins.generic.markup.archive.noAccessKey">Access Key is invalid or missing.</message>
 	<message key="plugins.generic.markup.archive.noJournal">Request must be linked to a journal.</message>
 	<message key="plugins.generic.markup.description">This plugin provides integration with PKP's Open Typesetting Stack for converting Word and PDF articles to NLM JATS XML.</message>
 	<message key="plugins.generic.markup.displayName">Open Typesetting Stack Plugin</message>

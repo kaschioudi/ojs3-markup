@@ -166,6 +166,20 @@ class MarkupBatchGatewayPlugin extends GatewayPlugin {
 			return;
 		}
 
+		// access key
+		$accessKey = isset($args['accessKey']) ? $args['accessKey'] : null;
+		if (empty($accessKey)) {
+			fatalError(__('plugins.generic.markup.archive.noAccessKey'));
+			exit;
+		}
+
+		// validate access key
+		if (!$this->_user || !MarkupConversionHelper::validateAccessToken($this->_user, $accessKey)) {
+			error_log('access key #2');
+			fatalError(__('plugins.generic.markup.archive.noAccessKey'));
+			exit;
+		}
+
 		$submissions = $_POST;
 
 		$pid = getmypid();

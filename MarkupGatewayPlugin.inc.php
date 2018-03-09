@@ -39,9 +39,6 @@ class MarkupGatewayPlugin extends GatewayPlugin {
 	/** @var $jobId string job identifier */
 	protected $_jobId = null;
 
-	/** @var $conversionHelper MarkupConversionHelper Conversion helper object */
-	protected $_conversionHelper = null;
-
 	function __construct($parentPluginName) {
 		parent::__construct();
 
@@ -224,6 +221,13 @@ class MarkupGatewayPlugin extends GatewayPlugin {
 			exit;
 		}
 
+		// access key
+		$accessKey = isset($args['accessKey']) ? $args['accessKey'] : null;
+		if (empty($accessKey)) {
+			fatalError(__('plugins.generic.markup.archive.noAccessKey'));
+			exit;
+		}
+
 		$submissionFileDao = DAORegistry::getDAO('SubmissionFileDAO');
 		$submissionFile = $submissionFileDao->getLatestRevision($fileId);
 		if (empty($submissionFile)) {
@@ -236,11 +240,18 @@ class MarkupGatewayPlugin extends GatewayPlugin {
 		$this->_jobId = isset($args['jobId']) ? $args['jobId'] : '';
 		$this->_stage = isset($args['stage']) ? (int) $args['stage'] : false;
 
+		// validate access key
+		$this->_plugin->import('classes.MarkupConversionHelper');
+		if (!$this->_user || !MarkupConversionHelper::validateAccessToken($this->_user, $accessKey)) {
+			error_log('access key #2');
+			fatalError(__('plugins.generic.markup.archive.noAccessKey'));
+			exit;
+		}
+
 		// initialize OTS wrapper
 		$this->_initXMLPSWrapper($request);
 
 		// initialize conversion helper object
-		$this->import('classes.MarkupConversionHelper');
 		$this->_conversionHelper = new MarkupConversionHelper($this->_plugin, $this->_xmlpsWrapper, $this->_user);
 
 		// process

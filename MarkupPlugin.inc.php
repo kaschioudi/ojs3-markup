@@ -488,13 +488,15 @@ class MarkupPlugin extends GenericPlugin {
 		$dispatcher = $router->getDispatcher();
 		$journal = $request->getJournal();
 
+		// Create an access key
 		$this->import('classes.MarkupConversionHelper');
+		$accessKey = MarkupConversionHelper::makeAccessToken($user);
 		$jobId = MarkupConversionHelper::createConversionJobInfo($journal, $user, $fileId);
 
 		$url = $request->url(null, 'gateway', 'plugin', 
-					array('MarkupGatewayPlugin','fileId', $fileId, 'userId', $user->getId(), 
-							'stage', $stage, 'jobId', $jobId, 'target', $target)
-				);
+			array('MarkupGatewayPlugin','fileId', $fileId, 'userId', $user->getId(), 
+				'stage', $stage, 'jobId', $jobId, 'target', $target, 'accessKey', $accessKey)
+		);
 
 		$ch = curl_init();
 		curl_setopt($ch, CURLOPT_URL, $url);

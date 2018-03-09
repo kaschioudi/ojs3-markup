@@ -535,4 +535,32 @@ class MarkupConversionHelper {
 		}
 		return true;
 	}
+
+	/**
+	 * Create an access token used for Gateway plugin request validation
+	 * @param $user PKPUser
+	 * @return accessKey string The generated passkey
+	 */
+	public static function makeAccessToken($user) {
+		import('lib.pkp.classes.security.AccessKeyManager');
+		$accessKeyManager = new AccessKeyManager();
+		$accessKey = $accessKeyManager->createKey('MarkupContext', $user->getId(), null, 1);
+		return $accessKey;
+	}
+
+	/**
+	 * Validates access key supplied to a gateway plugin 
+	 * 
+	 */
+	public static function validateAccessToken($user, $accessKey) {
+		import('lib.pkp.classes.security.AccessKeyManager');
+		$accessKeyManager = new AccessKeyManager();
+		$accessKeyHash = AccessKeyManager::generateKeyHash($accessKey);
+		$accessKey = $accessKeyManager->validateKey(
+			'MarkupContext',
+			$user->getId(),
+			$accessKeyHash
+		);
+		return !is_null($accessKey);
+	}
 }
