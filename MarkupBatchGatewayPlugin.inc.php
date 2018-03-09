@@ -175,7 +175,6 @@ class MarkupBatchGatewayPlugin extends GatewayPlugin {
 
 		// validate access key
 		if (!$this->_user || !MarkupConversionHelper::validateAccessToken($this->_user, $accessKey)) {
-			error_log('access key #2');
 			fatalError(__('plugins.generic.markup.archive.noAccessKey'));
 			exit;
 		}
