@@ -243,7 +243,6 @@ class MarkupGatewayPlugin extends GatewayPlugin {
 		// validate access key
 		$this->_plugin->import('classes.MarkupConversionHelper');
 		if (!$this->_user || !MarkupConversionHelper::validateAccessToken($this->_user, $accessKey)) {
-			error_log('access key #2');
 			fatalError(__('plugins.generic.markup.archive.noAccessKey'));
 			exit;
 		}
