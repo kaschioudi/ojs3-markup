@@ -550,7 +550,9 @@ class MarkupConversionHelper {
 
 	/**
 	 * Validates access key supplied to a gateway plugin 
-	 * 
+	 * @param $user PKPUser
+	 * @param $accessKey string
+	 * @return accessKey string The generated passkey
 	 */
 	public static function validateAccessToken($user, $accessKey) {
 		import('lib.pkp.classes.security.AccessKeyManager');
