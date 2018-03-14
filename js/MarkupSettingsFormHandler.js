@@ -59,6 +59,11 @@
 			function(cslStyleSelection) {
 
 				var url = $('input[id=cslStyleURL]').val();
+				// in case where default citation style is read from config.inc.php, 
+				// this input field is not available in the form so no need for citation styles loading
+				if (url === undefined) {
+					return;
+				}
 
 				// stop here if host url not available
 				if (url == '')

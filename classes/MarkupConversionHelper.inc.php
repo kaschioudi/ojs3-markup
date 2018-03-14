@@ -104,6 +104,7 @@ class MarkupConversionHelper {
 		}
 
 		/* Localized abstracts */
+		$abstracts = '';
 		if (is_array($submission->getAbstract(null))) foreach ($submission->getAbstract(null) as $loc => $abstract) {
 			$abstract = htmlspecialchars(Core::cleanVar(strip_tags($abstract)));
 			if (empty($abstract)) continue;
@@ -138,6 +139,18 @@ class MarkupConversionHelper {
 	}
 
 	/**
+	 * Return the citation hash to use either from config file or settings
+	 * @param $contextId int
+	 * @return mixed
+	 */
+	public function getCitationStyleHash($contextId) {
+		if (!is_null($citationStyleHash = Config::getVar('markup', 'ots_citation_style_hash'))) {
+			return $citationStyleHash;
+		}
+		return $this->_plugin->getSetting($contextId, 'cslStyle');
+	}
+
+	/**
 	 * Kicks off a submission file conversion on OTS server
 	 * @param $journal Journal Journal
 	 * @param $submissionFile mixed SubmissionFile 
@@ -155,7 +168,7 @@ class MarkupConversionHelper {
 		$filePath = $submissionFile->getFilePath();
 		$filename = basename($filePath);
 		$fileContent = file_get_contents($filePath);
-		$citationStyle = $this->_plugin->getSetting($journal->getId(), 'cslStyle');
+		$citationStyle = $this->getCitationStyleHash($journal->getId());
 
 		$metadata = $this->buildSubmissionMetadata($journal, $submission);
 		$jobId = $this->_xmlpsWrapper->submitJob($filename, $fileContent, $citationStyle, $metadata);

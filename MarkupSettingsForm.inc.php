@@ -50,6 +50,8 @@ class MarkupSettingsForm extends Form {
 			'xmlConversionStages' => 'object',
 			'editWithSubstanceStages' => 'object',
 		);
+
+		$this->_plugin->import('classes.MarkupConversionHelper');
 	}
 	
 	/**
@@ -72,8 +74,7 @@ class MarkupSettingsForm extends Form {
 		$this->setData('authType', $plugin->getSetting($journalId, 'authType'));
 		$this->setData('cslStyle', $plugin->getSetting($journalId, 'cslStyle'));
 
-		// Check if user has entered credentials in config file.
-		$this->_plugin->import('classes.MarkupConversionHelper');
+		// Check if admin has entered credentials in config file.
 		$configCreds = MarkupConversionHelper::readCredentialsFromConfig();
 		if (MarkupConversionHelper::canUseCredentialsFromConfig($configCreds)) {
 			$this->setData('markupConfigCredsAvailable', true);
@@ -86,7 +87,16 @@ class MarkupSettingsForm extends Form {
 			$this->setData('markupHostPass', $plugin->getSetting($journalId, 'markupHostPass'));
 			$this->setData('markupHostURL', $plugin->getSetting($journalId, 'markupHostURL'));
 		}
-		
+
+		// Check if admin has specified a default citation style
+		$citationStyleHash = Config::getVar('markup', 'ots_citation_style_hash');
+		if (is_null($citationStyleHash)) {
+			$this->setData('markupConfigDefaultCitationHashAvailable', false);
+		}
+		else {
+			$this->setData('markupConfigDefaultCitationHashAvailable', true);
+		}
+
 		// wanted formats
 		$wantedFormats = $plugin->getSetting($journalId, 'wantedFormats');
 		if (is_null($wantedFormats)) {
@@ -139,14 +149,23 @@ class MarkupSettingsForm extends Form {
 
 		$this->addCheck(new FormValidator($this, 'authType', 'required', 'plugins.generic.markup.required.authType'));
 
-		$authType = $this->getData('authType');
-		$loginCredsFieldsType = ($authType == 'site') ? 'required' : 'optional';
-		$this->addCheck(new FormValidator($this, 'markupHostUser', $loginCredsFieldsType, "plugins.generic.markup.{$loginCredsFieldsType}.markupHostUser"));
-		$this->addCheck(new FormValidator($this, 'markupHostPass', $loginCredsFieldsType, "plugins.generic.markup.{$loginCredsFieldsType}.markupHostPass"));
+		// user credentials fields are available only when credentials are not set in config.inc.php 
+		$configCreds = MarkupConversionHelper::readCredentialsFromConfig();
+		if (!MarkupConversionHelper::canUseCredentialsFromConfig($configCreds)) {
+			$authType = $this->getData('authType');
+			$loginCredsFieldsType = ($authType == 'site') ? 'required' : 'optional';
+			$this->addCheck(new FormValidator($this, 'markupHostUser', $loginCredsFieldsType, "plugins.generic.markup.{$loginCredsFieldsType}.markupHostUser"));
+			$this->addCheck(new FormValidator($this, 'markupHostPass', $loginCredsFieldsType, "plugins.generic.markup.{$loginCredsFieldsType}.markupHostPass"));
+			$this->addCheck(new FormValidator($this, 'markupHostURL', 'required', 'plugins.generic.markup.required.markupHostURL'));
+		}
+
+		// citation style field is available only if not set in config.inc.php my admin
+		$citationStyleHash = Config::getVar('markup', 'ots_citation_style_hash');
+		if (is_null($citationStyleHash)) {
+			$this->addCheck(new FormValidator($this, 'cslStyle', 'required', 'plugins.generic.markup.required.cslStyle'));
+		}
 
 		$this->addCheck(new FormValidatorPost($this));
-		$this->addCheck(new FormValidator($this, 'cslStyle', 'required', 'plugins.generic.markup.required.cslStyle'));
-		$this->addCheck(new FormValidator($this, 'markupHostURL', 'required', 'plugins.generic.markup.required.markupHostURL'));
 		$this->addCheck(new FormValidator($this, 'wantedFormats', 'required', 'plugins.generic.markup.required.wantedFormats'));
 		$this->addCheck(new FormValidator($this, 'xmlConversionStages', 'required', 'plugins.generic.markup.required.xmlConversionStages'));
 		$this->addCheck(new FormValidator($this, 'editWithSubstanceStages', 'required', 'plugins.generic.markup.required.editWithSubstanceStages'));
@@ -196,12 +215,23 @@ class MarkupSettingsForm extends Form {
 			$markupHostUser = $markupHostPass = '';
 		}
 
-		$plugin->updateSetting($journalId, 'authType', $authType);
-		$plugin->updateSetting($journalId, 'cslStyle', $this->getData('cslStyle'));
-		$plugin->updateSetting($journalId, 'markupHostURL', $markupHostURL);
+		// if credentials are not set by admin, these fields will be available and validated
+		// thus need to be saved
+		$configCreds = MarkupConversionHelper::readCredentialsFromConfig();
+		if (!MarkupConversionHelper::canUseCredentialsFromConfig($configCreds)) {
+			$plugin->updateSetting($journalId, 'authType', $authType);
+			$plugin->updateSetting($journalId, 'markupHostURL', $markupHostURL);
+			$plugin->updateSetting($journalId, 'markupHostUser', $markupHostUser);
+			$plugin->updateSetting($journalId, 'markupHostPass', $markupHostPass);
+		}
+
+		// same for citation style field
+		$citationStyleHash = Config::getVar('markup', 'ots_citation_style_hash');
+		if (is_null($citationStyleHash)) {
+			$plugin->updateSetting($journalId, 'cslStyle', $this->getData('cslStyle'));
+		}
+
 		$plugin->updateSetting($journalId, 'wantedFormats', $this->getData('wantedFormats'));
-		$plugin->updateSetting($journalId, 'markupHostUser', $markupHostUser);
-		$plugin->updateSetting($journalId, 'markupHostPass', $markupHostPass);
 		$plugin->updateSetting($journalId, 'xmlConversionStages', $this->getData('xmlConversionStages'));
 		$plugin->updateSetting($journalId, 'editWithSubstanceStages', $this->getData('editWithSubstanceStages'));
 	}

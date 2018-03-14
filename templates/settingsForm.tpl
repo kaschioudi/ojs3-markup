@@ -66,10 +66,14 @@
 		{fbvElement type="checkbox" name="editWithSubstanceStages[]" id="editWithSubstanceProductionStage" value=$smarty.const.WORKFLOW_STAGE_ID_PRODUCTION label="manager.publication.productionStage" checked=$smarty.const.WORKFLOW_STAGE_ID_PRODUCTION|@in_array:$editWithSubstanceStages}
 	{/fbvFormSection}
 
-	{fbvFormSection title="plugins.generic.markup.settings.cslStyle" description="plugins.generic.markup.settings.cslStyleFieldHelp"}
-		{fbvElement type="hidden" id="cslStyleURL" name="cslStyleURL" value=$markupHostURL}
-		{fbvElement type="select" id="cslStyle"}
-	{/fbvFormSection}
+	{if $markupConfigDefaultCitationHashAvailable eq true}
+		{fbvFormSection description="plugins.generic.markup.settings.citationHashFromConfigNotice"}{/fbvFormSection}
+	{else}
+		{fbvFormSection title="plugins.generic.markup.settings.cslStyle" description="plugins.generic.markup.settings.cslStyleFieldHelp"}
+			{fbvElement type="hidden" id="cslStyleURL" name="cslStyleURL" value=$markupHostURL}
+			{fbvElement type="select" id="cslStyle"}
+		{/fbvFormSection}
+	{/if}
 	
 	{if 'xml'|in_array:$wantedFormats}
 		{assign var="markupDocFormatXmlChecked" value=true}
