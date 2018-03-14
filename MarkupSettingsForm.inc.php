@@ -147,13 +147,12 @@ class MarkupSettingsForm extends Form {
 	 */
 	function validate() {
 
-		$this->addCheck(new FormValidator($this, 'authType', 'required', 'plugins.generic.markup.required.authType'));
-
 		// user credentials fields are available only when credentials are not set in config.inc.php 
 		$configCreds = MarkupConversionHelper::readCredentialsFromConfig();
 		if (!MarkupConversionHelper::canUseCredentialsFromConfig($configCreds)) {
 			$authType = $this->getData('authType');
 			$loginCredsFieldsType = ($authType == 'site') ? 'required' : 'optional';
+			$this->addCheck(new FormValidator($this, 'authType', 'required', 'plugins.generic.markup.required.authType'));
 			$this->addCheck(new FormValidator($this, 'markupHostUser', $loginCredsFieldsType, "plugins.generic.markup.{$loginCredsFieldsType}.markupHostUser"));
 			$this->addCheck(new FormValidator($this, 'markupHostPass', $loginCredsFieldsType, "plugins.generic.markup.{$loginCredsFieldsType}.markupHostPass"));
 			$this->addCheck(new FormValidator($this, 'markupHostURL', 'required', 'plugins.generic.markup.required.markupHostURL'));
