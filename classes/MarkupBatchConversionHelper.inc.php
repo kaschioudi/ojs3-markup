@@ -146,7 +146,7 @@ class MarkupBatchConversionHelper {
 				$genre = $genreDao->getById($submissionFile->getGenreId());
 				$fileStage = $submissionFile->getFileStage();
 				$fileExtension = strtolower($submissionFile->getExtension());
-				if (intval($genre->getCategory()) != GENRE_CATEGORY_DOCUMENT)
+				if (!$genre || (intval($genre->getCategory()) != GENRE_CATEGORY_DOCUMENT))
 					continue;
 				if (!in_array($fileExtension, $validFileExtensions))
 					continue;
