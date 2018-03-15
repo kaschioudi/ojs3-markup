@@ -109,7 +109,15 @@ class MarkupHandler extends Handler {
 		$fileId = $submissionFile->getFileId();
 		$stageId = $params['stage'];
 		
-		$pluginIsConfigured = is_null($authType) ? false : true;
+		$pluginIsConfigured = false;
+		$this->_plugin->import('classes.MarkupConversionHelper');
+		$configCreds = MarkupConversionHelper::readCredentialsFromConfig();
+		if (MarkupConversionHelper::canUseCredentialsFromConfig($configCreds)) {
+			$pluginIsConfigured = true;
+		}
+		else {
+			$pluginIsConfigured = is_null($authType) ? false : true;
+		}
 		$loginCredentialsConfigured = true;
 		
 		// Import host, user and password variables into the current symbol table from an array
