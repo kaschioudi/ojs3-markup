@@ -74,6 +74,37 @@ Additionally, if your journal has already been publishing Word or PDF articles a
 
 ![](https://github.com/kaschioudi/ojs3-markup/blob/master/readme-images/backlog.png?raw=true)
 
+You can also perform bulk conversion via the command line, using the provided `batch.php` in the plugin folder:
+
+    $ ./batch.php
+    Usage: 
+         ./batch.php [user_name] <journal name>                 Batch convert a specific journal enabled
+         ./batch.php [user_name] [--all]                    Batch convert all enabled journals
+         ./batch.php [--print]                          Prints the list of all enabled journals
+         ./batch.php [user_name] [--list] <comma-separated list of journals>    Batch convert a comma separated list of journals
+
+The tool should generally be run as your webserver user (e.g. `www-data` or `apache`) so that it has access to OJS' cache and other dependencies. The `[user_name]` specified on the command line should be an OJS admin who has access to all of the journals that are to be converted. By default, this CLI tool will only convert articles which *have already been published* (it will use PDF galleys as conversion input when they are available), as it's primarily intended to generate JATS XML for indexing or deposit purposes; users wanting to create XML for production and reader views should use the full Texture workflow above.
+
+Finally, when using the CLI tool you can also store OTS configuration settings in OJS' `config.inc.php` master file if you haven't configured the plugin from the settings menu in OJS, by adding a block like so:
+
+    ;;;;;;;;;;;;;;;;;;
+    ; Markup plugin  ;
+    ;;;;;;;;;;;;;;;;;;
+    
+    [markup]
+    
+    ; OTS email address used for login.
+    ots_login_email = ''
+    
+    ; Token for OTS API authentication. Get this token from your OTS settings page.
+    ots_api_token = '' 
+    
+    ; Open Typesetting Stack instance to connect to. Normally you should not change this setting.
+    ots_host = 'http://pkp-xml-demo.lib.sfu.ca'
+    
+    ; Preferred citation style for PDF and ePub output (see OTS readme).
+    ots_citation_style_hash = '3f0f7fede090f24cc71b7281073996be'
+
 
 Contact/Support
 ---------------
