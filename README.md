@@ -79,9 +79,9 @@ You can also perform bulk conversion via the command line, using the provided `b
     $ ./batch.php
     Usage: 
          ./batch.php [user_name] <journal name>                 Batch convert a specific journal enabled
-         ./batch.php [user_name] [--all]                    Batch convert all enabled journals
-         ./batch.php [--print]                          Prints the list of all enabled journals
-         ./batch.php [user_name] [--list] <comma-separated list of journals>    Batch convert a comma separated list of journals
+         ./batch.php [user_name] [--all]                        Batch convert all enabled journals
+         ./batch.php [--print]                                  Prints the list of all enabled journals
+         ./batch.php [user_name] [--list] <list of journals>    Batch convert a comma separated list of journals
 
 The tool should generally be run as your webserver user (e.g. `www-data` or `apache`) so that it has access to OJS' cache and other dependencies. The `[user_name]` specified on the command line should be an OJS admin who has access to all of the journals that are to be converted. By default, this CLI tool will only convert articles which *have already been published* (it will use PDF galleys as conversion input when they are available), as it's primarily intended to generate JATS XML for indexing or deposit purposes; users wanting to create XML for production and reader views should use the full Texture workflow above.
 
