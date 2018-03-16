@@ -3,8 +3,8 @@
 /**
  * @file plugins/generic/markup/classes/MarkupJobInfoDAO.inc.php
  *
- * Copyright (c) 2003-2017 Simon Fraser University
- * Copyright (c) 2003-2017 John Willinsky
+ * Copyright (c) 2003-2018 Simon Fraser University
+ * Copyright (c) 2003-2018 John Willinsky
  * Distributed under the GNU GPL v2. For full terms see the file docs/COPYING.
  *
  * @class MarkupJobInfoDAO
@@ -18,14 +18,14 @@ import('lib.pkp.classes.db.DAO');
 
 class MarkupJobInfoDAO extends DAO {
 	/** @var $plugin MarkupPlugin Reference to markup plugin */
-	protected $plugin = null;
+	protected $_plugin = null;
 	
 	//
 	// constructor
 	//
 	public function __construct($parentPlugin) {
 		parent::__construct();
-		$this->plugin = $parentPlugin;
+		$this->_plugin = $parentPlugin;
 	}
 	
 	/**
@@ -34,7 +34,7 @@ class MarkupJobInfoDAO extends DAO {
 	 * @return MarkupJobInfo
 	 */
 	protected function returnMarkupJobInfoFromRow($row) {
-		$this->plugin->import('classes.MarkupJobInfo');
+		$this->_plugin->import('classes.MarkupJobInfo');
 	
 		$markupJobInfo = new MarkupJobInfo();
 		$markupJobInfo->setId($row['id']);

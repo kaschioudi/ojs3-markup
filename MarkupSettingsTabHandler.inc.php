@@ -3,8 +3,8 @@
 /**
  * @file plugins/generic/markup/MarkupSettingsTabHandler.inc.php
  *
- * Copyright (c) 2003-2017 Simon Fraser University
- * Copyright (c) 2003-2017 John Willinsky
+ * Copyright (c) 2003-2018 Simon Fraser University
+ * Copyright (c) 2003-2018 John Willinsky
  * Distributed under the GNU GPL v2. For full terms see the file docs/COPYING.
  *
  * @class MarkupSettingsTabHandler
@@ -18,7 +18,7 @@ import('classes.handler.Handler');
 
 class MarkupSettingsTabHandler extends Handler {
 	/** @var MarkupPlugin The Document markup plugin */
-	protected $plugin = null;
+	protected $_plugin = null;
 	
 	/**
 	 * Constructor
@@ -27,7 +27,7 @@ class MarkupSettingsTabHandler extends Handler {
 		parent::__construct();
 		
 		// set reference to markup plugin
-		$this->plugin = PluginRegistry::getPlugin('generic', 'markupplugin');
+		$this->_plugin = PluginRegistry::getPlugin('generic', 'markupplugin');
 		
 		$this->addRoleAssignment(
 			array(ROLE_ID_MANAGER),
@@ -43,8 +43,8 @@ class MarkupSettingsTabHandler extends Handler {
 		$templateMgr = TemplateManager::getManager($request);
 		$templateMgr->register_function('plugin_url', array($this, 'smartyPluginUrl'));
 		
-		$this->plugin->import('MarkupSettingsForm');
-		$form = new MarkupSettingsForm($this->plugin, $context->getId());
+		$this->_plugin->import('MarkupSettingsForm');
+		$form = new MarkupSettingsForm($this->_plugin, $context->getId());
 		if ($request->getUserVar('save')) {
 			$form->readInputData();
 			if ($form->validate()) {

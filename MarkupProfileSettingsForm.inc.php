@@ -3,8 +3,8 @@
 /**
 * @file plugins/generic/markup/MarkupProfileSettingsForm.inc.php
 *
-* Copyright (c) 2003-2017 Simon Fraser University
-* Copyright (c) 2003-2017 John Willinsky
+* Copyright (c) 2003-2018 Simon Fraser University
+* Copyright (c) 2003-2018 John Willinsky
 * Distributed under the GNU GPL v2. For full terms see the file docs/COPYING.
 *
 * @class MarkupProfileSettingsForm
@@ -18,13 +18,13 @@ import('lib.pkp.classes.form.Form');
 class MarkupProfileSettingsForm extends Form {
 	
 	/** @var $journalId int */
-	protected $journalId;
+	protected $_journalId;
 
 	/** @var $plugin object */
-	protected $plugin;
+	protected $_plugin;
 
 	/** @var $settings array */
-	protected $settings;
+	protected $_settings;
 	
 	/**
 	 * Constructor
@@ -32,13 +32,13 @@ class MarkupProfileSettingsForm extends Form {
 	 * @param $journalId int JournalId
 	 */
 	public function __construct($plugin, $journalId) {
-		$this->journalId = $journalId;
-		$this->plugin = $plugin;
+		$this->_journalId = $journalId;
+		$this->_plugin = $plugin;
 		
 		parent::__construct($plugin->getTemplatePath() . 'profileSettingsForm.tpl');
 
 		// Validation checks for this form
-		$this->settings = array(
+		$this->_settings = array(
 			'markupHostPass' => 'string',
 			'markupHostUser' => 'string',
 		);
@@ -50,7 +50,7 @@ class MarkupProfileSettingsForm extends Form {
 	 * @return void
 	 */
 	public function initData() {
-		$plugin = $this->plugin;
+		$plugin = $this->_plugin;
 		$request = $plugin->getRequest();
 		$user = $request->getUser();
 
@@ -90,16 +90,16 @@ class MarkupProfileSettingsForm extends Form {
 	 */
 	public function fetch($request) {
 		$templateMgr = TemplateManager::getManager($request);
-		$templateMgr->assign('pluginJavaScriptURL', $this->plugin->getJsUrl($request));
+		$templateMgr->assign('pluginJavaScriptURL', $this->_plugin->getJsUrl($request));
 		
-		$templateMgr->assign('pluginName', $this->plugin->getName());
-		$templateMgr->assign('templatePath', $this->plugin->getTemplatePath());
+		$templateMgr->assign('pluginName', $this->_plugin->getName());
+		$templateMgr->assign('templatePath', $this->_plugin->getTemplatePath());
 		
 		return parent::fetch($request);
 	}
 	
 	public function execute() {
-		$plugin = $this->plugin;
+		$plugin = $this->_plugin;
 		$request = $plugin->getRequest();
 		$user = $request->getUser();
 		

@@ -3,8 +3,8 @@
 /**
  * @file plugins/generic/markup/MarkupBatchGatewayPlugin.inc.php
  *
- * Copyright (c) 2003-2017 Simon Fraser University
- * Copyright (c) 2003-2017 John Willinsky
+ * Copyright (c) 2003-2018 Simon Fraser University
+ * Copyright (c) 2003-2018 John Willinsky
  * Distributed under the GNU GPL v2. For full terms see the file docs/COPYING.
  *
  * @class MarkupBatchGatewayPlugin
@@ -18,17 +18,17 @@ import('lib.pkp.classes.plugins.GatewayPlugin');
 
 class MarkupBatchGatewayPlugin extends GatewayPlugin {
 	/** @var $parentPluginName string Name of parent plugin */
-	protected $parentPluginName = null;
+	protected $_parentPluginName = null;
 	/** @var $helper MarkupConversionHelper Markup conversion helper object */
-	protected $markupConversionHelper = null;
+	protected $_markupConversionHelper = null;
 	/** @var $helper MarkupBatchConversionHelper Batch conversion helper object */
-	protected $batchConversionHelper = null;
+	protected $_batchConversionHelper = null;
 	/** @var $user PKPUser user object */
-	protected $user = null;
+	protected $_user = null;
 	/** @var $plugin MarkupPlugin Reference to markup plugin */
-	protected $plugin = null;
+	protected $_plugin = null;
 	/** @var $otsWrapper XMLPSWrapper Reference to wrapper class for OTS Service */
-	protected $otsWrapper = null;
+	protected $_otsWrapper = null;
 
 	/**
 	 * Constructor
@@ -36,12 +36,12 @@ class MarkupBatchGatewayPlugin extends GatewayPlugin {
 	 */
 	public function __construct($parentPluginName) {
 		parent::__construct();
-		$this->parentPluginName = $parentPluginName;
-		$this->plugin = PluginRegistry::getPlugin('generic', $parentPluginName);
+		$this->_parentPluginName = $parentPluginName;
+		$this->_plugin = PluginRegistry::getPlugin('generic', $parentPluginName);
 
 		// initialize batch conversion helper
 		$this->import('classes.MarkupBatchConversionHelper');
-		$this->batchConversionHelper = new MarkupBatchConversionHelper();
+		$this->_batchConversionHelper = new MarkupBatchConversionHelper();
 	}
 
 	/**
@@ -51,15 +51,15 @@ class MarkupBatchGatewayPlugin extends GatewayPlugin {
 	 */
 	protected function initMarkupConversionHelper($request, $journal) {
 		$this->import('classes.MarkupConversionHelper');
-		$this->otsWrapper = MarkupConversionHelper::getOTSWrapperInstance(
-			$this->plugin,
-			$request,
-			$this->user
+		$this->_otsWrapper = MarkupConversionHelper::getOTSWrapperInstance(
+			$this->_plugin,
+			$journal,
+			$this->_user
 		);
-		$this->markupConversionHelper = new MarkupConversionHelper(
-			$this->plugin, 
-			$this->otsWrapper, 
-			$this->user
+		$this->_markupConversionHelper = new MarkupConversionHelper(
+			$this->_plugin, 
+			$this->_otsWrapper, 
+			$this->_user
 		);
 	}
 
@@ -97,7 +97,7 @@ class MarkupBatchGatewayPlugin extends GatewayPlugin {
 	 * @return MarkupPlugin Markup plugin object
 	 */
 	public function &getMarkupPlugin() {
-		return $this->plugin;
+		return $this->_plugin;
 	}
 
 	/**
@@ -127,10 +127,10 @@ class MarkupBatchGatewayPlugin extends GatewayPlugin {
 	 */
 	public function fetch($args, $request) {
 		// set custom error handler 
-		set_error_handler(array($this->batchConversionHelper,'errorHandler'), E_ERROR );
+		set_error_handler(array($this->_batchConversionHelper,'errorHandler'), E_ERROR );
 
 		// skip if conversion is already running
-		if ($this->batchConversionHelper->isRunning()) {
+		if ($this->_batchConversionHelper->isRunning()) {
 			return;
 		}
 
@@ -153,10 +153,10 @@ class MarkupBatchGatewayPlugin extends GatewayPlugin {
 		$userDao = DAORegistry::getDAO('UserDAO');
 		$userId = isset($args['userId']) ? (int) $args['userId'] : false;
 		if (!$userId) {
-			fatalError(__('plugins.generic.markup.archive.no_articleID'));
+			fatalError(__('plugins.generic.markup.archive.noUserID'));
 			exit;
 		}
-		$this->user = $userDao->getById($userId);
+		$this->_user = $userDao->getById($userId);
 
 		$journal = $request->getJournal();
 		// initialize markup conversion helper
@@ -164,6 +164,19 @@ class MarkupBatchGatewayPlugin extends GatewayPlugin {
 		// get list of submissions
 		if (empty($_POST)) {
 			return;
+		}
+
+		// access key
+		$accessKey = isset($args['accessKey']) ? $args['accessKey'] : null;
+		if (empty($accessKey)) {
+			fatalError(__('plugins.generic.markup.archive.noAccessKey'));
+			exit;
+		}
+
+		// validate access key
+		if (!$this->_user || !MarkupConversionHelper::validateAccessToken($this->_user, $accessKey)) {
+			fatalError(__('plugins.generic.markup.archive.noAccessKey'));
+			exit;
 		}
 
 		$submissions = $_POST;
@@ -177,11 +190,11 @@ class MarkupBatchGatewayPlugin extends GatewayPlugin {
 		);
 
 		// create outfile
-		$this->batchConversionHelper->createOutFile($data);
+		$this->_batchConversionHelper->createOutFile($data);
 
 		// find current user's group
 		$userGroupDao = DAORegistry::getDAO('UserGroupDAO');
-		$userGroups = $userGroupDao->getByUserId($this->user->getId(), $journal->getId());
+		$userGroups = $userGroupDao->getByUserId($this->_user->getId(), $journal->getId());
 		$userGroup = $userGroups->next();
 
 		// batch conversion
@@ -213,13 +226,13 @@ class MarkupBatchGatewayPlugin extends GatewayPlugin {
 			try {
 				$jobInfoId = MarkupConversionHelper::createConversionJobInfo(
 					$journal, 
-					$this->user, 
+					$this->_user, 
 					$submissionFileId
 				);
 				$data['jobInfoId'] = $jobInfoId;
-				$this->batchConversionHelper->updateOutFile($data);
+				$this->_batchConversionHelper->updateOutFile($data);
 
-				$jobId = $this->markupConversionHelper->triggerConversion(
+				$jobId = $this->_markupConversionHelper->triggerConversion(
 					$request->getJournal(),
 					$submissionFile,
 					$submissionFile->getFileStage(),
@@ -229,20 +242,20 @@ class MarkupBatchGatewayPlugin extends GatewayPlugin {
 				$data['otsJobId'] = $jobId;
 
 				// status callback closure
-				$batchConversionHelper = $this->batchConversionHelper;
-				$user = $this->user;
-				$plugin = $this->plugin;
+				$batchConversionHelper = $this->_batchConversionHelper;
+				$user = $this->_user;
+				$plugin = $this->_plugin;
 				$statusCallbackFn = function($jobStatus) use ($data, $batchConversionHelper, $request, $user, $plugin) {
 					$wrapper = MarkupConversionHelper::getOTSWrapperInstance(
 						$plugin,
-						$request,
+						$request->getJournal(),
 						$user
 					);
 					$data['conversionStatus'] = $wrapper->statusCodeToLabel($jobStatus);
 					$batchConversionHelper->updateOutFile($data);
 				};
 
-				$tmpZipFile = $this->markupConversionHelper->retrieveConversionJobArchive(
+				$tmpZipFile = $this->_markupConversionHelper->retrieveConversionJobArchive(
 					$submissionFile, 
 					$jobId,
 					$statusCallbackFn
@@ -252,17 +265,16 @@ class MarkupBatchGatewayPlugin extends GatewayPlugin {
 				}
 
 				$extractionPath = null;
-				if (($extractionPath = $this->markupConversionHelper->unzipArchive($tmpZipFile)) === false) {
+				if (($extractionPath = $this->_markupConversionHelper->unzipArchive($tmpZipFile)) === false) {
 					throw new Exception(__('plugins.generic.markup.archive-extract-failure')); 
 				}
 
 				$fileName = "document" . '__' . date('Y-m-d_h:i:s');
-				$this->markupConversionHelper->handleArchiveExtractionAfterGalleyGenerate(
+				$this->_markupConversionHelper->handleArchiveExtractionAfterGalleyGenerate(
 					$extractionPath,
 					$journal,
 					$submission,
 					$submissionFile,
-					$userGroup,
 					$fileName
 				);
 			}
@@ -275,6 +287,6 @@ class MarkupBatchGatewayPlugin extends GatewayPlugin {
 			}
 		}
 
-		$this->batchConversionHelper->deleteOutFile();
+		$this->_batchConversionHelper->deleteOutFile();
 	}
 }

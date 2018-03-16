@@ -3,8 +3,8 @@
 /**
  * @file plugins/generic/markup/classes/XMLPSWrapper.inc.php
  *
- * Copyright (c) 2003-2017 Simon Fraser University
- * Copyright (c) 2003-2017 John Willinsky
+ * Copyright (c) 2003-2018 Simon Fraser University
+ * Copyright (c) 2003-2018 John Willinsky
  * Distributed under the GNU GPL v2. For full terms see the file docs/COPYING.
  *
  * @class XMLPSWrapper
@@ -24,13 +24,13 @@ class XMLPSWrapper {
 	const DEFAULT_DEMO_HOST = 'http://pkp-xml-demo.lib.sfu.ca';
 	
 	/** @var $username string user login */
-	protected $username = null;
+	protected $_username = null;
 	
 	/** @var $token string user token*/
-	protected $token = null;
+	protected $_token = null;
 	
 	/** @var $host string server host */
-	protected $host = null;
+	protected $_host = null;
 	
 	/**
 	 * Initialize object with server parameters
@@ -43,12 +43,12 @@ class XMLPSWrapper {
 	public function __construct($host, $username = null, $token = null) {
 		
 		if (is_null($host) || empty($host)) {
-			$this->host = self::DEFAULT_DEMO_HOST;
+			$this->_host = self::DEFAULT_DEMO_HOST;
 		}
 		
-		$this->host = rtrim($host, '/');
-		$this->username = $username;
-		$this->token = $token;
+		$this->_host = rtrim($host, '/');
+		$this->_username = $username;
+		$this->_token = $token;
 	}
 	
 	/**
@@ -63,7 +63,7 @@ class XMLPSWrapper {
 		
 		$endpoint = trim($endpoint, '/');
 		$params = http_build_query($params);
-		$url = "{$this->host}/{$endpoint}";
+		$url = "{$this->_host}/{$endpoint}";
 		
 		return empty($params) ? $url : "{$url}?{$params}";
 	}
@@ -76,8 +76,8 @@ class XMLPSWrapper {
 	 */
 	protected function _withLoginCredentials($params) {
 		$credentials = array(
-			'email' => $this->username,
-			'access_token' => $this->token,
+			'email' => $this->_username,
+			'access_token' => $this->_token,
 		);
 		
 		return array_merge($params, $credentials);
@@ -100,7 +100,7 @@ class XMLPSWrapper {
 
 		if ($authRequired) {
 			
-			if (empty($this->username) || empty($this->token)) {
+			if (empty($this->_username) || empty($this->_token)) {
 				throw new Exception('Login credentials (username & token) are required for server authentication.');
 			}
 			
