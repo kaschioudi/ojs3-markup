@@ -31,7 +31,7 @@ class MarkupHandler extends Handler {
 		$this->addRoleAssignment(
 			array(ROLE_ID_MANAGER, ROLE_ID_SUB_EDITOR, ROLE_ID_ASSISTANT, ROLE_ID_REVIEWER, ROLE_ID_AUTHOR),
 			array('convertToXml', 'generateGalleyFiles', 'profile', 'save', 
-					'editor', 'xml', 'triggerConversion', 'fetchConversionJobStatus')
+					'editor', 'json', 'triggerConversion', 'fetchConversionJobStatus')
 		);
 
 		$this->addRoleAssignment(array(ROLE_ID_MANAGER), array('batch'));
@@ -159,11 +159,12 @@ class MarkupHandler extends Handler {
 		$fileId = $submissionFile->getFileId();
 		$editorTemplateFile = $this->_plugin->getTemplatePath() . 'editor.tpl';
 		$router = $request->getRouter();
-		$documentUrl = $router->url($request, null, 'markup', 'xml', null, 
-				array(
-						'submissionId' => $submissionFile->getSubmissionId(), 
-						'fileId' => $fileId)
-				);
+		$documentUrl = $router->url($request, null, 'markup', 'json', null, 
+			array(
+				'submissionId' => $submissionFile->getSubmissionId(), 
+				'fileId' => $fileId
+			)
+		);
 		
 		AppLocale::requireComponents(LOCALE_COMPONENT_APP_COMMON,  LOCALE_COMPONENT_PKP_MANAGER);
 		$templateMgr = TemplateManager::getManager($request);
@@ -173,14 +174,14 @@ class MarkupHandler extends Handler {
 	}
 	
 	/**
-	 * fetch xml document 
+	 * fetch json archive 
 	 * 
 	 * @param $args array
 	 * @param $request PKPRequest
 	 * 
 	 * @return string
 	 */
-	public function xml($args, $request) {
+	public function json($args, $request) {
 		$submissionFile = $this->getAuthorizedContextObject(ASSOC_TYPE_SUBMISSION_FILE);
 		if (!$submissionFile) {
 			fatalError('Invalid request');
@@ -209,11 +210,122 @@ class MarkupHandler extends Handler {
 			return new JSONMessage(true);
 		}
 		else {
-			$fileContent = file_get_contents($filePath);
-			return $fileContent;
+			$assets = array();
+			$manuscriptXml = file_get_contents($filePath);
+			$manifestXml = $this->_buildManifestXMLFromDocument($manuscriptXml, $assets);
+			// media url
+			$mediaInfos = $this->_buildMediaInfo($request, $assets);
+			$data = array(
+				'version'       => 'AE2F112D',
+				'resources'     => array(
+					'manifest.xml'      => array(
+						'encoding'      => "utf8",
+						'data'          => $manifestXml,
+						'size'          => strlen($manifestXml),
+						'createdAt'     => 0,
+						'updatedAt'     => 0,
+					),
+					'manuscript.xml'  => array(
+						'encoding'      => "utf8",
+						'data'          => $manuscriptXml,
+						'size'          => filesize($filePath),
+						'createdAt'     => 0,
+						'updatedAt'     => 0,
+					),
+				)
+			);
+			$data = array_merge($data, $mediaInfos);
+			header('Content-Type: application/json');
+			return json_encode($data);
 		}
 	}
-	
+
+	/**
+	 * Build media infos
+	 * 
+	 * @param $request PKPRquest
+	 * @param $assets array
+	 * @return array
+	 */
+	protected function _buildMediaInfo($request, $assets)
+	{
+		$infos = array();
+		$mediaDir = 'markup/media';		# TODO Where to fetch media images from in OJS?
+		$context = $request->getContext();
+		foreach ($assets as $asset) {
+			$path = $asset['path'];
+			$filePath = "{$mediaDir}/{$path}";
+			$base = $request->getIndexUrl() . '/' . $context->getPath() . '/markup';
+			$url = "{$base}/{$path}";
+			$infos[$path] = array(
+				'encoding'  => 'url',
+				'data'      => $url,
+				'size'      => 0, #filesize($filePath),
+				'createdAt' => 0, #filectime($filePath),
+				'updatedAt' => 0, #filectime($filePath),
+			);
+		}
+		return $infos;
+	}
+
+	/**
+	 * build manifest.xml from xml document
+	 *
+	 * @param $document string raw XML
+	 * @param $assets array list of figure metadata
+	 */
+	protected function _buildManifestXMLFromDocument($manuscriptXml, &$assets) {
+		$dom = new DOMDocument();
+		if (!$dom->loadXML($manuscriptXml)) {
+			fatalError("Unable to load XML document content in DOM in order to generate manifest XML.");
+		}
+
+		$k = 0;
+		$assets = array();
+		$figElements = $dom->getElementsByTagName('fig');
+		foreach ($figElements as $figure) {
+			$pos = $k+1;
+			$figItem = $figElements->item($k);
+			$graphic = $figItem->getElementsByTagName('graphic');
+
+			// figure without graphic?
+			if (!$figItem || !$graphic) {
+				continue;
+			}
+
+			// get fig id
+			$figId = null;
+			if ($figItem->hasAttribute('id')) {
+				$figId = $figItem->getAttribute('id');
+			}
+			else {
+				$figId = "ojs-fig-{$pos}";
+			}
+
+			// get path
+			$figGraphPath = $graphic->item(0)->getAttribute('xlink:href');
+
+			// save assets
+			$assets[] = array(
+				'id'    => $figId,
+				'type'  => 'image/jpg',
+				'path'  => $figGraphPath,
+			);
+
+			$k++;
+		}
+
+		$sxml = simplexml_load_string('<dar><documents><document id="manuscript" type="article" path="manuscript.xml" /></documents><assets></assets></dar>');
+		foreach ($assets as $asset) {
+			$assetNode = $sxml->assets->addChild('asset');
+			$assetNode->addAttribute('id', $asset['id']);
+			$assetNode->addAttribute('type', $asset['type']);
+			$assetNode->addAttribute('path', $asset['path']);
+		}
+
+		return $sxml->asXML();
+	}
+
 	/**
 	 * Trigger a job on xml server
 	 * 

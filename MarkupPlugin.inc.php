@@ -341,7 +341,7 @@ class MarkupPlugin extends GenericPlugin {
 				'convertToXml',
 				'generateGalleyFiles',
 				'editor',
-				'xml',
+				'json',
 				'save',
 				'profile',
 				'triggerConversion',

@@ -1,0 +1,5 @@
+body { overflow: hidden; }
+	html, body { height: 100%; }
+	.sc-app {
+		height: 100%;
+}
