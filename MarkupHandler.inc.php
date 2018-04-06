@@ -182,6 +182,8 @@ class MarkupHandler extends Handler {
 	 * @return string
 	 */
 	public function json($args, $request) {
+		$user = $request->getUser();
+		$context = $request->getContext();
 		$submissionFile = $this->getAuthorizedContextObject(ASSOC_TYPE_SUBMISSION_FILE);
 		if (!$submissionFile) {
 			fatalError('Invalid request');
@@ -197,17 +199,49 @@ class MarkupHandler extends Handler {
 		}
 		
 		$filePath = $submissionFile->getFilePath();
-		$postdata = file_get_contents("php://input");
-		
-		if (!empty($postdata)) {
-			$data = (array) json_decode($postdata);
-			if (empty($data['content'])) {
-				return new JSONMessage(false);
+		$postData = $this->_parseRawHttpRequest();
+		if (!empty($postData)) {
+			$archive = json_decode($postData['_archive']);
+			$resources = (array) $archive->resources;
+			if (isset($resources['manuscript.xml']) && is_object($resources['manuscript.xml'])) {
+				$manuscriptXml = $resources['manuscript.xml']->data;
+				// save xml to temp file
+				$tmpfname = tempnam(sys_get_temp_dir(), 'markup');
+				file_put_contents($tmpfname, $manuscriptXml);
+				// temp file to submission file
+				$submissionDao = Application::getSubmissionDAO();
+				$submissionId = $submissionFile->getSubmissionId();
+				$submission = $submissionDao->getById($submissionId);
+				$genreId = $submissionFile->getGenreId();
+				$fileSize = filesize($tmpfname);
+				
+				$submissionFileDao = DAORegistry::getDAO('SubmissionFileDAO');
+				$newSubmissionFile = $submissionFileDao->newDataObjectByGenreId($genreId);
+				$newSubmissionFile->setSubmissionId($submission->getId());
+				$newSubmissionFile->setSubmissionLocale($submission->getLocale());
+				$newSubmissionFile->setGenreId($genreId);
+				$newSubmissionFile->setFileStage($submissionFile->getFileStage());
+				$newSubmissionFile->setDateUploaded(Core::getCurrentDate());
+				$newSubmissionFile->setDateModified(Core::getCurrentDate());
+				$newSubmissionFile->setOriginalFileName($submissionFile->getOriginalFileName());
+				$newSubmissionFile->setUploaderUserId($user->getId());
+				$newSubmissionFile->setUserGroupId($submissionFile->getUserGroupId()); // TODO find and set logged in user group here
+				$newSubmissionFile->setFileSize($fileSize);
+				$newSubmissionFile->setFileType($submissionFile->getFileType());
+				$newSubmissionFile->setSourceFileId($submissionFile->getFileId());
+				$newSubmissionFile->setSourceRevision($submissionFile->getRevision());
+				$newSubmissionFile->setFileId($submissionFile->getFileId());
+				$newSubmissionFile->setRevision($submissionFile->getRevision()+1);
+				$insertedSubmissionFile = $submissionFileDao->insertObject($newSubmissionFile, $tmpfname);
+				
+				
+				return new JSONMessage(true, array(
+					'submissionId' => $insertedSubmissionFile->getSubmissionId(),
+					'fileId' => $insertedSubmissionFile->getFileIdAndRevision(),
+					'fileStage' => $insertedSubmissionFile->getFileStage(),
+				));
 			}
-			
-			$xmlheader = '<?xml version="1.0"?>'. PHP_EOL;
-			file_put_contents($filePath, $xmlheader . $data['content']);
-			return new JSONMessage(true);
+			return new JSONMessage(false);
 		}
 		else {
 			$assets = array();
@@ -238,6 +272,44 @@ class MarkupHandler extends Handler {
 			header('Content-Type: application/json');
 			return json_encode($data);
 		}
+	}
+
+	/**
+	 * Helper function to manually parse raw multipart/form-data associated to
+	 * texture PUT request on save
+	 */
+	protected function _parseRawHttpRequest()
+	{
+		$formData = array();
+		// read incoming data
+		$input = file_get_contents('php://input');
+		// grab multipart boundary from content type header
+		preg_match('/boundary=(.*)$/', $_SERVER['CONTENT_TYPE'], $matches);
+		$boundary = $matches[1];
+		// split content by boundary and get rid of last -- element
+		$a_blocks = preg_split("/-+$boundary/", $input);
+		array_pop($a_blocks);
+		// loop data blocks
+		foreach ($a_blocks as $id => $block)
+		{
+			if (empty($block))
+				continue;
+			// you'll have to var_dump $block to understand this and maybe replace \n or \r with a visibile char
+			// parse uploaded files
+			if (strpos($block, 'application/octet-stream') !== FALSE)
+			{
+				// match "name", then everything after "stream" (optional) except for prepending newlines
+				preg_match("/name=\"([^\"]*)\".*stream[\n|\r]+([^\n\r].*)?$/s", $block, $matches);
+			}
+			// parse all other fields
+			else
+			{
+				// match "name" and optional value in between newline sequences
+				preg_match('/name=\"([^\"]*)\"[\n|\r]+([^\n\r].*)?\r$/s', $block, $matches);
+			}
+			$formData[$matches[1]] = $matches[2];
+		}
+		return $formData;
 	}
 
 	/**
