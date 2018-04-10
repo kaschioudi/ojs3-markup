@@ -19,11 +19,16 @@
 	<link href='{$textureFolderPath}/css/editor.css' rel='stylesheet' type='text/css'/>
 </head>
 <body>
-	
+	<div id="toolbar">
+		<div id="feedback" class="save-feedback"></div>
+		<input class="save-btn" type="button" id="saveDocument" value="Save" />
+	</div>
+	<div id="editor"></div>
 	
 	<script type="text/javascript" src="{$textureFolderPath}/js/substance.js"></script>
 	<script type="text/javascript" src="{$textureFolderPath}/js/texture.js"></script>
+	<script type="text/javascript" src="{$textureFolderPath}/js/jquery.min.js"></script>
 	<script type="text/javascript" src="{$textureFolderPath}/js/editor.js"></script>
-	
+	<script type="text/javascript" src="{$textureFolderPath}/js/app.js"></script>
 </body>
 </html>
