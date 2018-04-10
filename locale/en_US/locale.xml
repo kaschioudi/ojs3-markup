@@ -35,11 +35,11 @@
 	<message key="plugins.generic.markup.errors.errorMessage">Unable to fetch article XML and HTML versions. The Open Typesetting Stack plugin needs to be enabled and the citation style needs to be provided in Journal Settings.</message>
 	<message key="plugins.generic.markup.optional.cslStyleName">Citation Style Name is optional.</message>
 	<message key="plugins.generic.markup.optional.markupHostPass">Password is optional.</message>
-	<message key="plugins.generic.markup.optional.markupHostUser">Username is optional.</message>
+	<message key="plugins.generic.markup.optional.markupHostUser">Email address is optional.</message>
 	<message key="plugins.generic.markup.optional.reviewVersion">Toggle for review version is optional.</message>
 	<message key="plugins.generic.markup.required.cslStyle">Citation Style is required.</message>
 	<message key="plugins.generic.markup.required.markupHostURL">Server address is required.</message>
-	<message key="plugins.generic.markup.required.markupHostUser">Username is required.</message>
+	<message key="plugins.generic.markup.required.markupHostUser">Email address is required.</message>
 	<message key="plugins.generic.markup.required.markupHostPass">Password is required.</message>
 	<message key="plugins.generic.markup.required.cslStyle">Citation Style is required.</message>
 	<message key="plugins.generic.markup.required.authType">Authentication type is required.</message>
@@ -57,7 +57,7 @@
 	<message key="plugins.generic.markup.settings.installed">Installed</message>
 	<message key="plugins.generic.markup.settings.markupHostAccountHelp"><![CDATA[<p><strong>PKP Open Typesetting Stack Plugin (Beta)</strong></p>
 
-<p>Thank you for your interest in OTS! This service, and associated OJS plugin, are both in beta, and expectations of reliability, availability and accuracy should be calibrated with that in mind. An Open Typesetting Stack User ID and API token are required to use the conversion service. You can register for our <strong>demo</strong> OTS instance <a href="http://pkp-xml-demo.lib.sfu.ca/" target="_blank">here</a>. For future news on non-demo, non-beta plans and services for this stack, please follow the <a href="https://pkp.sfu.ca/category/news/" target=_blank">PKP blog</a>, or keep an eye on the <a href="https://forum.pkp.sfu.ca" target="_blank">PKP support forum</a>. 
+<p>Thank you for your interest in OTS! This service, and associated OJS plugin, are both in beta, and expectations of reliability, availability and accuracy should be calibrated with that in mind. An Open Typesetting Stack email address and API token are required to use the conversion service. You can register for our <strong>demo</strong> OTS instance <a href="http://pkp-xml-demo.lib.sfu.ca/" target="_blank">here</a>. For future news on non-demo, non-beta plans and services for this stack, please follow the <a href="https://pkp.sfu.ca/category/news/" target=_blank">PKP blog</a>, or keep an eye on the <a href="https://forum.pkp.sfu.ca" target="_blank">PKP support forum</a>. 
 
 <p><strong>Bugs:</strong> We welcome bug reports and feature requests in the following locations (please search for similar bugs/requests before submitting, to reduce duplicates):</p>
 
@@ -70,7 +70,7 @@
 	<message key="plugins.generic.markup.settings.markupHostPass">API Token:</message>
 	<message key="plugins.generic.markup.settings.markupHostURL">Open Typesetting Stack URL:</message>
 	<message key="plugins.generic.markup.settings.markupHostURLHelp">OJS will use this Open Typesetting Stack instance. Normally you should not change this setting.</message>
-	<message key="plugins.generic.markup.settings.markupHostUser">User ID:</message>
+	<message key="plugins.generic.markup.settings.markupHostUser">Email:</message>
 	<message key="plugins.generic.markup.settings.notInstalled">Not installed</message>
 	<message key="plugins.generic.markup.settings.pathInfo">URL Paths</message>
 	<message key="plugins.generic.markup.settings.pathInfoHelp">"Enabled" is the default selection if supported by your server. If set to "Disabled," images may be missing from OTS output.</message>
@@ -87,7 +87,7 @@
 	<message key="plugins.generic.markup.settings.authType">Type of authentication:</message>
 	<message key="plugins.generic.markup.settings.siteAuthArea">Login credentials for journal-wide authentication:</message>
 	<message key="plugins.generic.markup.settings.userAuthArea">OTS login credentials</message>
-	<message key="plugins.generic.markup.settings.authTypeFieldHelp">Specify whether you want to use site-wide or user-specific authentication to OTS. Journal-wide authentication is simpler, allowing you to share a single administrator-level OTS User ID across your entire journal. However, if you anticipate individual authors wanting to access OTS directly (rather than through OJS) and want to avoid any potential issues around blind review, you can select user-specific authentication, which requires them to each specify their own OTS User ID in their OJS user preferences. Most people will want to use journal-wide authentication.</message>
+	<message key="plugins.generic.markup.settings.authTypeFieldHelp">Specify whether you want to use site-wide or user-specific authentication to OTS. Journal-wide authentication is simpler, allowing you to share a single administrator-level OTS email address across your entire journal. However, if you anticipate individual authors wanting to access OTS directly (rather than through OJS) and want to avoid any potential issues around blind review, you can select user-specific authentication, which requires them to each specify their own OTS email address in their OJS user preferences. Most people will want to use journal-wide authentication.</message>
 	<message key="plugins.generic.markup.settings.authTypeSite">Journal-wide authentication</message>
 	<message key="plugins.generic.markup.settings.authTypeUser">User-specific authentication</message>
 	<message key="plugins.generic.markup.links.convertToXml">Convert to XML</message>
