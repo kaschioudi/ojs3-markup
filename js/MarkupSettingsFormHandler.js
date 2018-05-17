@@ -1,8 +1,8 @@
 /**
  * @file js/MarkupSettingsFormHandler.js
  *
- * Copyright (c) 2014-2017 Simon Fraser University
- * Copyright (c) 2000-2017 John Willinsky
+ * Copyright (c) 2014-2018 Simon Fraser University
+ * Copyright (c) 2000-2018 John Willinsky
  * Distributed under the GNU GPL v2. For full terms see the file docs/COPYING.
  *
  * @package plugins.generic.markup
@@ -58,7 +58,12 @@
 			loadCitationStyles_ = 
 			function(cslStyleSelection) {
 
-				var url = $('input[name=markupHostURL]').val();
+				var url = $('input[id=cslStyleURL]').val();
+				// in case where default citation style is read from config.inc.php, 
+				// this input field is not available in the form so no need for citation styles loading
+				if (url === undefined) {
+					return;
+				}
 
 				// stop here if host url not available
 				if (url == '')

@@ -3,8 +3,8 @@
 /**
  * @file plugins/generic/markup/MarkupHandler.inc.php
  *
- * Copyright (c) 2014-2017 Simon Fraser University
- * Copyright (c) 2003-2017 John Willinsky
+ * Copyright (c) 2014-2018 Simon Fraser University
+ * Copyright (c) 2003-2018 John Willinsky
  * Distributed under the GNU GPL v2. For full terms see the file docs/COPYING.
  *
  * @class MarkupHandler
@@ -17,7 +17,7 @@ import('classes.handler.Handler');
 
 class MarkupHandler extends Handler {
 	/** @var MarkupPlugin The Document markup plugin */
-	protected $plugin;
+	protected $_plugin;
 	
 	/**
 	 * Constructor
@@ -26,12 +26,12 @@ class MarkupHandler extends Handler {
 		parent::__construct();	
 		
 		// set reference to markup plugin
-		$this->plugin = PluginRegistry::getPlugin('generic', 'markupplugin'); 
+		$this->_plugin = PluginRegistry::getPlugin('generic', 'markupplugin'); 
 		
 		$this->addRoleAssignment(
 			array(ROLE_ID_MANAGER, ROLE_ID_SUB_EDITOR, ROLE_ID_ASSISTANT, ROLE_ID_REVIEWER, ROLE_ID_AUTHOR),
 			array('convertToXml', 'generateGalleyFiles', 'profile', 'save', 
-					'editor', 'xml', 'triggerConversion', 'fetchConversionJobStatus')
+					'editor', 'json', 'triggerConversion', 'fetchConversionJobStatus')
 		);
 
 		$this->addRoleAssignment(array(ROLE_ID_MANAGER), array('batch'));
@@ -99,7 +99,7 @@ class MarkupHandler extends Handler {
 	protected function _conversion($args, $request, $params) {
 		$context = $request->getContext();
 		$dispatcher = $request->getDispatcher();
-		$authType = $this->plugin->getSetting($context->getId(), 'authType');
+		$authType = $this->_plugin->getSetting($context->getId(), 'authType');
 		
 		$submissionFile = $this->getAuthorizedContextObject(ASSOC_TYPE_SUBMISSION_FILE);
 		if (!$submissionFile) {
@@ -109,17 +109,25 @@ class MarkupHandler extends Handler {
 		$fileId = $submissionFile->getFileId();
 		$stageId = $params['stage'];
 		
-		$pluginIsConfigured = is_null($authType) ? false : true;
+		$pluginIsConfigured = false;
+		$this->_plugin->import('classes.MarkupConversionHelper');
+		$configCreds = MarkupConversionHelper::readCredentialsFromConfig();
+		if (MarkupConversionHelper::canUseCredentialsFromConfig($configCreds)) {
+			$pluginIsConfigured = true;
+		}
+		else {
+			$pluginIsConfigured = is_null($authType) ? false : true;
+		}
 		$loginCredentialsConfigured = true;
 		
 		// Import host, user and password variables into the current symbol table from an array
-		extract($this->plugin->getOTSLoginParametersForJournal($context->getId(), $request->getUser()));
+		extract($this->_plugin->getOTSLoginParametersForJournal($context->getId(), $request->getUser()));
 		if (is_null($user) || is_null($password)) {
 			$loginCredentialsConfigured = false;
 		}
 		
 		$conversionTriggerUrl = $dispatcher->url($request, ROUTE_PAGE, null, 'markup', 'triggerConversion', null, array('submissionId' => $submissionFile->getSubmissionId(), 'fileId' => $fileId, 'stage' => $stageId, 'target' => $params['target']));
-		$editorTemplateFile = $this->plugin->getTemplatePath() . 'convert.tpl';
+		$editorTemplateFile = $this->_plugin->getTemplatePath() . 'convert.tpl';
 		AppLocale::requireComponents(LOCALE_COMPONENT_APP_COMMON,  LOCALE_COMPONENT_PKP_MANAGER);
 		$templateMgr = TemplateManager::getManager($request);
 		$templateMgr->assign('fileId', $fileId);
@@ -127,7 +135,7 @@ class MarkupHandler extends Handler {
 		$templateMgr->assign('pluginIsConfigured', $pluginIsConfigured);
 		$templateMgr->assign('loginCredentialsConfigured', $loginCredentialsConfigured);
 		$templateMgr->assign('conversionTriggerUrl', $conversionTriggerUrl);
-		$templateMgr->assign('pluginJavaScriptURL', $this->plugin->getJsUrl($request));
+		$templateMgr->assign('pluginJavaScriptURL', $this->_plugin->getJsUrl($request));
 		$output = $templateMgr->fetch($editorTemplateFile);
 		return new JSONMessage(true, $output);
 	}
@@ -149,30 +157,33 @@ class MarkupHandler extends Handler {
 		}
 		
 		$fileId = $submissionFile->getFileId();
-		$editorTemplateFile = $this->plugin->getTemplatePath() . 'editor.tpl';
+		$editorTemplateFile = $this->_plugin->getTemplatePath() . 'editor.tpl';
 		$router = $request->getRouter();
-		$documentUrl = $router->url($request, null, 'markup', 'xml', null, 
-				array(
-						'submissionId' => $submissionFile->getSubmissionId(), 
-						'fileId' => $fileId)
-				);
+		$documentUrl = $router->url($request, null, 'markup', 'json', null, 
+			array(
+				'submissionId' => $submissionFile->getSubmissionId(), 
+				'fileId' => $fileId
+			)
+		);
 		
 		AppLocale::requireComponents(LOCALE_COMPONENT_APP_COMMON,  LOCALE_COMPONENT_PKP_MANAGER);
 		$templateMgr = TemplateManager::getManager($request);
 		$templateMgr->assign('documentUrl', $documentUrl);
-		$templateMgr->assign('textureFolderPath', $this->plugin->getTextureFolderUrl($request));
+		$templateMgr->assign('textureFolderPath', $this->_plugin->getTextureFolderUrl($request));
 		return $templateMgr->fetch($editorTemplateFile);
 	}
 	
 	/**
-	 * fetch xml document 
+	 * fetch json archive 
 	 * 
 	 * @param $args array
 	 * @param $request PKPRequest
 	 * 
 	 * @return string
 	 */
-	public function xml($args, $request) {
+	public function json($args, $request) {
+		$user = $request->getUser();
+		$context = $request->getContext();
 		$submissionFile = $this->getAuthorizedContextObject(ASSOC_TYPE_SUBMISSION_FILE);
 		if (!$submissionFile) {
 			fatalError('Invalid request');
@@ -183,29 +194,210 @@ class MarkupHandler extends Handler {
 		
 		$submissionFileDao = DAORegistry::getDAO('SubmissionFileDAO');
 		if (empty($submissionFile)) {
-			echo __('plugins.generic.markup.archive.no_article'); // TODO custom message
+			echo __('plugins.generic.markup.archive.noArticle'); // TODO custom message
 			exit;
 		}
 		
 		$filePath = $submissionFile->getFilePath();
-		$postdata = file_get_contents("php://input");
-		
-		if (!empty($postdata)) {
-			$data = (array) json_decode($postdata);
-			if (empty($data['content'])) {
-				return new JSONMessage(false);
+		$postData = $this->_parseRawHttpRequest();
+		if (!empty($postData)) {
+			$archive = json_decode($postData['_archive']);
+			$resources = (array) $archive->resources;
+			if (isset($resources['manuscript.xml']) && is_object($resources['manuscript.xml'])) {
+				$manuscriptXml = $resources['manuscript.xml']->data;
+				// save xml to temp file
+				$tmpfname = tempnam(sys_get_temp_dir(), 'markup');
+				file_put_contents($tmpfname, $manuscriptXml);
+				// temp file to submission file
+				$submissionDao = Application::getSubmissionDAO();
+				$submissionId = $submissionFile->getSubmissionId();
+				$submission = $submissionDao->getById($submissionId);
+				$genreId = $submissionFile->getGenreId();
+				$fileSize = filesize($tmpfname);
+				
+				$submissionFileDao = DAORegistry::getDAO('SubmissionFileDAO');
+				$newSubmissionFile = $submissionFileDao->newDataObjectByGenreId($genreId);
+				$newSubmissionFile->setSubmissionId($submission->getId());
+				$newSubmissionFile->setSubmissionLocale($submission->getLocale());
+				$newSubmissionFile->setGenreId($genreId);
+				$newSubmissionFile->setFileStage($submissionFile->getFileStage());
+				$newSubmissionFile->setDateUploaded(Core::getCurrentDate());
+				$newSubmissionFile->setDateModified(Core::getCurrentDate());
+				$newSubmissionFile->setOriginalFileName($submissionFile->getOriginalFileName());
+				$newSubmissionFile->setUploaderUserId($user->getId());
+				$newSubmissionFile->setUserGroupId($submissionFile->getUserGroupId()); // TODO find and set logged in user group here
+				$newSubmissionFile->setFileSize($fileSize);
+				$newSubmissionFile->setFileType($submissionFile->getFileType());
+				$newSubmissionFile->setSourceFileId($submissionFile->getFileId());
+				$newSubmissionFile->setSourceRevision($submissionFile->getRevision());
+				$newSubmissionFile->setFileId($submissionFile->getFileId());
+				$newSubmissionFile->setRevision($submissionFile->getRevision()+1);
+				$insertedSubmissionFile = $submissionFileDao->insertObject($newSubmissionFile, $tmpfname);
+				
+				
+				return new JSONMessage(true, array(
+					'submissionId' => $insertedSubmissionFile->getSubmissionId(),
+					'fileId' => $insertedSubmissionFile->getFileIdAndRevision(),
+					'fileStage' => $insertedSubmissionFile->getFileStage(),
+				));
 			}
-			
-			$xmlheader = '<?xml version="1.0"?>'. PHP_EOL;
-			file_put_contents($filePath, $xmlheader . $data['content']);
-			return new JSONMessage(true);
+			return new JSONMessage(false);
 		}
 		else {
-			$fileContent = file_get_contents($filePath);
-			return $fileContent;
+			$assets = array();
+			$manuscriptXml = file_get_contents($filePath);
+			$manifestXml = $this->_buildManifestXMLFromDocument($manuscriptXml, $assets);
+			// media url
+			$mediaInfos = $this->_buildMediaInfo($request, $assets);
+			$data = array(
+				'version'       => 'AE2F112D',
+				'resources'     => array(
+					'manifest.xml'      => array(
+						'encoding'      => "utf8",
+						'data'          => $manifestXml,
+						'size'          => strlen($manifestXml),
+						'createdAt'     => 0,
+						'updatedAt'     => 0,
+					),
+					'manuscript.xml'  => array(
+						'encoding'      => "utf8",
+						'data'          => $manuscriptXml,
+						'size'          => filesize($filePath),
+						'createdAt'     => 0,
+						'updatedAt'     => 0,
+					),
+				)
+			);
+			$data = array_merge($data, $mediaInfos);
+			header('Content-Type: application/json');
+			return json_encode($data);
 		}
 	}
-	
+
+	/**
+	 * Helper function to manually parse raw multipart/form-data associated to
+	 * texture PUT request on save
+	 */
+	protected function _parseRawHttpRequest()
+	{
+		$formData = array();
+		// read incoming data
+		$input = file_get_contents('php://input');
+		// grab multipart boundary from content type header
+		preg_match('/boundary=(.*)$/', $_SERVER['CONTENT_TYPE'], $matches);
+		$boundary = $matches[1];
+		// split content by boundary and get rid of last -- element
+		$a_blocks = preg_split("/-+$boundary/", $input);
+		array_pop($a_blocks);
+		// loop data blocks
+		foreach ($a_blocks as $id => $block)
+		{
+			if (empty($block))
+				continue;
+			// you'll have to var_dump $block to understand this and maybe replace \n or \r with a visibile char
+			// parse uploaded files
+			if (strpos($block, 'application/octet-stream') !== FALSE)
+			{
+				// match "name", then everything after "stream" (optional) except for prepending newlines
+				preg_match("/name=\"([^\"]*)\".*stream[\n|\r]+([^\n\r].*)?$/s", $block, $matches);
+			}
+			// parse all other fields
+			else
+			{
+				// match "name" and optional value in between newline sequences
+				preg_match('/name=\"([^\"]*)\"[\n|\r]+([^\n\r].*)?\r$/s', $block, $matches);
+			}
+			$formData[$matches[1]] = $matches[2];
+		}
+		return $formData;
+	}
+
+	/**
+	 * Build media infos
+	 * 
+	 * @param $request PKPRquest
+	 * @param $assets array
+	 * @return array
+	 */
+	protected function _buildMediaInfo($request, $assets)
+	{
+		$infos = array();
+		$mediaDir = 'markup/media';		# TODO Where to fetch media images from in OJS?
+		$context = $request->getContext();
+		foreach ($assets as $asset) {
+			$path = $asset['path'];
+			$filePath = "{$mediaDir}/{$path}";
+			$base = $request->getIndexUrl() . '/' . $context->getPath() . '/markup';
+			$url = "{$base}/{$path}";
+			$infos[$path] = array(
+				'encoding'  => 'url',
+				'data'      => $url,
+				'size'      => 0, #filesize($filePath),
+				'createdAt' => 0, #filectime($filePath),
+				'updatedAt' => 0, #filectime($filePath),
+			);
+		}
+		return $infos;
+	}
+
+	/**
+	 * build manifest.xml from xml document
+	 *
+	 * @param $document string raw XML
+	 * @param $assets array list of figure metadata
+	 */
+	protected function _buildManifestXMLFromDocument($manuscriptXml, &$assets) {
+		$dom = new DOMDocument();
+		if (!$dom->loadXML($manuscriptXml)) {
+			fatalError("Unable to load XML document content in DOM in order to generate manifest XML.");
+		}
+
+		$k = 0;
+		$assets = array();
+		$figElements = $dom->getElementsByTagName('fig');
+		foreach ($figElements as $figure) {
+			$pos = $k+1;
+			$figItem = $figElements->item($k);
+			$graphic = $figItem->getElementsByTagName('graphic');
+
+			// figure without graphic?
+			if (!$figItem || !$graphic) {
+				continue;
+			}
+
+			// get fig id
+			$figId = null;
+			if ($figItem->hasAttribute('id')) {
+				$figId = $figItem->getAttribute('id');
+			}
+			else {
+				$figId = "ojs-fig-{$pos}";
+			}
+
+			// get path
+			$figGraphPath = $graphic->item(0)->getAttribute('xlink:href');
+
+			// save assets
+			$assets[] = array(
+				'id'    => $figId,
+				'type'  => 'image/jpg',
+				'path'  => $figGraphPath,
+			);
+
+			$k++;
+		}
+
+		$sxml = simplexml_load_string('<dar><documents><document id="manuscript" type="article" path="manuscript.xml" /></documents><assets></assets></dar>');
+		foreach ($assets as $asset) {
+			$assetNode = $sxml->assets->addChild('asset');
+			$assetNode->addAttribute('id', $asset['id']);
+			$assetNode->addAttribute('type', $asset['type']);
+			$assetNode->addAttribute('path', $asset['path']);
+		}
+
+		return $sxml->asXML();
+	}
+
 	/**
 	 * Trigger a job on xml server
 	 * 
@@ -224,10 +416,10 @@ class MarkupHandler extends Handler {
 		$stage = $request->getUserVar('stage');
 			
 		$target = $request->getUserVar('target');
-		$jobId = $this->plugin->fetchGateway($fileId, $stage, $target);
+		$jobId = $this->_plugin->fetchGateway($fileId, $stage, $target);
 		
 		$journal = $request->getJournal();
-		$url = $this->plugin->getSetting($journal->getid(), 'markupHostURL');
+		$url = $this->_plugin->getSetting($journal->getid(), 'markupHostURL');
 		$message = __('plugins.generic.markup.job.success', array('url' => $url));
 		
 		$router = $request->getRouter();
@@ -235,7 +427,7 @@ class MarkupHandler extends Handler {
 		$conversionJobStatusCheckUrl = $dispatcher->url($request, ROUTE_PAGE, null, 'markup', 
 			'fetchConversionJobStatus', null, array('submissionId' => $submissionFile->getSubmissionId(), 'fileId' => $submissionFile->getFileId(), 'job' => $jobId));
 		
-		$templateFile = $this->plugin->getTemplatePath() . 'convert-result.tpl';
+		$templateFile = $this->_plugin->getTemplatePath() . 'convert-result.tpl';
 		AppLocale::requireComponents(LOCALE_COMPONENT_APP_COMMON,  LOCALE_COMPONENT_PKP_MANAGER);
 		$templateMgr = TemplateManager::getManager($request);
 		$templateMgr->assign('jobId', $jobId);
@@ -263,9 +455,9 @@ class MarkupHandler extends Handler {
 		$xmlJobId = $jobInfo->getXmlJobId();
 		
 		// Import host, user and password variables into the current symbol table from an array
-		extract($this->plugin->getOTSLoginParametersForJournal($journal->getId(), $request->getUser()));
+		extract($this->_plugin->getOTSLoginParametersForJournal($journal->getId(), $request->getUser()));
 		
-		$this->plugin->import('classes.XMLPSWrapper');
+		$this->_plugin->import('classes.XMLPSWrapper');
 		$xmlpsWrapper = new XMLPSWrapper($host, $user, $password);
 		$code = (int) $xmlpsWrapper->getJobStatus($xmlJobId);
 		$status = $xmlpsWrapper->statusCodeToLabel($code);
@@ -308,8 +500,8 @@ class MarkupHandler extends Handler {
 		$templateMgr = TemplateManager::getManager($request);
 		$templateMgr->register_function('plugin_url', array($this, 'smartyPluginUrl'));
 		
-		$this->plugin->import('MarkupProfileSettingsForm');
-		$form = new MarkupProfileSettingsForm($this->plugin, $context->getId());
+		$this->_plugin->import('MarkupProfileSettingsForm');
+		$form = new MarkupProfileSettingsForm($this->_plugin, $context->getId());
 		if ($request->getUserVar('save')) {
 			$form->readInputData();
 			if ($form->validate()) {
@@ -326,107 +518,6 @@ class MarkupHandler extends Handler {
 			$form->initData();
 		}
 		return new JSONMessage(true, $form->fetch($request));
-	}
-
-	protected function buildSubmissionMetadata($contextId) {
-		$metadata = array();
-		$locale = AppLocale::getLocale();
-		$genreDao = DAORegistry::getDAO('GenreDAO');
-		$submissionDao = DAORegistry::getDAO('ArticleDAO');
-		$submissionFileDao = DAORegistry::getDAO('SubmissionFileDAO');
-		$submissions = $submissionDao->getByContextId($contextId);
-		import('lib.pkp.classes.file.SubmissionFileManager');
-		$validFileExtensions = array('pdf','doc','docx','xml');
-		$pdfGalleyFileId = null;
-		$pdfProductionReadyFileId = null;
-		$xmlProductionReadyFileId = null;
-
-		import('lib.pkp.classes.submission.SubmissionFile'); // Bring in const
-		// TODO Validate this with Alec
-		// do we need more const here?
-		// Do these values make sense?
-		// Unable to find titles for SUBMISSION_FILE_FAIR_COPY and SUBMISSION_FILE_PUBLIC
-		$fileStageNames = array(
-			SUBMISSION_FILE_SUBMISSION 		=> __('submission.submit.submissionFiles'),
-			SUBMISSION_FILE_REVIEW_FILE 		=> __('reviewer.submission.reviewFiles'),
-			SUBMISSION_FILE_COPYEDIT 		=> __('submission.copyedited'),
-			SUBMISSION_FILE_PROOF 			=> __('submission.pageProofs'),
-			SUBMISSION_FILE_PRODUCTION_READY	=> __('editor.submission.production.productionReadyFiles'),
-			SUBMISSION_FILE_ATTACHMENT		=> __('grid.reviewAttachments.title'),
-			SUBMISSION_FILE_FAIR_COPY		=> 'SUBMISSION_FILE_FAIR_COPY',//__(''),
-			SUBMISSION_FILE_QUERY			=> __('submission.queries.attachedFiles'),
-			SUBMISSION_FILE_REVIEW_ATTACHMENT	=> __('grid.reviewAttachments.title'),
-			SUBMISSION_FILE_REVIEW_REVISION		=> __('editor.submission.revisions'),
-			SUBMISSION_FILE_PUBLIC			=> 'SUBMISSION_FILE_PUBLIC',//__(''),
-		);
-
-		while ($submission = $submissions->next()) {
-			$hasXmlInProductionReady = false;
-			$sMetadata = array(
-				'id'	=> $submission->getId(),
-				'stage'	=> $submission->getStageId(),
-				'title' => $submission->getFullTitle($locale),
-				'files' => array(),
-			);
-			$submissionFileManager = new SubmissionFileManager($contextId, $submission->getId());
-			$submissionFiles = $submissionFileDao->getBySubmissionId($submission->getId());
-			foreach ($submissionFiles as $submissionFile) {
-				$genre = $genreDao->getById($submissionFile->getGenreId());
-				$fileStage = $submissionFile->getFileStage();
-				$fileExtension = strtolower($submissionFile->getExtension());
-				if (intval($genre->getCategory()) != GENRE_CATEGORY_DOCUMENT)
-					continue;
-				if (!in_array($fileExtension, $validFileExtensions))
-					continue;
-				// check whether xml file is present in production ready
-				if (($fileExtension == 'xml') && ($fileStage == SUBMISSION_FILE_PRODUCTION_READY)) {
-					$hasXmlInProductionReady = true;
-				}
-
-				// check if there's a publish pdf in galleys or production ready
-				if ($fileExtension == 'pdf') { 
-					if ($fileStage == SUBMISSION_FILE_PROOF) {
-						$pdfGalleyFileId = $submissionFile->getFileId();
-					}
-					if ($fileStage == SUBMISSION_FILE_PRODUCTION_READY) {
-						$pdfProductionReadyFileId = $submissionFile->getFileId();
-					}
-				}
-				if (in_array($fileExtension, array('doc','docx'))) {
-					if ($fileStage == SUBMISSION_FILE_PRODUCTION_READY) {
-						$xmlProductionReadyFileId = $submissionFile->getFileId();
-					}
-				}
-				$sMetadata['files'][] = array(
-					'fileId' 	=> $submissionFile->getFileId(),
-					'filename'	=> $submissionFile->getName($locale),
-					'fileStage'	=> $fileStageNames[$fileStage],
-				);
-			}
-
-			// decide on submission file to select by default
-			$defaultSubmissionFileId = 0;
-			if (!$hasXmlInProductionReady) {
-				if (!is_null($pdfGalleyFileId)) {
-					$defaultSubmissionFileId = $pdfGalleyFileId;
-				}
-				elseif (!is_null($pdfProductionReadyFileId)) {
-					$defaultSubmissionFileId = $pdfProductionReadyFileId;
-				}
-				elseif (!is_null($xmlProductionReadyFileId)) {
-					$defaultSubmissionFileId = $xmlProductionReadyFileId;
-				}
-				else {
-					$defaultSubmissionFileId = 0;
-				}
-			}
-			$sMetadata['defaultSubmissionFileId'] = $defaultSubmissionFileId;
-			$sMetadata['pdfGalleyFileId'] = $pdfGalleyFileId;
-			$sMetadata['pdfProductionReadyFileId'] = $pdfProductionReadyFileId;
-			$sMetadata['xmlProductionReadyFileId'] = $xmlProductionReadyFileId;
-			$metadata[] = $sMetadata;
-		}
-		return $metadata;
 	}
 
 	/**
@@ -446,13 +537,13 @@ class MarkupHandler extends Handler {
 			LOCALE_COMPONENT_APP_COMMON
 		);
 
-		$this->plugin->import('classes.MarkupBatchConversionHelper');
+		$this->_plugin->import('classes.MarkupBatchConversionHelper');
 		$batchConversionHelper = new MarkupBatchConversionHelper();
 
 		$context = $request->getContext();
 		$dispatcher = $request->getDispatcher();
 		$templateMgr = TemplateManager::getManager();
-		$submissionMetadata = $this->buildSubmissionMetadata($context->getId());
+		$submissionMetadata = $batchConversionHelper->buildSubmissionMetadataByContext($context->getId());
 		$batchConversionStatusUrl = $dispatcher->url($request, ROUTE_PAGE, null, 'batch', 'fetchConversionStatus', null);
 		$startConversionUrl = $dispatcher->url($request, ROUTE_PAGE, null, 'batch', 'startConversion', null);
 		$templateMgr->assign('batchConversionStatusUrl', $batchConversionStatusUrl);
@@ -466,7 +557,7 @@ class MarkupHandler extends Handler {
 		}
 		$templateMgr->assign('submissions', $submissionMetadata);
 		$templateMgr->assign('batchConversionIsRunning', $batchConversionHelper->isRunning());
-		$templateFile = $this->plugin->getTemplatePath() . 'batchConversion.tpl';
+		$templateFile = $this->_plugin->getTemplatePath() . 'batchConversion.tpl';
 		$output = $templateMgr->fetch($templateFile);
 		return new JSONMessage(true, $output);
 	}

@@ -3,8 +3,8 @@
 /**
  * @file plugins/generic/markup/MarkupGatewayPlugin.inc.php
  *
- * Copyright (c) 2003-2017 Simon Fraser University
- * Copyright (c) 2003-2017 John Willinsky
+ * Copyright (c) 2003-2018 Simon Fraser University
+ * Copyright (c) 2003-2018 John Willinsky
  * Distributed under the GNU GPL v2. For full terms see the file docs/COPYING.
  *
  * @class MarkupGatewayPlugin
@@ -19,34 +19,31 @@ import('lib.pkp.classes.plugins.GatewayPlugin');
 class MarkupGatewayPlugin extends GatewayPlugin {
 	
 	/** @var $parentPluginName string Name of parent plugin */
-	protected $parentPluginName = null;
+	protected $_parentPluginName = null;
 
 	/** @var $user User user object */
-	protected $user = null;
+	protected $_user = null;
 
 	/** @var $plugin MarkupPlugin Reference to markup plugin */
-	protected $plugin = null;
+	protected $_plugin = null;
 
 	/** @var $xmlpsWrapper XMLPSWrapper Reference to wrapper class for OTS Service */
-	protected $xmlpsWrapper = null;
+	protected $_xmlpsWrapper = null;
 
 	/** @var $fileId int submission file id */
-	protected $fileId = null;
+	protected $_fileId = null;
 
 	/** @var $stage int submission stage */
-	protected $stage = null;
+	protected $_stage = null;
 
 	/** @var $jobId string job identifier */
-	protected $jobId = null;
-
-	/** @var $conversionHelper MarkupConversionHelper Conversion helper object */
-	protected $conversionHelper = null;
+	protected $_jobId = null;
 
 	function __construct($parentPluginName) {
 		parent::__construct();
 
-		$this->parentPluginName = $parentPluginName;
-		$this->plugin = PluginRegistry::getPlugin('generic', $parentPluginName);
+		$this->_parentPluginName = $parentPluginName;
+		$this->_plugin = PluginRegistry::getPlugin('generic', $parentPluginName);
 	}
 	
 	/**
@@ -56,10 +53,10 @@ class MarkupGatewayPlugin extends GatewayPlugin {
 	 */
 	protected function _initXMLPSWrapper($request) {
 		$this->import('classes.MarkupConversionHelper');
-		$this->xmlpsWrapper = MarkupConversionHelper::getOTSWrapperInstance(
-			$this->plugin,
-			$request,
-			$this->user
+		$this->_xmlpsWrapper = MarkupConversionHelper::getOTSWrapperInstance(
+			$this->_plugin,
+			$request->getJournal(),
+			$this->_user
 		);
 	}
 	
@@ -106,7 +103,7 @@ class MarkupGatewayPlugin extends GatewayPlugin {
 	 * @return MarkupPlugin Markup plugin object
 	 */
 	function &getMarkupPlugin() {
-		return $this->plugin;
+		return $this->_plugin;
 	}
 	
 	/**
@@ -205,14 +202,14 @@ class MarkupGatewayPlugin extends GatewayPlugin {
 		// Make sure we're within a Journal context
 		$journal = $this->getRequest()->getJournal();
 		if (!$journal) {
-			echo __('plugins.generic.markup.archive.no_journal');
+			echo __('plugins.generic.markup.archive.noJournal');
 			exit;
 		}
 
 		// load submission
 		$fileId = isset($args['fileId']) ? (int) $args['fileId'] : false;
 		if (!$fileId) {
-			echo __('plugins.generic.markup.archive.no_articleID');
+			echo __('plugins.generic.markup.archive.noArticleID');
 			exit;
 		}
 
@@ -220,28 +217,41 @@ class MarkupGatewayPlugin extends GatewayPlugin {
 		$userDao = DAORegistry::getDAO('UserDAO');
 		$userId = isset($args['userId']) ? (int) $args['userId'] : false;
 		if (!$userId) {
-			fatalError(__('plugins.generic.markup.archive.no_articleID'));
+			fatalError(__('plugins.generic.markup.archive.noArticleID'));
+			exit;
+		}
+
+		// access key
+		$accessKey = isset($args['accessKey']) ? $args['accessKey'] : null;
+		if (empty($accessKey)) {
+			fatalError(__('plugins.generic.markup.archive.noAccessKey'));
 			exit;
 		}
 
 		$submissionFileDao = DAORegistry::getDAO('SubmissionFileDAO');
 		$submissionFile = $submissionFileDao->getLatestRevision($fileId);
 		if (empty($submissionFile)) {
-			echo __('plugins.generic.markup.archive.no_article');
+			echo __('plugins.generic.markup.archive.noArticle');
 			exit;
 		}
 
-		$this->fileId = $fileId;
-		$this->user = $userDao->getById($args['userId']);
-		$this->jobId = isset($args['jobId']) ? $args['jobId'] : '';
-		$this->stage = isset($args['stage']) ? (int) $args['stage'] : false;
+		$this->_fileId = $fileId;
+		$this->_user = $userDao->getById($args['userId']);
+		$this->_jobId = isset($args['jobId']) ? $args['jobId'] : '';
+		$this->_stage = isset($args['stage']) ? (int) $args['stage'] : false;
+
+		// validate access key
+		$this->_plugin->import('classes.MarkupConversionHelper');
+		if (!$this->_user || !MarkupConversionHelper::validateAccessToken($this->_user, $accessKey)) {
+			fatalError(__('plugins.generic.markup.archive.noAccessKey'));
+			exit;
+		}
 
 		// initialize OTS wrapper
 		$this->_initXMLPSWrapper($request);
 
 		// initialize conversion helper object
-		$this->import('classes.MarkupConversionHelper');
-		$this->conversionHelper = new MarkupConversionHelper($this->plugin, $this->xmlpsWrapper, $this->user);
+		$this->_conversionHelper = new MarkupConversionHelper($this->_plugin, $this->_xmlpsWrapper, $this->_user);
 
 		// process
 		$stage = (int)$args['stage'];
@@ -268,8 +278,8 @@ class MarkupGatewayPlugin extends GatewayPlugin {
 		$tmpZipFile = null;
 
 		try {
-			$jobId = $this->conversionHelper->triggerConversion($journal, $submissionFile, $stage, $target, $this->jobId);
-			$tmpZipFile = $this->conversionHelper->retrieveConversionJobArchive($submissionFile, $jobId);
+			$jobId = $this->_conversionHelper->triggerConversion($journal, $submissionFile, $stage, $target, $this->_jobId);
+			$tmpZipFile = $this->_conversionHelper->retrieveConversionJobArchive($submissionFile, $jobId);
 			if (($tmpZipFile == false) || !file_exists($tmpZipFile)) {
 				return;
 			}
@@ -286,36 +296,34 @@ class MarkupGatewayPlugin extends GatewayPlugin {
 
 		// Extract archive
 		$extractionPath = null;
-		if (($extractionPath = $this->conversionHelper->unzipArchive($tmpZipFile)) === false) {
+		if (($extractionPath = $this->_conversionHelper->unzipArchive($tmpZipFile)) === false) {
 			return;
 		}
 
 		// find current user's group
 		$userGroupDao = DAORegistry::getDAO('UserGroupDAO');
-		$userGroups = $userGroupDao->getByUserId($this->user->getId(), $journal->getId());
+		$userGroups = $userGroupDao->getByUserId($this->_user->getId(), $journal->getId());
 		$userGroup = $userGroups->next();
 
 		$fileName = "document" . '__' . date('Y-m-d_h:i:s');
 		switch ($target) {
 			case 'xml-conversion':
-				$this->conversionHelper->handleArchiveExtractionAfterXmlConversion(
+				$this->_conversionHelper->handleArchiveExtractionAfterXmlConversion(
 					$extractionPath,
 					$journal,
 					$submission,
 					$submissionFile, 
-					$userGroup, 
 					$stage,
 					$fileName
 				);
 				break;
 
 			case 'galley-generate':
-				$this->conversionHelper->handleArchiveExtractionAfterGalleyGenerate(
+				$this->_conversionHelper->handleArchiveExtractionAfterGalleyGenerate(
 					$extractionPath,
 					$journal,
 					$submission,
 					$submissionFile,
-					$userGroup,
 					$fileName
 				);
 				break;

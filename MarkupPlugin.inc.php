@@ -3,8 +3,8 @@
 /**
  * @file plugins/generic/markup/MarkupPlugin.inc.php
  *
- * Copyright (c) 2003-2017 Simon Fraser University
- * Copyright (c) 2003-2017 John Willinsky
+ * Copyright (c) 2003-2018 Simon Fraser University
+ * Copyright (c) 2003-2018 John Willinsky
  * Distributed under the GNU GPL v2. For full terms see the file docs/COPYING.
  *
  * @class MarkupPlugin
@@ -32,13 +32,13 @@ import('lib.pkp.classes.plugins.GenericPlugin');
 class MarkupPlugin extends GenericPlugin {
 	
 	/** @var $formatList array Default list of wanted formats */
-	protected $formatList = array('epub','xml','pdf');
+	protected $_formatList = array('epub','xml','pdf');
 
 	/** @var $conversionStages array Default list of stages for convert to xml feature */
-	protected $xmlConversionStages = array(WORKFLOW_STAGE_ID_SUBMISSION,WORKFLOW_STAGE_ID_INTERNAL_REVIEW,WORKFLOW_STAGE_ID_EXTERNAL_REVIEW,WORKFLOW_STAGE_ID_EDITING,WORKFLOW_STAGE_ID_PRODUCTION);
+	protected $_xmlConversionStages = array(WORKFLOW_STAGE_ID_SUBMISSION,WORKFLOW_STAGE_ID_INTERNAL_REVIEW,WORKFLOW_STAGE_ID_EXTERNAL_REVIEW,WORKFLOW_STAGE_ID_EDITING,WORKFLOW_STAGE_ID_PRODUCTION);
 
 	/** @var $editWithSubstanceStages array Default list of stages for edit with substance feature */
-	protected $editWithSubstanceStages = array(WORKFLOW_STAGE_ID_SUBMISSION,WORKFLOW_STAGE_ID_INTERNAL_REVIEW,WORKFLOW_STAGE_ID_EXTERNAL_REVIEW,WORKFLOW_STAGE_ID_EDITING,WORKFLOW_STAGE_ID_PRODUCTION);
+	protected $_editWithSubstanceStages = array(WORKFLOW_STAGE_ID_SUBMISSION,WORKFLOW_STAGE_ID_INTERNAL_REVIEW,WORKFLOW_STAGE_ID_EXTERNAL_REVIEW,WORKFLOW_STAGE_ID_EDITING,WORKFLOW_STAGE_ID_PRODUCTION);
 
 	/**
 	 * Returns list of available formats
@@ -46,7 +46,7 @@ class MarkupPlugin extends GenericPlugin {
 	 * @return array format list
 	 */
 	public function getFormatList() {
-		return $this->formatList;
+		return $this->_formatList;
 	}
 
 	/**
@@ -55,7 +55,7 @@ class MarkupPlugin extends GenericPlugin {
 	 * @return array Default list of stages for convert to xml feature
 	 */
 	public function getXmlConversionStages() {
-		return $this->xmlConversionStages;
+		return $this->_xmlConversionStages;
 	}
 
 	/**
@@ -64,7 +64,7 @@ class MarkupPlugin extends GenericPlugin {
 	 * @return array Default list of stages for edit with substance feature
 	 */
 	public function getEditWithSubstanceStages() {
-		return $this->editWithSubstanceStages;
+		return $this->_editWithSubstanceStages;
 	}
 	
 	/**
@@ -341,7 +341,7 @@ class MarkupPlugin extends GenericPlugin {
 				'convertToXml',
 				'generateGalleyFiles',
 				'editor',
-				'xml',
+				'json',
 				'save',
 				'profile',
 				'triggerConversion',
@@ -488,13 +488,15 @@ class MarkupPlugin extends GenericPlugin {
 		$dispatcher = $router->getDispatcher();
 		$journal = $request->getJournal();
 
+		// Create an access key
 		$this->import('classes.MarkupConversionHelper');
+		$accessKey = MarkupConversionHelper::makeAccessToken($user);
 		$jobId = MarkupConversionHelper::createConversionJobInfo($journal, $user, $fileId);
 
 		$url = $request->url(null, 'gateway', 'plugin', 
-					array('MarkupGatewayPlugin','fileId', $fileId, 'userId', $user->getId(), 
-							'stage', $stage, 'jobId', $jobId, 'target', $target)
-				);
+			array('MarkupGatewayPlugin','fileId', $fileId, 'userId', $user->getId(), 
+				'stage', $stage, 'jobId', $jobId, 'target', $target, 'accessKey', $accessKey)
+		);
 
 		$ch = curl_init();
 		curl_setopt($ch, CURLOPT_URL, $url);
@@ -514,6 +516,13 @@ class MarkupPlugin extends GenericPlugin {
 	 * @return array 
 	 */
 	public function getOTSLoginParametersForJournal($journalId, $user = null) {
+		// first we try to read from config file
+		$this->import('classes.MarkupConversionHelper');
+		$configCreds = MarkupConversionHelper::readCredentialsFromConfig();
+		if (MarkupConversionHelper::canUseCredentialsFromConfig($configCreds)) {
+			return $configCreds;
+		}
+
 		$authType = $this->getSetting($journalId, 'authType');
 		switch ($authType) {
 			case 'user':
