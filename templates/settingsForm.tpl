@@ -1,8 +1,8 @@
 {**
 * plugins/generic/markup/templates/settingsForm.tpl
 *
-* Copyright (c) 2014-2017 Simon Fraser University
-* Copyright (c) 2003-2017 John Willinsky
+* Copyright (c) 2014-2018 Simon Fraser University
+* Copyright (c) 2003-2018 John Willinsky
 * Distributed under the GNU GPL v2. For full terms see the file docs/COPYING.
 *
 * Document Markup gateway plugin settings
@@ -27,29 +27,31 @@
 	
 	{include file="controllers/notification/inPlaceNotification.tpl" notificationId="MarkupSettingsFormNotification"}
 	
-	
-	{fbvFormSection description="plugins.generic.markup.settings.markupHostAccountHelp"}{/fbvFormSection}
-	
-	{fbvFormSection list=true title="plugins.generic.markup.settings.authType" description="plugins.generic.markup.settings.authTypeFieldHelp"}
-		{if $authType eq 'site'}
-			 {assign var="siteChecked" value=true}
-			 {assign var="userChecked" value=false}
-		{else}
-			{assign var="siteChecked" value=false}
-			{assign var="userChecked" value=true}
-		{/if}
-		{fbvElement type="radio" name="authType" id="authTypeSite" value="site" label="plugins.generic.markup.settings.authTypeSite" checked=$siteChecked}
-		{fbvElement type="radio" name="authType" id="authTypeUser" value="user" label="plugins.generic.markup.settings.authTypeUser" checked=$userChecked}
-	{/fbvFormSection}
-	
-	{fbvFormArea id="siteAuthArea" title="plugins.generic.markup.settings.siteAuthArea"}
-		{include file="`$templatePath`credentialsForm.tpl"}
-	{/fbvFormArea}
-	
-	{fbvFormSection title="plugins.generic.markup.settings.markupHostURL" description="plugins.generic.markup.settings.markupHostURLHelp"}
-		{fbvElement type="text" id="markupHostURL" value=$markupHostURL|escape class="markupHostURL"}
-	{/fbvFormSection}
-	
+	{fbvFormSection description="plugins.generic.markup.settings.markupHostAccountHelp" class="notice"}{/fbvFormSection}
+	{if $markupConfigCredsAvailable eq true}
+		{fbvFormSection description="plugins.generic.markup.settings.credsFromConfigNotice"}{/fbvFormSection}
+	{else}
+		{fbvFormSection list=true title="plugins.generic.markup.settings.authType" description="plugins.generic.markup.settings.authTypeFieldHelp"}
+			{if $authType eq 'site'}
+				 {assign var="siteChecked" value=true}
+				 {assign var="userChecked" value=false}
+			{else}
+				{assign var="siteChecked" value=false}
+				{assign var="userChecked" value=true}
+			{/if}
+			{fbvElement type="radio" name="authType" id="authTypeSite" value="site" label="plugins.generic.markup.settings.authTypeSite" checked=$siteChecked}
+			{fbvElement type="radio" name="authType" id="authTypeUser" value="user" label="plugins.generic.markup.settings.authTypeUser" checked=$userChecked}
+		{/fbvFormSection}
+
+		{fbvFormArea id="siteAuthArea" title="plugins.generic.markup.settings.siteAuthArea"}
+			{include file="`$templatePath`credentialsForm.tpl"}
+		{/fbvFormArea}
+
+		{fbvFormSection title="plugins.generic.markup.settings.markupHostURL" description="plugins.generic.markup.settings.markupHostURLHelp"}
+			{fbvElement type="text" id="markupHostURL" value=$markupHostURL class="markupHostURL"}
+		{/fbvFormSection}
+	{ /if}
+
 	{fbvFormSection list=true description="plugins.generic.markup.settings.conversionStages" description="plugins.generic.markup.settings.conversionStagesHelp"}
 		{fbvElement type="checkbox" name="xmlConversionStages[]" id="conversionSubmissionStage" value=$smarty.const.WORKFLOW_STAGE_ID_SUBMISSION label="manager.publication.submissionStage" checked=$smarty.const.WORKFLOW_STAGE_ID_SUBMISSION|@in_array:$xmlConversionStages}
 		{fbvElement type="checkbox" name="xmlConversionStages[]" id="conversionReviewStage" value=$smarty.const.WORKFLOW_STAGE_ID_EXTERNAL_REVIEW label="manager.publication.reviewStage" checked=$smarty.const.WORKFLOW_STAGE_ID_EXTERNAL_REVIEW|@in_array:$xmlConversionStages}
@@ -64,9 +66,14 @@
 		{fbvElement type="checkbox" name="editWithSubstanceStages[]" id="editWithSubstanceProductionStage" value=$smarty.const.WORKFLOW_STAGE_ID_PRODUCTION label="manager.publication.productionStage" checked=$smarty.const.WORKFLOW_STAGE_ID_PRODUCTION|@in_array:$editWithSubstanceStages}
 	{/fbvFormSection}
 
-	{fbvFormSection title="plugins.generic.markup.settings.cslStyle" description="plugins.generic.markup.settings.cslStyleFieldHelp"}
-		{fbvElement type="select" id="cslStyle"}
-	{/fbvFormSection}
+	{if $markupConfigDefaultCitationHashAvailable eq true}
+		{fbvFormSection description="plugins.generic.markup.settings.citationHashFromConfigNotice"}{/fbvFormSection}
+	{else}
+		{fbvFormSection title="plugins.generic.markup.settings.cslStyle" description="plugins.generic.markup.settings.cslStyleFieldHelp"}
+			{fbvElement type="hidden" id="cslStyleURL" name="cslStyleURL" value=$markupHostURL}
+			{fbvElement type="select" id="cslStyle"}
+		{/fbvFormSection}
+	{/if}
 	
 	{if 'xml'|in_array:$wantedFormats}
 		{assign var="markupDocFormatXmlChecked" value=true}

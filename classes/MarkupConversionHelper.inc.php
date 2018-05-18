@@ -3,8 +3,8 @@
 /**
  * @file plugins/generic/markup/classes/MarkupConversionHelper.inc.php
  *
- * Copyright (c) 2003-2017 Simon Fraser University
- * Copyright (c) 2003-2017 John Willinsky
+ * Copyright (c) 2003-2018 Simon Fraser University
+ * Copyright (c) 2003-2018 John Willinsky
  * Distributed under the GNU GPL v2. For full terms see the file docs/COPYING.
  *
  * @class MarkupConversionHelper
@@ -16,13 +16,13 @@
 
 class MarkupConversionHelper {
 	/** @var $xmlpsWrapper XMLPSWrapper Reference to wrapper class for OTS Service */
-	protected $xmlpsWrapper = null;
+	protected $_xmlpsWrapper = null;
 	/** @var $plugin MarkupPlugin Reference to markup plugin */
-	protected $plugin = null;
+	protected $_plugin = null;
 	/** @var $params array extra parameters */
-	protected $params = null;
+	protected $_params = null;
 	/** @var $xmlpsWrapper OTSWrapper OTS wrapper */
-	protected static $otsWrapper = null;
+	protected static $_otsWrapper = null;
 
 	/**
 	 * Constructor
@@ -31,9 +31,9 @@ class MarkupConversionHelper {
 	 * @param $user PKPUser 
 	 */
 	public function __construct($plugin, $xmlpsWrapper, $user) {
-		$this->plugin = $plugin;
+		$this->_plugin = $plugin;
 		$this->user = $user;
-		$this->xmlpsWrapper = $xmlpsWrapper;
+		$this->_xmlpsWrapper = $xmlpsWrapper;
 	}
 
 	/**
@@ -44,6 +44,7 @@ class MarkupConversionHelper {
 	 * @return array
 	 */
 	protected function buildSubmissionMetadata($journal, $submission) {
+		AppLocale::requireComponents(LOCALE_COMPONENT_PKP_SUBMISSION);
 		$locale = ($submission->getLanguage() != '') ? $submission->getLanguage() : $journal->getPrimaryLocale();
 
 		$publishedArticleDao = DAORegistry::getDAO('PublishedArticleDAO');
@@ -103,6 +104,7 @@ class MarkupConversionHelper {
 		}
 
 		/* Localized abstracts */
+		$abstracts = '';
 		if (is_array($submission->getAbstract(null))) foreach ($submission->getAbstract(null) as $loc => $abstract) {
 			$abstract = htmlspecialchars(Core::cleanVar(strip_tags($abstract)));
 			if (empty($abstract)) continue;
@@ -137,6 +139,18 @@ class MarkupConversionHelper {
 	}
 
 	/**
+	 * Return the citation hash to use either from config file or settings
+	 * @param $contextId int
+	 * @return mixed
+	 */
+	public function getCitationStyleHash($contextId) {
+		if (!is_null($citationStyleHash = Config::getVar('markup', 'ots_citation_style_hash'))) {
+			return $citationStyleHash;
+		}
+		return $this->_plugin->getSetting($contextId, 'cslStyle');
+	}
+
+	/**
 	 * Kicks off a submission file conversion on OTS server
 	 * @param $journal Journal Journal
 	 * @param $submissionFile mixed SubmissionFile 
@@ -154,14 +168,14 @@ class MarkupConversionHelper {
 		$filePath = $submissionFile->getFilePath();
 		$filename = basename($filePath);
 		$fileContent = file_get_contents($filePath);
-		$citationStyle = $this->plugin->getSetting($journal->getId(), 'cslStyle');
+		$citationStyle = $this->getCitationStyleHash($journal->getId());
 
 		$metadata = $this->buildSubmissionMetadata($journal, $submission);
-		$jobId = $this->xmlpsWrapper->submitJob($filename, $fileContent, $citationStyle, $metadata);
+		$jobId = $this->_xmlpsWrapper->submitJob($filename, $fileContent, $citationStyle, $metadata);
 
 		// link XML job id with markup job
 		$markupJobInfoDao = DAORegistry::getDAO('MarkupJobInfoDAO');
-		$this->plugin->import('classes.MarkupJobInfo');
+		$this->_plugin->import('classes.MarkupJobInfo');
 		$markupJobInfo = $markupJobInfoDao->getMarkupJobInfo($jobInfoId);
 		$markupJobInfo->setXmlJobId($jobId);
 		$markupJobInfoDao->updateMarkupJobInfo($markupJobInfo);
@@ -183,7 +197,7 @@ class MarkupConversionHelper {
 		$i = 0;
 		$jobStatus = null;
 		while($i++ < $maxReq) {
-			$jobStatus = $this->xmlpsWrapper->getJobStatus($jobId);
+			$jobStatus = $this->_xmlpsWrapper->getJobStatus($jobId);
 			if (!is_null($statusCallbackFn) && is_callable($statusCallbackFn)) {
 				$statusCallbackFn($jobStatus);
 			}
@@ -203,7 +217,7 @@ class MarkupConversionHelper {
 		}
 
 		// Download the Zip archive.
-		$tmpZipFile = $this->xmlpsWrapper->downloadFile($jobId);
+		$tmpZipFile = $this->_xmlpsWrapper->downloadFile($jobId);
 
 		return $tmpZipFile;
 	}
@@ -228,7 +242,7 @@ class MarkupConversionHelper {
 		$destination = sys_get_temp_dir() . '/' . uniqid();
 		if (!$this->zipArchiveExtract($zipFile, $destination, $message, $validFiles)) {
 			echo __(
-				'plugins.generic.markup.archive.bad_zip',
+				'plugins.generic.markup.archive.badZip',
 				array(
 					'file' => $zipFile,
 					'error' => $message
@@ -299,8 +313,6 @@ class MarkupConversionHelper {
 		$genreDao = DAORegistry::getDAO('GenreDAO');
 		$genre = $genreDao->getByKey('SUBMISSION', $journalId);
 		$genreId = $genre->getId();
-
-		$userGroupDao = DAORegistry::getDAO('UserGroupDAO');
 
 		$fileName = isset($params['filename']) ? "{$params['filename']}.xml" :'document.xml';
 
@@ -395,17 +407,15 @@ class MarkupConversionHelper {
 	 * @param $journal Journal
 	 * @param $submission Submission
 	 * @param $submissionFile SubmissionFile
-	 * @param $userGroup UserGroup
 	 * @param $stage int
 	 * @param $fileName string
 	 * @return boolean
 	 */
-	public function handleArchiveExtractionAfterXmlConversion($extractionPath, $journal, $submission, $submissionFile, $userGroup, $stage, $fileName) {
+	public function handleArchiveExtractionAfterXmlConversion($extractionPath, $journal, $submission, $submissionFile, $stage, $fileName) {
 		$params = array(
 			'stage' 	=> $stage,
 			'assocType' 	=> (int)$submissionFile->getAssocType(),
 			'assocId' 	=> (int)$submissionFile->getAssocId(),
-			'UserGroupId' 	=> $userGroup->getId(),
 			'filename'	=> $fileName,
 		);
 		$this->addXmlDocumentToSubmissionFileList($journal, $submission, "{$extractionPath}/document.xml", $params);
@@ -418,22 +428,20 @@ class MarkupConversionHelper {
 	 * @param $journal Journal
 	 * @param $submission Submission
 	 * @param $submissionFile SubmissionFile
-	 * @param $userGroup UserGroup
 	 * @param string $fileName
 	 * @return boolean
 	 */
-	public function handleArchiveExtractionAfterGalleyGenerate($extractionPath, $journal, $submission, $submissionFile, $userGroup, $fileName) {
+	public function handleArchiveExtractionAfterGalleyGenerate($extractionPath, $journal, $submission, $submissionFile, $fileName) {
 		$journalId = $journal->getId();
 		// Always populate production ready files with xml document.
 		$params = array(
 			'stage' 	=> SUBMISSION_FILE_PRODUCTION_READY,
 			'assocType' 	=> (int)$submissionFile->getAssocType(),
 			'assocId' 	=> (int)$submissionFile->getAssocId(),
-			'UserGroupId' 	=> $userGroup->getId(),
 			'filename' 	=> $fileName
 		);
 		$this->addXmlDocumentToSubmissionFileList($journal, $submission, "{$extractionPath}/document.xml", $params);
-		$wantedFormats = $this->plugin->getSetting($journalId, 'wantedFormats');
+		$wantedFormats = $this->_plugin->getSetting($journalId, 'wantedFormats');
 		$genreDao = DAORegistry::getDAO('GenreDAO');
 		$genre = $genreDao->getByKey('SUBMISSION', $journalId);
 
@@ -447,7 +455,6 @@ class MarkupConversionHelper {
 
 		$gParams = array(
 			'filename' => $fileName,
-			'UserGroupId' 	=> $userGroup->getId(),
 		);
 		if (in_array('pdf', $wantedFormats)) {
 			$this->addFileToSubmissionGalley($existing_galley_by_labels, $submission, $genre->getId(), 'pdf', "{$extractionPath}/document.pdf", $gParams);
@@ -489,18 +496,18 @@ class MarkupConversionHelper {
 	/**
 	 * Return an instance of OTS wrapper
 	 * @param $plugin MarkupPlugin
-	 * @param $request PKPRequest
+	 * @param $journal Journal
 	 * @param $userObject User
+	 * @param $useCached boolean Whether the cached object can be reused. 
 	 *
 	 * @return XMLPSWrapper
 	 */
-	public static function getOTSWrapperInstance($plugin, $request, $userObject) {
+	public static function getOTSWrapperInstance($plugin, $journal, $userObject, $reuseCached = true) {
 		// Note: passing $userObject instead of calling $request->getUser() because this 
 		// method is often called from gateway plugin and it seems that user session is not available
-		if (!is_null(self::$otsWrapper)) {
-			return self::$otsWrapper;
+		if (!is_null(self::$_otsWrapper) && $reuseCached) {
+			return self::$_otsWrapper;
 		}
-		$journal = $request->getJournal();
 		$journalId = $journal->getId();
 		// Import host, user and password variables into the current symbol table from an array
 		extract($plugin->getOTSLoginParametersForJournal($journal->getId(), $userObject));
@@ -508,7 +515,67 @@ class MarkupConversionHelper {
 		// and I don't want to use `import('plugins.generic.markup.classes.XMLPSWrapper');`  because I cannot 
 		// guarantee the plugin folder will always be `markup`. e.g The repo name is ojs3-markup
 		require_once(dirname(__FILE__) . '/XMLPSWrapper.inc.php');
-		self::$otsWrapper = new XMLPSWrapper($host, $user, $password);
-		return self::$otsWrapper;
+		self::$_otsWrapper = new XMLPSWrapper($host, $user, $password);
+		return self::$_otsWrapper;
+	}
+
+	/**
+	 * Read OTS credentials values from config file
+	 * @return array
+	 */
+	public static function readCredentialsFromConfig() {
+		return array(
+			'host'		=> Config::getVar('markup', 'ots_host'),
+			'user' 		=> Config::getVar('markup', 'ots_login_email'),
+			'password' 	=> Config::getVar('markup', 'ots_api_token'),
+		);
+	}
+
+	/**
+	 * Tells wether the user has specified OTS login credentials in the config file
+	 * @param $creds array
+	 * @return boolean
+	 */
+	public static function canUseCredentialsFromConfig($creds) {
+		if (!isset($creds['host']) || empty($creds['host'])) {
+			return false;
+		}
+		if (!isset($creds['user']) || empty($creds['user'])) {
+			return false;
+		}
+		if (!isset($creds['password']) || empty($creds['password'])) {
+			return false;
+		}
+		return true;
+	}
+
+	/**
+	 * Create an access token used for Gateway plugin request validation
+	 * @param $user PKPUser
+	 * @return accessKey string The generated passkey
+	 */
+	public static function makeAccessToken($user) {
+		import('lib.pkp.classes.security.AccessKeyManager');
+		$accessKeyManager = new AccessKeyManager();
+		$accessKey = $accessKeyManager->createKey('MarkupContext', $user->getId(), null, 1);
+		return $accessKey;
+	}
+
+	/**
+	 * Validates access key supplied to a gateway plugin 
+	 * @param $user PKPUser
+	 * @param $accessKey string
+	 * @return accessKey string The generated passkey
+	 */
+	public static function validateAccessToken($user, $accessKey) {
+		import('lib.pkp.classes.security.AccessKeyManager');
+		$accessKeyManager = new AccessKeyManager();
+		$accessKeyHash = AccessKeyManager::generateKeyHash($accessKey);
+		$accessKey = $accessKeyManager->validateKey(
+			'MarkupContext',
+			$user->getId(),
+			$accessKeyHash
+		);
+		return !is_null($accessKey);
 	}
 }

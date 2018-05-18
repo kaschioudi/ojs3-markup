@@ -3,8 +3,8 @@
 /**
  * @file plugins/generic/markup/MarkupBatchConversionHandler.inc.php
  *
- * Copyright (c) 2003-2017 Simon Fraser University
- * Copyright (c) 2003-2017 John Willinsky
+ * Copyright (c) 2003-2018 Simon Fraser University
+ * Copyright (c) 2003-2018 John Willinsky
  * Distributed under the GNU GPL v2. For full terms see the file docs/COPYING.
  *
  * @class MarkupBatchConversionHandler
@@ -17,7 +17,7 @@ import('classes.handler.Handler');
 
 class MarkupBatchConversionHandler extends Handler {
 	/** @var MarkupPlugin The Document markup plugin */
-	protected $plugin = null;
+	protected $_plugin = null;
 
 	/**
 	 * Constructor
@@ -26,7 +26,7 @@ class MarkupBatchConversionHandler extends Handler {
 		parent::__construct();
 
 		// set reference to markup plugin
-		$this->plugin = PluginRegistry::getPlugin('generic', 'markupplugin');
+		$this->_plugin = PluginRegistry::getPlugin('generic', 'markupplugin');
 
 		$this->addRoleAssignment(
 			array(ROLE_ID_MANAGER),
@@ -100,9 +100,14 @@ class MarkupBatchConversionHandler extends Handler {
 			}
 		}
 		if (count($submissions)) {
+			// Create an access key
+			$this->_plugin->import('classes.MarkupConversionHelper');
+			$accessKey = MarkupConversionHelper::makeAccessToken($user);
+
 			// trigger conversion
 			$url = $request->url(null, 'gateway', 'plugin', array('MarkupBatchGatewayPlugin',
-										'userId', $user->getId()));
+					'userId', $user->getId(), 'accessKey', $accessKey));
+
 			$ch = curl_init();
 			curl_setopt($ch, CURLOPT_HTTPHEADER, array('Expect:')); // Avoid HTTP 417 errors
 			curl_setopt($ch, CURLOPT_URL, $url);
@@ -118,7 +123,7 @@ class MarkupBatchConversionHandler extends Handler {
 				$user->getId(), 
 				NOTIFICATION_TYPE_SUCCESS, 
 				array(
-					'contents' => __('plugins.generic.markup.start-success'),
+					'contents' => __('plugins.generic.markup.trigger-conversion'),
 				)
 			);
 		}
@@ -137,7 +142,7 @@ class MarkupBatchConversionHandler extends Handler {
 	 * @return JSONMessage
 	 */
 	public function fetchConversionStatus($args, $request) {
-		$this->plugin->import('classes.MarkupBatchConversionHelper');
+		$this->_plugin->import('classes.MarkupBatchConversionHelper');
 		$batchConversionHelper = new MarkupBatchConversionHelper();
 		$data = $batchConversionHelper->readOutFile();
 		$responseData = null;
@@ -176,7 +181,7 @@ OED;
 		$dispatcher = $request->getDispatcher();
 		$conversionPageUrl = $dispatcher->url($request, ROUTE_PAGE,null, 'management', 'settings', 'website',
 				array(), 'markupBatchConversion');
-		$this->plugin->import('classes.MarkupBatchConversionHelper');
+		$this->_plugin->import('classes.MarkupBatchConversionHelper');
 		$batchConversionHelper = new MarkupBatchConversionHelper();
 		if (!$batchConversionHelper->isRunning()) {
 			$request->redirectUrl($conversionPageUrl);

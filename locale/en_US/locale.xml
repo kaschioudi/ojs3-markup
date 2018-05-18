@@ -1,42 +1,25 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE locale SYSTEM "../../../../../lib/pkp/dtd/locale.dtd">
+
 <!--
   * @file plugins/generic/markup/locale/en_US/locale.xml
   *
-  * Copyright (c) 2003-2013 John Willinsky
+  * Copyright (c) 2003-2018 Simon Fraser University
+  * Copyright (c) 2003-2018 John Willinsky
   * Distributed under the GNU GPL v2. For full terms see the file docs/COPYING.
   *
   * Open Typesetting Stack plugin localization strings for the en_US (U.S. English) locale.
   -->
+  
 <locale name="en_US" full_name="U.S. English">
-	<message key="plugins.generic.markup.archive.bad_filename">Filename is missing</message>
-	<message key="plugins.generic.markup.archive.bad_zip">Error handling zipfile ({$file}): {$error} </message>
-	<message key="plugins.generic.markup.archive.description">This zipfile includes parsed and converted NLM-XML, HTML, PDF, and ePub copies of your article. It also contains any accompanying images, and structured citation data in BibTeX format (for importing into reference databases such as Zotero or Mendeley).</message>
-	<message key="plugins.generic.markup.archive.downloaded">Open Typesetting Stack: Job received.</message>
+	<message key="plugins.generic.markup.archive.badZip">Error handling zipfile ({$file}): {$error} </message>
 	<message key="plugins.generic.markup.archive.enable">Open Typesetting Stack Plugin needs to be enabled.</message>
-	<message key="plugins.generic.markup.archive.is_zip">Supplementary file is already in zip format.</message>
-	<message key="plugins.generic.markup.archive.login">You need to login to access this file.</message>
-	<message key="plugins.generic.markup.archive.no_access">You are not allowed to access this file.</message>
-	<message key="plugins.generic.markup.archive.no_article">The article does not exist.</message>
-	<message key="plugins.generic.markup.archive.no_articleID">"Article ID is invalid or missing."</message>
-	<message key="plugins.generic.markup.archive.no_file">File does not exist: ({$file}).</message>
-	<message key="plugins.generic.markup.archive.no_job">Invalid job id: ({$jobId})</message>
-	<message key="plugins.generic.markup.archive.no_journal">Request must be linked to a journal.</message>
-	<message key="plugins.generic.markup.archive.no_url">You have not specified an OTS server address (default should be http://pkp-xml-demo.lib.sfu.ca).</message>
-	<message key="plugins.generic.markup.archive.portalSubTitle">Document Status</message>
-	<message key="plugins.generic.markup.archive.portalTitle">Open Typesetting Stack Plugin</message>
-	<message key="plugins.generic.markup.archive.processing">Open Typesetting Stack: Processing...</message>
-	<message key="plugins.generic.markup.archive.status">Open Typesetting Stack returned: {$message} </message>
-	<message key="plugins.generic.markup.archive.supp_file_missing">Although an OTS file record seems to exist, the file itself is missing.</message>
-	<message key="plugins.generic.markup.archive.supp_missing">OTS file record is missing. Try re-uploading the article to regenerate the markup files.</message>
+	<message key="plugins.generic.markup.archive.noArticle">The article does not exist.</message>
+	<message key="plugins.generic.markup.archive.noArticleID">Article ID is invalid or missing.</message>
+	<message key="plugins.generic.markup.archive.noAccessKey">Access Key is invalid or missing.</message>
+	<message key="plugins.generic.markup.archive.noJournal">Request must be linked to a journal.</message>
 	<message key="plugins.generic.markup.description">This plugin provides integration with PKP's Open Typesetting Stack for converting Word and PDF articles to NLM JATS XML.</message>
 	<message key="plugins.generic.markup.displayName">Open Typesetting Stack Plugin</message>
-	<message key="plugins.generic.markup.error">Error!</message>
-	<message key="plugins.generic.markup.errors.errorMessage">Unable to fetch article XML and HTML versions. The Open Typesetting Stack plugin needs to be enabled and the citation style needs to be provided in Journal Settings.</message>
-	<message key="plugins.generic.markup.optional.cslStyleName">Citation Style Name is optional.</message>
-	<message key="plugins.generic.markup.optional.markupHostPass">Password is optional.</message>
-	<message key="plugins.generic.markup.optional.markupHostUser">Email address is optional.</message>
-	<message key="plugins.generic.markup.optional.reviewVersion">Toggle for review version is optional.</message>
 	<message key="plugins.generic.markup.required.cslStyle">Citation Style is required.</message>
 	<message key="plugins.generic.markup.required.markupHostURL">Server address is required.</message>
 	<message key="plugins.generic.markup.required.markupHostUser">Email address is required.</message>
@@ -46,12 +29,7 @@
 	<message key="plugins.generic.markup.required.wantedFormats">At least one document format must be selected.</message>
 	<message key="plugins.generic.markup.settings">OTS Settings</message>
 	<message key="plugins.generic.markup.settings.cslStyle">Select Citation Style:</message>
-	<message key="plugins.generic.markup.settings.cslStyleSubmitErrorMessage">Invalid Open Typesetting Stack URL.</message>
 	<message key="plugins.generic.markup.settings.cslStyleFieldHelp">Choose your preferred citation style for PDF and ePub output. Input citation style is detected automatically.</message>
-	<message key="plugins.generic.markup.settings.cssStyles">Stylesheets:</message>
-	<message key="plugins.generic.markup.settings.cssStylesHelp">This CSS stylesheet affects the layout of articles generated by this plugin. Default styles are automatically provided. You may replace these with your own customized versions using the <![CDATA[<a href="{$url}" class="action" target="_blank">file manager</a>]]></message>
-	<message key="plugins.generic.markup.settings.curlSupport">PHP curl Support:</message>
-	<message key="plugins.generic.markup.settings.curlSupportHelp">PHP curl needs to be installed on your server. This plugin uses curl to send the article files to the Open Typesetting Stack for processing.</message>
 	<message key="plugins.generic.markup.settings.disabled">Disabled</message>
 	<message key="plugins.generic.markup.settings.enabled">Enabled</message>
 	<message key="plugins.generic.markup.settings.installed">Installed</message>
@@ -72,18 +50,13 @@
 	<message key="plugins.generic.markup.settings.markupHostURLHelp">OJS will use this Open Typesetting Stack instance. Normally you should not change this setting.</message>
 	<message key="plugins.generic.markup.settings.markupHostUser">Email:</message>
 	<message key="plugins.generic.markup.settings.notInstalled">Not installed</message>
-	<message key="plugins.generic.markup.settings.pathInfo">URL Paths</message>
-	<message key="plugins.generic.markup.settings.pathInfoHelp">"Enabled" is the default selection if supported by your server. If set to "Disabled," images may be missing from OTS output.</message>
 	<message key="plugins.generic.markup.settings.saved">Settings saved!</message>
-	<message key="plugins.generic.markup.settings.zipSupport">PHP unzip support:</message>
-	<message key="plugins.generic.markup.settings.zipSupportHelp">PHP zlib needs to be installed on your OJS server.</message>
 	<message key="plugins.generic.markup.settings.wantedFormats">Article output formats:</message>
 	<message key="plugins.generic.markup.settings.wantedFormatsHelp">Select the article output formats that will be generated when using OTS to publish final article galleys. You may want to deselect some of these if, for example your journal is producing its own PDF galleys independently from OTS.</message>
 	<message key="plugins.generic.markup.settings.wantedFormatsXML">XML</message>
 	<message key="plugins.generic.markup.settings.wantedFormatsPDF">PDF</message>
 	<message key="plugins.generic.markup.settings.wantedFormatsEPUB">EPUB</message>
 	<message key="plugins.generic.markup.job.success">Your document has been successfuly submitted to the Open Typesetting Stack. Transformation progress is available at: {$url}</message>
-	<message key="plugins.generic.markup.job.failure">Unable to submit your document to the Open Typesetting Stack. Please make sure the plugin is correctly installed and configured.</message>
 	<message key="plugins.generic.markup.settings.authType">Type of authentication:</message>
 	<message key="plugins.generic.markup.settings.siteAuthArea">Login credentials for journal-wide authentication:</message>
 	<message key="plugins.generic.markup.settings.userAuthArea">OTS login credentials</message>
@@ -112,11 +85,23 @@
 	<message key="plugins.generic.markup.batch.cancel-label">Cancel conversion</message>
 	<message key="plugins.generic.markup.batch.selected-submissions">On this page, you can automatically batch-convert already-published articles from PDF or Word formats to JATS XML using PKP's Open Typesetting Stack, without needing to navigate to each article individually. While this will generally not produce perfect results -- the Open Typesetting Stack is normally intended to be used together with the included Texture editor to improve the quality of XML -- it should be sufficient to populate your journals' OAI feed with structured data for harvesting purposes. The Open Typesetting Stack will return converted XML to your journals under the "Production Ready Files" stage for each article that is converted here. You can still navigate to each article individually to improve formatting with Texture after performing this batch conversion.</message>
 	<message key="plugins.generic.markup.batch-select-file">Select a file to convert</message>
-	<message key="plugins.generic.markup.start-success">Batch conversion started successfully</message>
+	<message key="plugins.generic.markup.trigger-conversion">Your conversion request is being processed.</message>
 	<message key="plugins.generic.markup.cancel-success">Batch conversion cancelled successfully</message>
 	<message key="plugins.generic.markup.cancel-failure">Unable to cancel batch conversion</message>
 	<message key="plugins.generic.markup.file-exists">{$file} exists! Conversion already running?</message>
 	<message key="plugins.generic.markup.archive-download-failure">Unable to download conversion archive</message>
 	<message key="plugins.generic.markup.archive-extract-failure">Unable to extract conversion archive</message>
 	<message key="plugins.generic.markup.conversion-running">BATCH CONVERSION NOT RUNNING!</message>
+	<message key="plugins.generic.markup.journalList">Below is the list of all journals enabled in this OJS install:</message>
+	<message key="plugins.generic.markup.invalidJournalPath">The specified journal path does not exist.</message>
+	<message key="plugins.generic.markup.processingSubmissionText">Processing submission: {$submissionTitle}</message>
+	<message key="plugins.generic.markup.otsJobId">OTS Job #ID : {$jobId}</message>
+	<message key="plugins.generic.markup.ojsJobInfoId">OJS JobInfo #ID : {$jobInfoId}</message>
+	<message key="plugins.generic.markup.otsConversionStatus">OTS JOB STATUS => {$conversionStatus}</message>
+	<message key="plugins.generic.markup.batchSummary">{$submissionFoundCount} submission(s) found &amp; {$submissionProcessedCount} processed!</message>
+	<message key="plugins.generic.markup.settings.credsFromConfigNotice">Please note that the plugin is using login credentials from OJS config file (config.inc.php)</message>
+	<message key="plugins.generic.markup.settings.citationHashFromConfigNotice">Please note that the plugin is using the default citation style specified in OJS config file (config.inc.php)</message>
+	<message key="plugins.generic.markup.unknownUser">The specified user, "{$adminUser}", does not exist.</message>
+	<message key="plugins.generic.markup.missingJournalList">ERROR: This option requires a comma-separated list of journals</message>
+	<message key="plugins.generic.markup.archive.noUserID">User ID is invalid or missing.</message>
 </locale>
