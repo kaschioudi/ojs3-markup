@@ -104,7 +104,7 @@ class MarkupConversionHelper {
 		}
 
 		/* Localized abstracts */
-		$abstracts = '';
+		$abstracts = array();
 		if (is_array($submission->getAbstract(null))) foreach ($submission->getAbstract(null) as $loc => $abstract) {
 			$abstract = htmlspecialchars(Core::cleanVar(strip_tags($abstract)));
 			if (empty($abstract)) continue;
