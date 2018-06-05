@@ -347,6 +347,7 @@ class MarkupPlugin extends GenericPlugin {
 				'triggerConversion',
 				'fetchConversionJobStatus',
 				'batch',
+				'media',
 			);
 
 			if (!in_array($op, $publicOps)) return;

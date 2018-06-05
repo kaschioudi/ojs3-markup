@@ -368,7 +368,7 @@ class MarkupConversionHelper {
 		$submissionFile->setDateUploaded(Core::getCurrentDate());
 		$submissionFile->setDateModified(Core::getCurrentDate());
 		$submissionFile->setOriginalFileName($fileName);
-		$submissionFile->setFileType('image/png');
+		$submissionFile->setFileType(mime_content_type($filePath));
 		$submissionFile->setViewable(true);
 		$submissionFile->setSubmissionLocale($submission->getLocale());
 		$submissionFile->setName($fileName, AppLocale::getLocale());

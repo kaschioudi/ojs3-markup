@@ -31,7 +31,7 @@ class MarkupHandler extends Handler {
 		$this->addRoleAssignment(
 			array(ROLE_ID_MANAGER, ROLE_ID_SUB_EDITOR, ROLE_ID_ASSISTANT, ROLE_ID_REVIEWER, ROLE_ID_AUTHOR),
 			array('convertToXml', 'generateGalleyFiles', 'profile', 'save', 
-					'editor', 'json', 'triggerConversion', 'fetchConversionJobStatus')
+					'editor', 'json', 'triggerConversion', 'fetchConversionJobStatus', 'media')
 		);
 
 		$this->addRoleAssignment(array(ROLE_ID_MANAGER), array('batch'));
@@ -324,11 +324,17 @@ class MarkupHandler extends Handler {
 		$infos = array();
 		$mediaDir = 'markup/media';		# TODO Where to fetch media images from in OJS?
 		$context = $request->getContext();
+		$router = $request->getRouter();
+		$dispatcher = $router->getDispatcher();
 		foreach ($assets as $asset) {
-			$path = $asset['path'];
+			$path = str_replace('media/', '', $asset['path']);
 			$filePath = "{$mediaDir}/{$path}";
 			$base = $request->getIndexUrl() . '/' . $context->getPath() . '/markup';
-			$url = "{$base}/{$path}";
+			$url = $dispatcher->url($request, ROUTE_PAGE, null, 'markup', 'media', null, array(
+				'submissionId' => $request->getUserVar('submissionId'),
+				'fileId' => $request->getUserVar('fileId'),
+				'fileName' => $path,
+			));
 			$infos[$path] = array(
 				'encoding'  => 'url',
 				'data'      => $url,
@@ -560,5 +566,53 @@ class MarkupHandler extends Handler {
 		$templateFile = $this->_plugin->getTemplatePath() . 'batchConversion.tpl';
 		$output = $templateMgr->fetch($templateFile);
 		return new JSONMessage(true, $output);
+	}
+
+	/**
+	 * display images attached to XML document
+	 *
+	 * @param $args array
+	 * @param $request PKPRequest
+	 *
+	 * @return void
+	 */
+	public function media($args, $request) {
+		$user = $request->getUser();
+		$context = $request->getContext();
+		$submissionFile = $this->getAuthorizedContextObject(ASSOC_TYPE_SUBMISSION_FILE);
+		if (!$submissionFile) {
+			fatalError('Invalid request');
+		}
+
+		$submissionFileDao = DAORegistry::getDAO('SubmissionFileDAO');
+		import('lib.pkp.classes.submission.SubmissionFile'); // Constants
+		$dependentFiles = $submissionFileDao->getLatestRevisionsByAssocId(
+			ASSOC_TYPE_SUBMISSION_FILE, 
+			$submissionFile->getFileId(), 
+			$submissionFile->getSubmissionId(), 
+			SUBMISSION_FILE_DEPENDENT
+		);
+
+		// make sure this is an xml document
+		if (!in_array($submissionFile->getFileType(), array('text/xml', 'application/xml'))) {
+			fatalError('Invalid request');
+		}
+
+		$mediaSubmissionFile = null;
+		foreach ($dependentFiles as $dependentFile) {
+			if ($dependentFile->getOriginalFileName() == $request->getUserVar('fileName')) {
+				$mediaSubmissionFile = $dependentFile;
+				break;
+			}
+		}
+
+		if (!$mediaSubmissionFile) {
+			$request->getDispatcher()->handle404();
+		}
+
+		$filePath = $mediaSubmissionFile->getFilePath();
+		header('Content-Type:'.$mediaSubmissionFile->getFileType());
+		header('Content-Length: ' . $mediaSubmissionFile->getFileSize());
+		readfile($filePath);
 	}
 }
