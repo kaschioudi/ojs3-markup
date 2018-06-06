@@ -326,21 +326,35 @@ class MarkupHandler extends Handler {
 		$context = $request->getContext();
 		$router = $request->getRouter();
 		$dispatcher = $router->getDispatcher();
+		$fileId = $request->getUserVar('fileId');
+		$submissionId = $request->getUserVar('submissionId');
+		// build mapping to assets file paths
+		$assetsFilePaths = array();
+		$submissionFileDao = DAORegistry::getDAO('SubmissionFileDAO');
+		import('lib.pkp.classes.submission.SubmissionFile'); // Constants
+		$dependentFiles = $submissionFileDao->getLatestRevisionsByAssocId(
+			ASSOC_TYPE_SUBMISSION_FILE,
+			$fileId,
+			$submissionId,
+			SUBMISSION_FILE_DEPENDENT
+		);
+		foreach ($dependentFiles as $dFile) {
+			$assetsFilePaths[$dFile->getOriginalFileName()] = $dFile->getFilePath();
+		}
 		foreach ($assets as $asset) {
 			$path = str_replace('media/', '', $asset['path']);
-			$filePath = "{$mediaDir}/{$path}";
-			$base = $request->getIndexUrl() . '/' . $context->getPath() . '/markup';
+			$filePath = $assetsFilePaths[$path];
 			$url = $dispatcher->url($request, ROUTE_PAGE, null, 'markup', 'media', null, array(
-				'submissionId' => $request->getUserVar('submissionId'),
-				'fileId' => $request->getUserVar('fileId'),
+				'submissionId' => $submissionId,
+				'fileId' => $fileId,
 				'fileName' => $path,
 			));
 			$infos[$path] = array(
 				'encoding'  => 'url',
 				'data'      => $url,
-				'size'      => 0, #filesize($filePath),
-				'createdAt' => 0, #filectime($filePath),
-				'updatedAt' => 0, #filectime($filePath),
+				'size'      => filesize($filePath),
+				'createdAt' => filemtime($filePath),
+				'updatedAt' => filectime($filePath),
 			);
 		}
 		return $infos;
