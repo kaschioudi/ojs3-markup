@@ -460,14 +460,14 @@ class MarkupConversionHelper {
 		$message = '';
 		$destination = sys_get_temp_dir() . '/' . uniqid();
 		if (!$this->zipArchiveExtract($htmlArchiveFilePath, $destination, $message)) {
-			echo __(
+			$errorMessage = __(
 				'plugins.generic.markup.archive.badZip',
 				array(
-					'file' => $zipFile,
+					'file' => $htmlArchiveFilePath,
 					'error' => $message
 				)
 			);
-			return false;
+			fatalError($errorMessage);
 		}
 
 		foreach (glob("{$destination}/media/*.png") as $filePath) {
