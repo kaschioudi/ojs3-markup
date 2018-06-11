@@ -235,6 +235,7 @@ class MarkupConversionHelper {
 			'document.pdf',
 			'document.xml',
 			'document.epub',
+			'html.zip',
 		);
 
 		// Extract the zip archive to a markup subdirectory
@@ -304,7 +305,7 @@ class MarkupConversionHelper {
 	 * @param $filePath string Path to file in archive
 	 * @param $params array Additional parameters (file stage, assoc type, assoc id)
 	 *
-	 * @return void
+	 * @return SubmissionFile
 	 */
 	public function addXmlDocumentToSubmissionFileList($journal, $submission, $filePath, $params) {
 		$journalId = $journal->getId();
@@ -334,6 +335,48 @@ class MarkupConversionHelper {
 		$submissionFile->setAssocType($params['assocType']);
 		$submissionFile->setAssocId($params['assocId']);
 		$insertedFile = $submissionFileDao->insertObject($submissionFile, $filePath, false);
+		return $insertedFile;
+	}
+
+	/**
+	 * Add image as dependent file to xml document
+	 *
+	 * @param $journal Journal
+	 * @param $submission Submission
+	 * @param $filePath string Path to file in archive
+	 * @param $params array Additional parameters (assoc type, assoc id)
+	 *
+	 * @return SubmissionFile
+	 */
+	protected function _addDependentImageToXmlDocument($journal, $submission, $filePath, $params) {
+		$journalId = $journal->getId();
+		$submissionId = $submission->getId();
+
+		$genreDao = DAORegistry::getDAO('GenreDAO');
+		$genre = $genreDao->getByKey('IMAGE', $journalId);
+		$genreId = $genre->getId();
+
+		$fileName = basename($filePath);
+
+		$submissionFileDao = DAORegistry::getDAO('SubmissionFileDAO');
+		$submissionFile = $submissionFileDao->newDataObjectByGenreId($genreId);
+		$submissionFile->setUploaderUserId($this->user->getId());
+		$submissionFile->setSubmissionId($submissionId);
+		$submissionFile->setGenreId($genreId);
+		$submissionFile->setFileSize(filesize($filePath));
+		$submissionFile->setFileStage(SUBMISSION_FILE_DEPENDENT);
+		$submissionFile->setDateUploaded(Core::getCurrentDate());
+		$submissionFile->setDateModified(Core::getCurrentDate());
+		$submissionFile->setOriginalFileName($fileName);
+		$submissionFile->setFileType(mime_content_type($filePath));
+		$submissionFile->setViewable(true);
+		$submissionFile->setSubmissionLocale($submission->getLocale());
+		$submissionFile->setName($fileName, AppLocale::getLocale());
+
+		$submissionFile->setAssocType($params['assocType']);
+		$submissionFile->setAssocId($params['assocId']);
+		$insertedFile = $submissionFileDao->insertObject($submissionFile, $filePath, false);
+		return $insertedFile;
 	}
 
 	/**
@@ -348,7 +391,6 @@ class MarkupConversionHelper {
 	 * @return object Submission file object
 	 */
 	public function addFileToSubmissionGalley($existing_galley_by_labels, $submission, $genreId, $format, $filePath, $params = array()) {
-
 		$submissionId = $submission->getId();
 
 		$galleyFiles = [];
@@ -402,6 +444,42 @@ class MarkupConversionHelper {
 	}
 
 	/**
+	 * Extract HTML archive and attach media files to XML document (dependent files)
+	 *
+	 * @param $context Journal
+	 * @param $submission Submission
+	 * @param $submissionFile Submission File
+	 * @param $stage int stage
+	 * @param $filePath string Path to HTML archive
+	 * @param $params array Additional parameters (assoc type, assoc id)
+	 *
+	 * @return void
+	 */
+	protected function _processHtmlMediaFiles($context, $submission, $submissionFile, $stage, $htmlArchiveFilePath) {
+		// Extract the html zip archive
+		$message = '';
+		$destination = sys_get_temp_dir() . '/' . uniqid();
+		if (!$this->zipArchiveExtract($htmlArchiveFilePath, $destination, $message)) {
+			$errorMessage = __(
+				'plugins.generic.markup.archive.badZip',
+				array(
+					'file' => $htmlArchiveFilePath,
+					'error' => $message
+				)
+			);
+			fatalError($errorMessage);
+		}
+
+		foreach (glob("{$destination}/media/*.png") as $filePath) {
+			$params = array(
+				'assocType' => ASSOC_TYPE_SUBMISSION_FILE,
+				'assocId' => $submissionFile->getFileId(),
+			);
+			$this->_addDependentImageToXmlDocument($context, $submission, $filePath, $params); 
+		}
+	}
+
+	/**
 	 * Performs zip extraction after xml job conversion
 	 * @param $extractionPath string
 	 * @param $journal Journal
@@ -418,7 +496,9 @@ class MarkupConversionHelper {
 			'assocId' 	=> (int)$submissionFile->getAssocId(),
 			'filename'	=> $fileName,
 		);
-		$this->addXmlDocumentToSubmissionFileList($journal, $submission, "{$extractionPath}/document.xml", $params);
+		$xmlSubmissionFile = $this->addXmlDocumentToSubmissionFileList($journal, $submission, "{$extractionPath}/document.xml", $params);
+		$htmlZilePath = "{$extractionPath}/html.zip";
+		$this->_processHtmlMediaFiles($journal, $submission, $xmlSubmissionFile, $stage, $htmlZilePath);
 		return true;
 	}
 

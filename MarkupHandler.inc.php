@@ -31,7 +31,7 @@ class MarkupHandler extends Handler {
 		$this->addRoleAssignment(
 			array(ROLE_ID_MANAGER, ROLE_ID_SUB_EDITOR, ROLE_ID_ASSISTANT, ROLE_ID_REVIEWER, ROLE_ID_AUTHOR),
 			array('convertToXml', 'generateGalleyFiles', 'profile', 'save', 
-					'editor', 'json', 'triggerConversion', 'fetchConversionJobStatus')
+					'editor', 'json', 'triggerConversion', 'fetchConversionJobStatus', 'media')
 		);
 
 		$this->addRoleAssignment(array(ROLE_ID_MANAGER), array('batch'));
@@ -249,28 +249,28 @@ class MarkupHandler extends Handler {
 			$manifestXml = $this->_buildManifestXMLFromDocument($manuscriptXml, $assets);
 			// media url
 			$mediaInfos = $this->_buildMediaInfo($request, $assets);
+			$resources = array(
+				'manifest.xml'      => array(
+					'encoding'      => "utf8",
+					'data'          => $manifestXml,
+					'size'          => strlen($manifestXml),
+					'createdAt'     => 0,
+					'updatedAt'     => 0,
+				),
+				'manuscript.xml'  => array(
+					'encoding'      => "utf8",
+					'data'          => $manuscriptXml,
+					'size'          => filesize($document->path),
+					'createdAt'     => 0,
+					'updatedAt'     => 0,
+				),
+			);
 			$data = array(
 				'version'       => 'AE2F112D',
-				'resources'     => array(
-					'manifest.xml'      => array(
-						'encoding'      => "utf8",
-						'data'          => $manifestXml,
-						'size'          => strlen($manifestXml),
-						'createdAt'     => 0,
-						'updatedAt'     => 0,
-					),
-					'manuscript.xml'  => array(
-						'encoding'      => "utf8",
-						'data'          => $manuscriptXml,
-						'size'          => filesize($filePath),
-						'createdAt'     => 0,
-						'updatedAt'     => 0,
-					),
-				)
+				'resources'     => array_merge($resources, $mediaInfos)
 			);
-			$data = array_merge($data, $mediaInfos);
 			header('Content-Type: application/json');
-			return json_encode($data);
+			return json_encode($data, JSON_UNESCAPED_SLASHES);
 		}
 	}
 
@@ -324,17 +324,37 @@ class MarkupHandler extends Handler {
 		$infos = array();
 		$mediaDir = 'markup/media';		# TODO Where to fetch media images from in OJS?
 		$context = $request->getContext();
+		$router = $request->getRouter();
+		$dispatcher = $router->getDispatcher();
+		$fileId = $request->getUserVar('fileId');
+		$submissionId = $request->getUserVar('submissionId');
+		// build mapping to assets file paths
+		$assetsFilePaths = array();
+		$submissionFileDao = DAORegistry::getDAO('SubmissionFileDAO');
+		import('lib.pkp.classes.submission.SubmissionFile'); // Constants
+		$dependentFiles = $submissionFileDao->getLatestRevisionsByAssocId(
+			ASSOC_TYPE_SUBMISSION_FILE,
+			$fileId,
+			$submissionId,
+			SUBMISSION_FILE_DEPENDENT
+		);
+		foreach ($dependentFiles as $dFile) {
+			$assetsFilePaths[$dFile->getOriginalFileName()] = $dFile->getFilePath();
+		}
 		foreach ($assets as $asset) {
-			$path = $asset['path'];
-			$filePath = "{$mediaDir}/{$path}";
-			$base = $request->getIndexUrl() . '/' . $context->getPath() . '/markup';
-			$url = "{$base}/{$path}";
-			$infos[$path] = array(
+			$path = str_replace('media/', '', $asset['path']);
+			$filePath = $assetsFilePaths[$path];
+			$url = $dispatcher->url($request, ROUTE_PAGE, null, 'markup', 'media', null, array(
+				'submissionId' => $submissionId,
+				'fileId' => $fileId,
+				'fileName' => $path,
+			));
+			$infos[$asset['path']] = array(
 				'encoding'  => 'url',
 				'data'      => $url,
-				'size'      => 0, #filesize($filePath),
-				'createdAt' => 0, #filectime($filePath),
-				'updatedAt' => 0, #filectime($filePath),
+				'size'      => filesize($filePath),
+				'createdAt' => filemtime($filePath),
+				'updatedAt' => filectime($filePath),
 			);
 		}
 		return $infos;
@@ -560,5 +580,53 @@ class MarkupHandler extends Handler {
 		$templateFile = $this->_plugin->getTemplatePath() . 'batchConversion.tpl';
 		$output = $templateMgr->fetch($templateFile);
 		return new JSONMessage(true, $output);
+	}
+
+	/**
+	 * display images attached to XML document
+	 *
+	 * @param $args array
+	 * @param $request PKPRequest
+	 *
+	 * @return void
+	 */
+	public function media($args, $request) {
+		$user = $request->getUser();
+		$context = $request->getContext();
+		$submissionFile = $this->getAuthorizedContextObject(ASSOC_TYPE_SUBMISSION_FILE);
+		if (!$submissionFile) {
+			fatalError('Invalid request');
+		}
+
+		$submissionFileDao = DAORegistry::getDAO('SubmissionFileDAO');
+		import('lib.pkp.classes.submission.SubmissionFile'); // Constants
+		$dependentFiles = $submissionFileDao->getLatestRevisionsByAssocId(
+			ASSOC_TYPE_SUBMISSION_FILE, 
+			$submissionFile->getFileId(), 
+			$submissionFile->getSubmissionId(), 
+			SUBMISSION_FILE_DEPENDENT
+		);
+
+		// make sure this is an xml document
+		if (!in_array($submissionFile->getFileType(), array('text/xml', 'application/xml'))) {
+			fatalError('Invalid request');
+		}
+
+		$mediaSubmissionFile = null;
+		foreach ($dependentFiles as $dependentFile) {
+			if ($dependentFile->getOriginalFileName() == $request->getUserVar('fileName')) {
+				$mediaSubmissionFile = $dependentFile;
+				break;
+			}
+		}
+
+		if (!$mediaSubmissionFile) {
+			$request->getDispatcher()->handle404();
+		}
+
+		$filePath = $mediaSubmissionFile->getFilePath();
+		header('Content-Type:'.$mediaSubmissionFile->getFileType());
+		header('Content-Length: ' . $mediaSubmissionFile->getFileSize());
+		readfile($filePath);
 	}
 }
