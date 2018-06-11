@@ -249,28 +249,29 @@ class MarkupHandler extends Handler {
 			$manifestXml = $this->_buildManifestXMLFromDocument($manuscriptXml, $assets);
 			// media url
 			$mediaInfos = $this->_buildMediaInfo($request, $assets);
+			$resources = array(
+				'manifest.xml'      => array(
+					'encoding'      => "utf8",
+					'data'          => $manifestXml,
+					'size'          => strlen($manifestXml),
+					'createdAt'     => 0,
+					'updatedAt'     => 0,
+				),
+				'manuscript.xml'  => array(
+					'encoding'      => "utf8",
+					'data'          => $manuscriptXml,
+					'size'          => filesize($document->path),
+					'createdAt'     => 0,
+					'updatedAt'     => 0,
+				),
+			);
 			$data = array(
 				'version'       => 'AE2F112D',
-				'resources'     => array(
-					'manifest.xml'      => array(
-						'encoding'      => "utf8",
-						'data'          => $manifestXml,
-						'size'          => strlen($manifestXml),
-						'createdAt'     => 0,
-						'updatedAt'     => 0,
-					),
-					'manuscript.xml'  => array(
-						'encoding'      => "utf8",
-						'data'          => $manuscriptXml,
-						'size'          => filesize($filePath),
-						'createdAt'     => 0,
-						'updatedAt'     => 0,
-					),
-				)
+				'resources'     => array_merge($resources, $mediaInfos)
 			);
 			$data = array_merge($data, $mediaInfos);
 			header('Content-Type: application/json');
-			return json_encode($data);
+			return json_encode($data, JSON_UNESCAPED_SLASHES);
 		}
 	}
 
