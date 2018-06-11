@@ -430,7 +430,7 @@ class MarkupPlugin extends GenericPlugin {
 
 					if ($stageId == WORKFLOW_STAGE_ID_PRODUCTION) {
 						$row->addAction(new LinkAction(
-							'generateGaleyFiles',
+							'generateGalleyFiles',
 							new AjaxModal(
 								$dispatcher->url($request, ROUTE_PAGE, null, 'markup', 'generateGalleyFiles', null, 
 										array(
@@ -476,7 +476,7 @@ class MarkupPlugin extends GenericPlugin {
 	 *
 	 * @param $fileId int fileId to retrieve converted archive for
 	 * @param $stage int the file stage
-	 * @param $target string job target (xml-conversion or galey-generate)
+	 * @param $target string job target (xml-conversion or galley-generate)
 	 *
 	 * @return string job id
 	 */
