@@ -269,7 +269,6 @@ class MarkupHandler extends Handler {
 				'version'       => 'AE2F112D',
 				'resources'     => array_merge($resources, $mediaInfos)
 			);
-			$data = array_merge($data, $mediaInfos);
 			header('Content-Type: application/json');
 			return json_encode($data, JSON_UNESCAPED_SLASHES);
 		}
@@ -350,7 +349,7 @@ class MarkupHandler extends Handler {
 				'fileId' => $fileId,
 				'fileName' => $path,
 			));
-			$infos[$path] = array(
+			$infos[$asset['path']] = array(
 				'encoding'  => 'url',
 				'data'      => $url,
 				'size'      => filesize($filePath),
