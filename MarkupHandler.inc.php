@@ -149,7 +149,7 @@ class MarkupHandler extends Handler {
 	 * @return string
 	 */
 	public function editor($args, $request) {
-		$stageId = (int) $request->getUserVar('stage');
+		$stageId = (int) $request->getUserVar('stageId');
 		
 		$submissionFile = $this->getAuthorizedContextObject(ASSOC_TYPE_SUBMISSION_FILE);
 		if (!$submissionFile) {
@@ -162,7 +162,8 @@ class MarkupHandler extends Handler {
 		$documentUrl = $router->url($request, null, 'markup', 'json', null, 
 			array(
 				'submissionId' => $submissionFile->getSubmissionId(), 
-				'fileId' => $fileId
+				'fileId' => $fileId,
+				'stageId' => $stageId,
 			)
 		);
 		
@@ -190,7 +191,7 @@ class MarkupHandler extends Handler {
 		}
 		
 		$fileId = $submissionFile->getFileId();
-		$stageId = (int) $request->getUserVar('stage');
+		$stageId = (int) $request->getUserVar('stageId');
 		
 		$submissionFileDao = DAORegistry::getDAO('SubmissionFileDAO');
 		if (empty($submissionFile)) {

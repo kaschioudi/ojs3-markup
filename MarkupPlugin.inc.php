@@ -460,7 +460,7 @@ class MarkupPlugin extends GenericPlugin {
 										array(
 											'submissionId' => $submissionFile->getSubmissionId(), 
 											'fileId' => $submissionFile->getFileId(), 
-											'stage' => $stage)
+											'stageId' => $stageId)
 										)
 							),
 							__('plugins.generic.markup.links.editWithSubstance'),
