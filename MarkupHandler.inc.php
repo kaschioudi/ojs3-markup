@@ -67,7 +67,7 @@ class MarkupHandler extends Handler {
 		$params = array (
 			'messageKey' => 'plugins.generic.markup.modal.xmlConversionText',
 			'target' => 'xml-conversion',
-			'stage' => $request->getUserVar('stage')
+			'stageId' => $request->getUserVar('stageId')
 		);
 		return $this->_conversion($args, $request, $params);
 	}
@@ -84,7 +84,7 @@ class MarkupHandler extends Handler {
 		$params = array (
 			'messageKey' => 'plugins.generic.markup.modal.galleyProductionText',
 			'target' => 'galley-generate',
-			'stage' => WORKFLOW_STAGE_ID_PRODUCTION
+			'stageId' => WORKFLOW_STAGE_ID_PRODUCTION
 		);
 		return $this->_conversion($args, $request, $params);
 	}
@@ -107,7 +107,7 @@ class MarkupHandler extends Handler {
 		}
 		
 		$fileId = $submissionFile->getFileId();
-		$stageId = $params['stage'];
+		$stageId = $params['stageId'];
 		
 		$pluginIsConfigured = false;
 		$this->_plugin->import('classes.MarkupConversionHelper');
@@ -126,7 +126,7 @@ class MarkupHandler extends Handler {
 			$loginCredentialsConfigured = false;
 		}
 		
-		$conversionTriggerUrl = $dispatcher->url($request, ROUTE_PAGE, null, 'markup', 'triggerConversion', null, array('submissionId' => $submissionFile->getSubmissionId(), 'fileId' => $fileId, 'stage' => $stageId, 'target' => $params['target']));
+		$conversionTriggerUrl = $dispatcher->url($request, ROUTE_PAGE, null, 'markup', 'triggerConversion', null, array('submissionId' => $submissionFile->getSubmissionId(), 'fileId' => $fileId, 'stageId' => $stageId, 'target' => $params['target']));
 		$editorTemplateFile = $this->_plugin->getTemplatePath() . 'convert.tpl';
 		AppLocale::requireComponents(LOCALE_COMPONENT_APP_COMMON,  LOCALE_COMPONENT_PKP_MANAGER);
 		$templateMgr = TemplateManager::getManager($request);
@@ -433,10 +433,10 @@ class MarkupHandler extends Handler {
 		}
 		
 		$fileId = $submissionFile->getFileId();
-		$stage = $request->getUserVar('stage');
+		$stageId = $request->getUserVar('stageId');
 			
 		$target = $request->getUserVar('target');
-		$jobId = $this->_plugin->fetchGateway($fileId, $stage, $target);
+		$jobId = $this->_plugin->fetchGateway($fileId, $stageId, $target);
 		
 		$journal = $request->getJournal();
 		$url = $this->_plugin->getSetting($journal->getid(), 'markupHostURL');
@@ -445,8 +445,7 @@ class MarkupHandler extends Handler {
 		$router = $request->getRouter();
 		$dispatcher = $router->getDispatcher();
 		$conversionJobStatusCheckUrl = $dispatcher->url($request, ROUTE_PAGE, null, 'markup', 
-			'fetchConversionJobStatus', null, array('submissionId' => $submissionFile->getSubmissionId(), 'fileId' => $submissionFile->getFileId(), 'job' => $jobId));
-		
+			'fetchConversionJobStatus', null, array('submissionId' => $submissionFile->getSubmissionId(), 'fileId' => $submissionFile->getFileId(), 'stageId' => $stageId, 'job' => $jobId));
 		$templateFile = $this->_plugin->getTemplatePath() . 'convert-result.tpl';
 		AppLocale::requireComponents(LOCALE_COMPONENT_APP_COMMON,  LOCALE_COMPONENT_PKP_MANAGER);
 		$templateMgr = TemplateManager::getManager($request);

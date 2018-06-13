@@ -34,7 +34,7 @@ class MarkupGatewayPlugin extends GatewayPlugin {
 	protected $_fileId = null;
 
 	/** @var $stage int submission stage */
-	protected $_stage = null;
+	protected $_stageId = null;
 
 	/** @var $jobId string job identifier */
 	protected $_jobId = null;
@@ -238,7 +238,7 @@ class MarkupGatewayPlugin extends GatewayPlugin {
 		$this->_fileId = $fileId;
 		$this->_user = $userDao->getById($args['userId']);
 		$this->_jobId = isset($args['jobId']) ? $args['jobId'] : '';
-		$this->_stage = isset($args['stage']) ? (int) $args['stage'] : false;
+		$this->_stageId = isset($args['stageId']) ? (int) $args['stageId'] : false;
 
 		// validate access key
 		$this->_plugin->import('classes.MarkupConversionHelper');
@@ -254,9 +254,9 @@ class MarkupGatewayPlugin extends GatewayPlugin {
 		$this->_conversionHelper = new MarkupConversionHelper($this->_plugin, $this->_xmlpsWrapper, $this->_user);
 
 		// process
-		$stage = (int)$args['stage'];
+		$stageId = (int)$args['stageId'];
 		$target = strval($args['target']);
-		$this->_process($submissionFile, $stage, $target);
+		$this->_process($submissionFile, $stageId, $target);
 	}
 	
 	/**
