@@ -256,19 +256,19 @@ class MarkupGatewayPlugin extends GatewayPlugin {
 		// process
 		$stageId = (int)$args['stageId'];
 		$target = strval($args['target']);
-		$this->_process($submissionFile, $stageId, $target);
+		$this->_process($submissionFile, $submissionFile->getFileStage(), $target);
 	}
 	
 	/**
 	 * Takes care of document markup conversion
 	 *
 	 * @param $submissionFile mixed SubmissionFile 
-	 * @param $stage int Submission stage ID
+	 * @param $fileStage int Submission stage ID
 	 * @param $target string Job target (xml-conversion or galley-generate)
 	 *
 	 * @return void
 	 */
-	function _process($submissionFile, $stage, $target) {
+	function _process($submissionFile, $fileStage, $target) {
 		$journal = $this->getRequest()->getJournal();
 		$journalId = $journal->getId();
 
@@ -299,7 +299,6 @@ class MarkupGatewayPlugin extends GatewayPlugin {
 		if (($extractionPath = $this->_conversionHelper->unzipArchive($tmpZipFile)) === false) {
 			return;
 		}
-
 		// find current user's group
 		$userGroupDao = DAORegistry::getDAO('UserGroupDAO');
 		$userGroups = $userGroupDao->getByUserId($this->_user->getId(), $journal->getId());
@@ -313,7 +312,7 @@ class MarkupGatewayPlugin extends GatewayPlugin {
 					$journal,
 					$submission,
 					$submissionFile, 
-					$stage,
+					$fileStage,
 					$fileName
 				);
 				break;

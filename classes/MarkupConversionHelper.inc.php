@@ -204,7 +204,6 @@ class MarkupConversionHelper {
 			if (($jobStatus != XMLPSWrapper::JOB_STATUS_PENDING) && ($jobStatus != XMLPSWrapper::JOB_STATUS_PROCESSING)) break;
 			sleep($sleep);
 		}
-
 		// Return FALSE if the job didn't complete
 		if ($jobStatus != XMLPSWrapper::JOB_STATUS_COMPLETED) 
 			return false;
@@ -215,7 +214,6 @@ class MarkupConversionHelper {
 		if (empty($submissionFile)) {
 			return false;
 		}
-
 		// Download the Zip archive.
 		$tmpZipFile = $this->_xmlpsWrapper->downloadFile($jobId);
 
@@ -310,20 +308,18 @@ class MarkupConversionHelper {
 	public function addXmlDocumentToSubmissionFileList($journal, $submission, $filePath, $params) {
 		$journalId = $journal->getId();
 		$submissionId = $submission->getId();
-
 		$genreDao = DAORegistry::getDAO('GenreDAO');
 		$genre = $genreDao->getByKey('SUBMISSION', $journalId);
 		$genreId = $genre->getId();
 
 		$fileName = isset($params['filename']) ? "{$params['filename']}.xml" :'document.xml';
-
 		$submissionFileDao = DAORegistry::getDAO('SubmissionFileDAO');
 		$submissionFile = $submissionFileDao->newDataObjectByGenreId($genreId);
 		$submissionFile->setUploaderUserId($this->user->getId());
 		$submissionFile->setSubmissionId($submissionId);
 		$submissionFile->setGenreId($genreId);
 		$submissionFile->setFileSize(filesize($filePath));
-		$submissionFile->setFileStage($params['stage']);
+		$submissionFile->setFileStage($params['fileStage']);
 		$submissionFile->setDateUploaded(Core::getCurrentDate());
 		$submissionFile->setDateModified(Core::getCurrentDate());
 		$submissionFile->setOriginalFileName($fileName);
@@ -485,13 +481,13 @@ class MarkupConversionHelper {
 	 * @param $journal Journal
 	 * @param $submission Submission
 	 * @param $submissionFile SubmissionFile
-	 * @param $stage int
+	 * @param $fileStage int
 	 * @param $fileName string
 	 * @return boolean
 	 */
-	public function handleArchiveExtractionAfterXmlConversion($extractionPath, $journal, $submission, $submissionFile, $stage, $fileName) {
+	public function handleArchiveExtractionAfterXmlConversion($extractionPath, $journal, $submission, $submissionFile, $fileStage, $fileName) {
 		$params = array(
-			'stage' 	=> $stage,
+			'fileStage' 	=> $fileStage,
 			'assocType' 	=> (int)$submissionFile->getAssocType(),
 			'assocId' 	=> (int)$submissionFile->getAssocId(),
 			'filename'	=> $fileName,
@@ -515,7 +511,7 @@ class MarkupConversionHelper {
 		$journalId = $journal->getId();
 		// Always populate production ready files with xml document.
 		$params = array(
-			'stage' 	=> SUBMISSION_FILE_PRODUCTION_READY,
+			'fileStage' 	=> SUBMISSION_FILE_PRODUCTION_READY,
 			'assocType' 	=> (int)$submissionFile->getAssocType(),
 			'assocId' 	=> (int)$submissionFile->getAssocId(),
 			'filename' 	=> $fileName
