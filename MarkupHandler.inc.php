@@ -328,6 +328,7 @@ class MarkupHandler extends Handler {
 		$router = $request->getRouter();
 		$dispatcher = $router->getDispatcher();
 		$fileId = $request->getUserVar('fileId');
+		$stageId = $request->getUserVar('stageId');
 		$submissionId = $request->getUserVar('submissionId');
 		// build mapping to assets file paths
 		$assetsFilePaths = array();
@@ -348,6 +349,7 @@ class MarkupHandler extends Handler {
 			$url = $dispatcher->url($request, ROUTE_PAGE, null, 'markup', 'media', null, array(
 				'submissionId' => $submissionId,
 				'fileId' => $fileId,
+				'stageId' => $stageId,
 				'fileName' => $path,
 			));
 			$infos[$asset['path']] = array(
