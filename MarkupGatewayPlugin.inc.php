@@ -34,7 +34,7 @@ class MarkupGatewayPlugin extends GatewayPlugin {
 	protected $_fileId = null;
 
 	/** @var $stage int submission stage */
-	protected $_stage = null;
+	protected $_stageId = null;
 
 	/** @var $jobId string job identifier */
 	protected $_jobId = null;
@@ -238,7 +238,7 @@ class MarkupGatewayPlugin extends GatewayPlugin {
 		$this->_fileId = $fileId;
 		$this->_user = $userDao->getById($args['userId']);
 		$this->_jobId = isset($args['jobId']) ? $args['jobId'] : '';
-		$this->_stage = isset($args['stage']) ? (int) $args['stage'] : false;
+		$this->_stageId = isset($args['stageId']) ? (int) $args['stageId'] : false;
 
 		// validate access key
 		$this->_plugin->import('classes.MarkupConversionHelper');
@@ -254,21 +254,21 @@ class MarkupGatewayPlugin extends GatewayPlugin {
 		$this->_conversionHelper = new MarkupConversionHelper($this->_plugin, $this->_xmlpsWrapper, $this->_user);
 
 		// process
-		$stage = (int)$args['stage'];
+		$stageId = (int)$args['stageId'];
 		$target = strval($args['target']);
-		$this->_process($submissionFile, $stage, $target);
+		$this->_process($submissionFile, $submissionFile->getFileStage(), $target);
 	}
 	
 	/**
 	 * Takes care of document markup conversion
 	 *
 	 * @param $submissionFile mixed SubmissionFile 
-	 * @param $stage int Submission stage ID
+	 * @param $fileStage int Submission stage ID
 	 * @param $target string Job target (xml-conversion or galley-generate)
 	 *
 	 * @return void
 	 */
-	function _process($submissionFile, $stage, $target) {
+	function _process($submissionFile, $fileStage, $target) {
 		$journal = $this->getRequest()->getJournal();
 		$journalId = $journal->getId();
 
@@ -299,7 +299,6 @@ class MarkupGatewayPlugin extends GatewayPlugin {
 		if (($extractionPath = $this->_conversionHelper->unzipArchive($tmpZipFile)) === false) {
 			return;
 		}
-
 		// find current user's group
 		$userGroupDao = DAORegistry::getDAO('UserGroupDAO');
 		$userGroups = $userGroupDao->getByUserId($this->_user->getId(), $journal->getId());
@@ -313,7 +312,7 @@ class MarkupGatewayPlugin extends GatewayPlugin {
 					$journal,
 					$submission,
 					$submissionFile, 
-					$stage,
+					$fileStage,
 					$fileName
 				);
 				break;

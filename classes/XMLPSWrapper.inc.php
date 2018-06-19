@@ -192,7 +192,7 @@ class XMLPSWrapper {
 		$response = $this->_makeApiRequest('api/job/status', $params, true);
 		
 		if ($response['status'] != "success") {
-			throw new Exception('Job submission failed.');
+			throw new Exception('Unable to fetch job status.');
 		}
 		
 		return $response['jobStatus'];

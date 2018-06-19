@@ -420,7 +420,7 @@ class MarkupPlugin extends GenericPlugin {
 										array(
 											'submissionId' => $submissionFile->getSubmissionId(), 
 											'fileId' => $submissionFile->getFileId(), 
-											'stage' => $stage)
+											'stageId' => $stageId)
 										),
 								__('plugins.generic.markup.modal.xmlConversion')
 							),
@@ -437,7 +437,7 @@ class MarkupPlugin extends GenericPlugin {
 										array(
 											'submissionId' => $submissionFile->getSubmissionId(), 
 											'fileId' => $submissionFile->getFileId(), 
-											'stage' => WORKFLOW_STAGE_ID_PRODUCTION)
+											'stageId' => WORKFLOW_STAGE_ID_PRODUCTION)
 										),
 								__('plugins.generic.markup.modal.galleyProduction')
 							),
@@ -460,7 +460,7 @@ class MarkupPlugin extends GenericPlugin {
 										array(
 											'submissionId' => $submissionFile->getSubmissionId(), 
 											'fileId' => $submissionFile->getFileId(), 
-											'stage' => $stage)
+											'stageId' => $stageId)
 										)
 							),
 							__('plugins.generic.markup.links.editWithSubstance'),
@@ -481,7 +481,7 @@ class MarkupPlugin extends GenericPlugin {
 	 *
 	 * @return string job id
 	 */
-	public function fetchGateway($fileId, $stage, $target) {
+	public function fetchGateway($fileId, $stageId, $target) {
 		$request = $this->getRequest();
 		$user = $request->getUser();
 
@@ -496,7 +496,7 @@ class MarkupPlugin extends GenericPlugin {
 
 		$url = $request->url(null, 'gateway', 'plugin', 
 			array('MarkupGatewayPlugin','fileId', $fileId, 'userId', $user->getId(), 
-				'stage', $stage, 'jobId', $jobId, 'target', $target, 'accessKey', $accessKey)
+				'stageId', $stageId, 'jobId', $jobId, 'target', $target, 'accessKey', $accessKey)
 		);
 
 		$ch = curl_init();
