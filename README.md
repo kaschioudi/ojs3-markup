@@ -19,18 +19,18 @@ Works with OJS 3 or greater
 Installation
 ------------
 
--   Clone the plugin contents into the plugins/generic folder (e.g. plugins/generic/markup). If not doing this before installing OJS, you will need to then run `php tools/upgrade.php upgrade` or `php tools/dbXMLtoSQL.php -schema execute plugins/generic/markup/schema.xml`.
+-   Clone the plugin contents into the `plugins/generic` folder (e.g. `plugins/generic/markup`). If not doing this before installing OJS, you will need to then run `php tools/upgrade.php upgrade` or `php tools/dbXMLtoSQL.php -schema execute plugins/generic/markup/schema.xml`.
 
 Usage
 -----
 
-First, you’ll have to install and configure the plugin. To do this, after creating a journal, go to your user home by clicking your name in the top-right corner of the page, then to "Settings" -\> "Website" in the sidebar, and finally "Plugins" from the top of the Settings menu. The Open Typesetting Stack plugin should be listed under "Generic Plugins".
+First, you’ll have to install and configure the plugin. To do this, after creating a journal, go to your user home by clicking your name in the top-right corner of the page, then to `Settings` -\> `Website` in the sidebar, and finally `Plugins` from the top of the Settings menu. The Open Typesetting Stack plugin should be listed under `Generic Plugins`.
 
 ![](https://github.com/kaschioudi/ojs3-markup/blob/master/readme-images/plugins.png?raw=true)
 
-Enable it, then refresh the page, and you should see a new "OTS Settings" menu entry at the top. Click through.
+Enable it, then refresh the page, and you should see a new `OTS Settings` menu entry at the top. Click through.
 
-If this is your first time using OTS, you'll want to open a new browser tab and head over to our demonstration instance at <http://pkp-xml-demo.lib.sfu.ca/> at this point to sign up. You can upload jobs to the OTS stack directly from this page, but what you’ll want to do to use the functionality in OJS is get an API key for integration. You can do this by going to your Settings menu in the top-right corner of the OTS interface after registering and logging in, and then clicking "Generate Token" under API Authentication.
+If this is your first time using OTS, you'll want to open a new browser tab and head over to our demonstration instance at <http://pkp-xml-demo.lib.sfu.ca/> at this point to sign up. You can upload jobs to the OTS stack directly from this page, but what you’ll want to do to use the functionality in OJS is get an API key for integration. You can do this by going to your Settings menu in the top-right corner of the OTS interface after registering and logging in, and then clicking `Generate Token` under API Authentication.
 
 ![](https://github.com/kaschioudi/ojs3-markup/blob/master/readme-images/otsapikey.png?raw=true)
 
@@ -50,7 +50,7 @@ After the job is complete, you should see an XML version of the same article ava
 
 ![](https://github.com/kaschioudi/ojs3-markup/blob/master/readme-images/edit.png?raw=true)
 
-​[Texture](https://github.com/substance/texture) is a WYSIWYG, user-friendly, native JATS XML editor. Users who don't want to think about XML never have to, but are still deliberately constrained by the JATS spec when making changes to the document, so that (unlike when editing with Word), they can publish directly from here. For expert users who *are *interested in tweaking XML, or for anyone wanting to add a JATS element that is not yet implemented in the WYSIWYG, you can do this with the "Insert" button in the top bar. More and more JATS elements will be added over time so that they are rendered natively, and at the same time Texture will incorporate different custom views offering expert users greater ease of use when directly editing XML.
+​[Texture](https://github.com/substance/texture) is a WYSIWYG, user-friendly, native JATS XML editor. Users who don't want to think about XML never have to, but are still deliberately constrained by the JATS spec when making changes to the document, so that (unlike when editing with Word), they can publish directly from here. For expert users who *are* interested in tweaking XML, or for anyone wanting to add a JATS element that is not yet implemented in the WYSIWYG, you can do this with the "Insert" button in the top bar. More and more JATS elements will be added over time so that they are rendered natively, and at the same time Texture will incorporate different custom views offering expert users greater ease of use when directly editing XML.
 
 The save behaviour in Texture is also currently incomplete -- our plan is for it to eventually act like Google Docs wherein all changes are saved automatically, with the save button in the top bar acting as a "Save as" button, when you want to register a new draft of the article in OJS. Currently, though, you need to use that button to save, and "save as" isn't there yet.
 
@@ -70,7 +70,7 @@ This will submit another job to OTS, which will return production-ready galley f
 Backlog Conversion
 -----
 
-Additionally, if your journal has already been publishing Word or PDF articles and you want to convert them to JATS XML in bulk (with the understanding that this will probably not produce an ideal result on its own), you can do so by navigating to the "OTS Backlog convesrsion" tab of the settings menu, selecting the files you want to convert, and clicking "Start conversion".
+Additionally, if your journal has already been publishing Word or PDF articles and you want to convert them to JATS XML in bulk (with the understanding that this will probably not produce an ideal result on its own), you can do so by navigating to the "OTS Backlog conversion" tab of the settings menu, selecting the files you want to convert, and clicking "Start conversion".
 
 ![](https://github.com/kaschioudi/ojs3-markup/blob/master/readme-images/backlog.png?raw=true)
 
