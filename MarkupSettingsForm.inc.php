@@ -16,7 +16,7 @@
 import('lib.pkp.classes.form.Form');
 
 define('MARKUP_CSL_STYLE_DEFAULT', '674e1c66aa817a0713a410915ac1b298');
-define('MARKUP_DOCUMENT_SERVER_URL_DEFAULT', 'http://pkp-xml-demo.lib.sfu.ca/');
+define('MARKUP_DOCUMENT_SERVER_URL_DEFAULT', 'https://pkp-xml-demo.lib.sfu.ca/');
 
 class MarkupSettingsForm extends Form {
 	
