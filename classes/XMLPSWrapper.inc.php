@@ -21,7 +21,7 @@ class XMLPSWrapper {
 	const JOB_STATUS_COMPLETED = 2;
 	const JOB_STATUS_FAILED = 3;
 	
-	const DEFAULT_DEMO_HOST = 'http://pkp-xml-demo.lib.sfu.ca';
+	const DEFAULT_DEMO_HOST = 'https://pkp-xml-demo.lib.sfu.ca';
 	
 	/** @var $username string user login */
 	protected $_username = null;
